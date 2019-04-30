@@ -4,6 +4,7 @@ project(PolitoceanRovArmCore)
 # Add here all libraries' directories
 #add_subdirectory(name_of_directory)
 add_subdirectory(JoystickSubscriber)
+add_subdirectory(Sensor)
 
 
 # Install and export (do not touch this part)
