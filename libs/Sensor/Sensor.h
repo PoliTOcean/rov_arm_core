@@ -20,7 +20,7 @@ public:
     Sensor(sensor_t type, T value) : type_(type), value_(value) {}
 
     void setValue(T value) { value_ = value; }
-    T getValue() { return value_ }
+    T getValue() { return value_; }
     sensor_t getType();
 
     /*
