@@ -22,4 +22,6 @@ target_link_libraries(RovArmCore
     # Name_of_the_library       --- if it's internal (e.g. Subscriber)
     # -lname_of_the_library     --- if it's a standard c++ library (e.g. -lpthread)
     PolitoceanRovArmCore::JoystickSubscriber
-    PolitoceanCommon::mqttLogger)
+    PolitoceanCommon::mqttLogger
+    PolitoceanCommon::logger
+    PolitoceanCommon::Publisher)
