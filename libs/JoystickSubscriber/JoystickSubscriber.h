@@ -5,7 +5,7 @@
 namespace Politocean {
 
 class JoystickSubscriber : public Subscriber {
-    std::vector<int> axes, buttons;
+    std::vector<int> axes_, buttons_;
 
 public:
     static const std::string DFLT_ADDRESS, DFLT_CLIENT_ID, DFLT_TOPIC;

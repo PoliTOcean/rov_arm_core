@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "Controller.h"
-#include "PolitoceanFunctions.hpp"
 
 namespace Politocean {
 

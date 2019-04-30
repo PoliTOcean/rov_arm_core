@@ -15,8 +15,8 @@ namespace PINOUT {
 
 class Controller {
 public:
-    static const int    DEFAULT_SPI_CHANNEL = 0,
-                        DEFAULT_SPI_SPEED = 1000000;
+    static const int DEFAULT_SPI_CHANNEL    = 0;
+    static const int DEFAULT_SPI_SPEED      = 1000000;
 
     Controller();
 
