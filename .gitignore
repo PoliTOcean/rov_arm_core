@@ -14,3 +14,4 @@ RovArmCore
 RovCore
 .vscode
 *.orig
+logs
