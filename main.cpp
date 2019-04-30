@@ -15,12 +15,11 @@ mqttLogger ptoLogger(&pub);
 
 int main(int argc, const char *argv[])
 {
+    logger::enableLevel(logger::DEBUG, true);
     try {
         pub.connect();
     
         JoystickSubscriber subscriber;
-        
-        subscriber.connect();
 
         subscriber.wait();
     } catch(const mqtt::exception& e) {
