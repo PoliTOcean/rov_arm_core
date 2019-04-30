@@ -1,8 +1,12 @@
-#include <Subscriber.h>
+#include "Subscriber.h"
+
+#include <vector>
 
 namespace Politocean {
 
 class JoystickSubscriber : public Subscriber {
+    std::vector<int> axes, buttons;
+
 public:
     static const std::string DFLT_ADDRESS, DFLT_CLIENT_ID, DFLT_TOPIC;
 
