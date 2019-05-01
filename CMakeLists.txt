@@ -10,6 +10,8 @@ include_directories(politocean_common/include)
 # Add project internal libs
 add_subdirectory(libs)
 
+include_directories(include)
+
 # Add executable
 add_executable(RovArmCore main.cpp)
 
