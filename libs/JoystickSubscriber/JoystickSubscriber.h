@@ -20,7 +20,9 @@ class JoystickSubscriber : public Subscriber
      * @axesBuffer_     : contains the axes values to send via SPI
      * @buttonsBuffer_  : contains the buttons values to send via SPI
      */
-    std::vector<int> axesBuffer_, buttonsBuffer_;
+    std::vector<int> axes_;
+    unsigned char button_;
+
     std::vector<Sensor<unsigned char>> sensors_;
 
     /**
