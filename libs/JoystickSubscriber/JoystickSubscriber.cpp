@@ -18,7 +18,7 @@ void JoystickSubscriber::callback(const std::string& payload)
 {
     auto c_map = nlohmann::json::parse(payload);
     
-    std::vector<int> axes       = c_map["axes"];
+    std::vector<int> axes       = {c_map["axes"]};
     std::vector<int> buttons    = c_map["axes"];
 
     axesBuffer_     = {

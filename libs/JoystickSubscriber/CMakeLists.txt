@@ -14,7 +14,12 @@ target_include_directories(JoystickSubscriber
             ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(JoystickSubscriber PolitoceanCommon::Subscriber)
+target_link_libraries(JoystickSubscriber        PolitoceanCommon::Subscriber
+                                                PolitoceanRovArmCore::Controller
+                                                PolitoceanRovArmCore::Sensor
+                                                -lwiringPi
+                                                -lrt
+                                                -lcrypt)
 
 target_compile_features(JoystickSubscriber PRIVATE cxx_auto_type)
 target_compile_options(JoystickSubscriber PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)

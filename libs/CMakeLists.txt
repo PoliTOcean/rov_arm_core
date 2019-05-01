@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(PolitoceanRovArmCore)
 
+include_directories(../include)
+
 # Add here all libraries' directories
 #add_subdirectory(name_of_directory)
 add_subdirectory(JoystickSubscriber)
