@@ -20,7 +20,8 @@ int main(int argc, const char *argv[])
         pub.connect();
     
         JoystickSubscriber subscriber;
-
+        
+        subscriber.connect();
         subscriber.wait();
     } catch(const mqtt::exception& e) {
         ptoLogger.logError(e);

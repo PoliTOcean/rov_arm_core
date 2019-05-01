@@ -10,10 +10,13 @@ const std::string JoystickSubscriber::DFLT_TOPIC     { "JoystickTopic" };
 void JoystickSubscriber::callback(const std::string& payload)
 {
     // TODO: Elaborate payload, filter commands and send via SPI to microcontroller
+
     auto c_map = nlohmann::json::parse(payload);
     
-    std::vector<int> axes       = c_map["axes"];
-    std::vector<int> buttons    = c_map["buttons"];
+    axes_       = c_map["axes"].get<std::vector<int>>();
+    buttons_    = c_map["axes"].get<std::vector<int>>();
+
+    std::cout << axes_[0] << std::endl;
 }
 
 }
