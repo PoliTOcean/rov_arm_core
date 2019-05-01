@@ -26,7 +26,7 @@ class JoystickSubscriber : public Subscriber
     /**
      * @current_: the index of the current value of the SPI buffer
      */
-    int current_;
+    unsigned int current_;
 
 public:
     /**
