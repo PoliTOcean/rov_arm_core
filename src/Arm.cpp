@@ -30,18 +30,30 @@ void cleanup(){
 
 void joystickButtCallback(const std::string& payload)
 {
-
+	std::cout << payload << std::endl;
 	if(payload == "back_up")
 	{
-		Status3 = 1;
+		digitalWrite(EN_n1, LOW);
+		digitalWrite(DIR1, CW);
+	
+		digitalWrite(STEP1, LOW);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		digitalWrite(STEP1, HIGH);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	else if(payload == "back_down")
 	{
-		Status4 = 1;
+		digitalWrite(EN_n1, LOW);
+		digitalWrite(DIR1, CCW);
+	
+		digitalWrite(STEP1, LOW);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		digitalWrite(STEP1, HIGH);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	else 
 	{
-		Status3 = Status4 = 0;
+		digitalWrite(EN_n1, HIGH);
 	}
 }
 
@@ -61,42 +73,12 @@ int main (void)
 	Status4 = 0;
 	
 	//Iscrizione al subscriber
-	Subscriber Sub("127.0.0.1", Rov::ARM_ID);
+	Subscriber Sub("tcp://localhost127.0.0.1", Rov::ARM_ID);
 	Sub.subscribeTo(Topics::ROV_ARM, &joystickButtCallback);
 	Sub.connect();
 	
-	while (Sub.is_connected())
-	{	
-		while(Status3 == 1)
-		{
-		
-			digitalWrite(EN_n1, LOW);
-			digitalWrite(DIR1, CW);
-		
-			digitalWrite(STEP1, LOW);
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			digitalWrite(STEP1, HIGH);
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
-		
-		digitalWrite(EN_n1, HIGH);
-		
-		while(Status4 == 1)
-		{
-		
-			digitalWrite(EN_n1, LOW);
-			digitalWrite(DIR1, CCW);
-		
-			digitalWrite(STEP1, LOW);
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			digitalWrite(STEP1, HIGH);
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
-		
-		digitalWrite(EN_n1, HIGH);
-		
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	}
+	Sub.wait();
+
 	cleanup();
 	
 	return 0;
