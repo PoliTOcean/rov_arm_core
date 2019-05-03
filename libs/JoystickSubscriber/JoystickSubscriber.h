@@ -30,40 +30,45 @@ class JoystickSubscriber : public Subscriber
      */
     unsigned int current_;
 
+    /**
+     * Callback functions.
+     * They read the joystick data (@payload) from JoystickPublisher
+     * 
+     * @payload: the string that recives from the JoystickPublisher
+     *
+     * listenForButtons : converts the string @payload into an unsigned char value and stores it inside @button_.
+     * listenForAxes    : parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
+     */
+    void listenForButtons(const std::string& payload);
+    void listenForAxes(const std::string& payload);
+
 public:
     /**
      * @DFLT_ADDRESS    : default mosquitto address
      * @DFLT_CLIENT_ID  : default subscriber client id
-     * @DFLT_TOPIC      : default listening topic
      */
-    static const std::string DFLT_ADDRESS, DFLT_CLIENT_ID, DFLT_TOPIC;
+    static const std::string DFLT_ADDRESS, DFLT_CLIENT_ID;
 
     /**
      * Default constructor.
      * It uses default values @DFLT_ADDRESS, @DFLT_CLIENT_ID, @DFLT_TOPIC
      */
-    JoystickSubscriber() : JoystickSubscriber(DFLT_ADDRESS, DFLT_CLIENT_ID, DFLT_TOPIC) {}
+    JoystickSubscriber() : JoystickSubscriber(DFLT_ADDRESS, DFLT_CLIENT_ID) {}
     /**
      * Constructor.
      * 
      * @address : mosquitto address
      * @clientID: subscriber client id
-     * @topic   : listening topic
      */
-    JoystickSubscriber(const std::string& address, const std::string& clientID, const std::string& topic) 
-        : Subscriber(address, clientID, topic, &JoystickSubscriber::callback, this), controller_(), current_(0)
+    JoystickSubscriber(const std::string& address, const std::string& clientID) 
+        : Subscriber(address, clientID), controller_(), current_(0)
     {
         for (auto sensor_type : sensor_t())
             sensors_.emplace_back(Sensor<unsigned char>(sensor_type, 0));
     }
     
-    /**
-     * Callback function.
-     * It elaborates the joystick data (@payload) and use the SPI to send values and receive sensors data.
-     * 
-     * @payload: the string that recives from the JoystickPublisher
-     */
-    void callback(const std::string& payload);
+    // Starts listening to topics
+    void listen();
 };
 
 }

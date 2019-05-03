@@ -6,6 +6,7 @@
 #include "json.hpp"
 
 #include "Commands.h"
+#include "PolitoceanConstants.h"
 #include "PolitoceanUtils.hpp"
 
 namespace Politocean
@@ -13,14 +14,23 @@ namespace Politocean
 
 const std::string JoystickSubscriber::DFLT_ADDRESS   { "tcp://localhost:1883" };
 const std::string JoystickSubscriber::DFLT_CLIENT_ID { "JoystickSubscriber" };
-const std::string JoystickSubscriber::DFLT_TOPIC     { "JoystickTopic" };
 
-void JoystickSubscriber::callback(const std::string& payload)
+void JoystickSubscriber::listenForButtons(const std::string& payload)
+{
+    button_ = static_cast<unsigned char>(std::stoi(payload));
+}
+
+void JoystickSubscriber::listenForAxes(const std::string& payload)
 {
     auto c_map = nlohmann::json::parse(payload);
-    
-    axes_   = c_map["axes"].get<std::vector<int>>();
-    button_ = c_map["button"];
+
+    axes_ = c_map["axes"].get<std::vector<int>>();
+}
+
+void JoystickSubscriber::listen()
+{
+    subscribeTo(Constants::Topics::JOYSTICK_AXES, listenForAxes);
+    subscribeTo(Constants::Topics::JOYSTICK_BUTTONS, listenForButtons);
     
     std::vector<int> axesBuffer = {
         axes_[COMMANDS::AXIS::X],
