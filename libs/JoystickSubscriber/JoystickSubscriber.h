@@ -68,7 +68,10 @@ public:
     }
     
     // Starts listening to topics
-    void listen();
+    void startListening();
+
+    // Stops listening to topics
+    void stopListening();
 };
 
 }

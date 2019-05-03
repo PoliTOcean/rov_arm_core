@@ -27,10 +27,10 @@ void JoystickSubscriber::listenForAxes(const std::string& payload)
     axes_ = c_map["axes"].get<std::vector<int>>();
 }
 
-void JoystickSubscriber::listen()
+void JoystickSubscriber::startListening()
 {
-    subscribeTo(Constants::Topics::JOYSTICK_AXES, listenForAxes);
-    subscribeTo(Constants::Topics::JOYSTICK_BUTTONS, listenForButtons);
+    subscribeTo(Constants::Topics::JOYSTICK_AXES, &JoystickSubscriber::listenForAxes, this);
+    subscribeTo(Constants::Topics::JOYSTICK_BUTTONS, &JoystickSubscriber::listenForButtons, this);
     
     std::vector<int> axesBuffer = {
         axes_[COMMANDS::AXIS::X],
@@ -44,6 +44,11 @@ void JoystickSubscriber::listen()
     if (++current_ > sensors_.size())
         current_ = 0;
 
+}
+
+void JoystickSubscriber::stopListening()
+{
+    unsubscribeFrom({ Constants::Topics::JOYSTICK_BUTTONS, Constants::Topics::JOYSTICK_AXES });
 }
 
 }
