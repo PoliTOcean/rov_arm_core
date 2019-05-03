@@ -1,15 +1,18 @@
 #include <wiringPi.h>
 #include <json.hpp>
 #include <PolitoceanConstants.h>
+#include <chrono>
+#include <thread>
+#include <Subscriber.h>
 
-#define DIR1= 28; // Direction GPIO Pin
-#define STEP1= 27; // Direction GPIO Pin
-#define EN_n1= 29; // Enable Pin active low
+#define DIR1 28 // Direction GPIO Pin
+#define STEP1 27 // Direction GPIO Pin
+#define EN_n1 29 // Enable Pin active low
 
-#define delay = 0.001;
+#define delay 0.001
 
-#define CW = 1;	  //Clockwise Rotation
-#define CCW = 0; // Counterclockwise Rotation
+#define CW 1	  //Clockwise Rotation
+#define CCW 0 // Counterclockwise Rotation
 
 using namespace Politocean;
 using namespace Politocean::Constants;
@@ -56,17 +59,14 @@ int main (void)
 	
 	Status3 = 0;
 	Status4 = 0;
-	//Nome del nodo
+	
 	//Iscrizione al subscriber
 	Subscriber Sub("127.0.0.1", Rov::ARM_ID);
 	Sub.subscribeTo(Topics::ROV_ARM, &joystickButtCallback);
 	Sub.connect();
-	//Funzione microstepping
-	while (sub.is_connected())
-	{
-		
-	//rospy shutdown(?)
 	
+	while (Sub.is_connected())
+	{	
 		while(Status3 == 1)
 		{
 		
@@ -74,9 +74,9 @@ int main (void)
 			digitalWrite(DIR1, CW);
 		
 			digitalWrite(STEP1, LOW);
-			usleep(1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			digitalWrite(STEP1, HIGH);
-			usleep(1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		
 		digitalWrite(EN_n1, HIGH);
@@ -88,15 +88,15 @@ int main (void)
 			digitalWrite(DIR1, CCW);
 		
 			digitalWrite(STEP1, LOW);
-			usleep(1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			digitalWrite(STEP1, HIGH);
-			usleep(1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		
 		digitalWrite(EN_n1, HIGH);
 		
-		usleep(10000);
-    }
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
 	cleanup();
 	
 	return 0;
