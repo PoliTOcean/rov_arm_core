@@ -6,7 +6,7 @@ add_library(Controller
 
 add_library(PolitoceanRovArmCore::Controller ALIAS Controller)
 
-target_link_libraries(Controller -lwiringPi)
+target_link_libraries(Controller -lwiringPi -lcrypt -lrt)
 
 target_include_directories(Controller
         PUBLIC
