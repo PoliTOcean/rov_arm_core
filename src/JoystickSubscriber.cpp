@@ -140,7 +140,7 @@ void sendBufferToSpi(const std::vector<unsigned char>& buffer){
 		sensors[sensor++].setValue(data);
 
 		// Check if I received the last sensor
-		if (sensor > sensors.size())
+		if (sensor >= sensors.size())
 			sensor = 0;
 	}
 }
