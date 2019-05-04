@@ -54,8 +54,8 @@ public:
 	 * 
 	 * @payload: the string that recives from the JoystickPublisher
 	 * 
-	 * listenForButtons : converts the string @payload into an unsigned char value and stores it inside @button_.
-	 * listenForAxes    : parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
+	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
+	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
 	void listenForAxes(const std::string& payload);
 	void listenForButton(const std::string& payload);
@@ -118,7 +118,7 @@ int main(int argc, const char *argv[])
 	std::vector<Politocean::Sensor<unsigned char>> sensors;
 
 	/**
-	 * @joystickSubscriber 	: the subscriber listening to JoystickPublisher topics
+	 * @joystickSubscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener			: object with the callbacks for @joystickSubscriber and methods to retreive data read
 	 */
 	Politocean::Subscriber joystickSubscriber(DFLT_ADDRESS, DFLT_CLIENT_ID);
