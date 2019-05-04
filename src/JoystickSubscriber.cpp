@@ -200,7 +200,7 @@ int main(int argc, const char *argv[])
 				axes[Politocean::Constants::Commands::Axes::RZ]
 			};
 
-			unsigned char data = Politocean::map(axesBuffer[sensor], 0, INT_MAX);
+			unsigned char data = Politocean::map(axesBuffer[sensor], 0, INT_MAX, 1, UCHAR_MAX-1);
 			
 			std::lock_guard<std::mutex> lock(mutex_);
 
