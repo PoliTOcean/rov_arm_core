@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <thread>
 
 namespace Politocean
 {
@@ -31,6 +32,13 @@ class JoystickSubscriber : public Subscriber
     unsigned int current_;
 
     /**
+     * @isListening_        : it is true if the JoystickSubscriber is listening to the topics.
+     * @listeningThread_    : the pointer to the listening thread.
+     */
+    bool isListening_;
+    std::thread *listeningThread_;
+
+    /**
      * Callback functions.
      * They read the joystick data (@payload) from JoystickPublisher
      * 
@@ -41,13 +49,6 @@ class JoystickSubscriber : public Subscriber
      */
     void listenForButtons(const std::string& payload);
     void listenForAxes(const std::string& payload);
-
-    /**
-     * @isListening_        : it is true if the JoystickSubscriber is listening to the topics.
-     * @listeningThread_    : the pointer to the listening thread.
-     */
-    bool isListening_;
-    std::thread *listeningThread_;
 
 public:
     /**
