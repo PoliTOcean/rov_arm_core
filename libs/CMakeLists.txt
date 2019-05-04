@@ -5,7 +5,6 @@ include_directories(../include)
 
 # Add here all libraries' directories
 #add_subdirectory(name_of_directory)
-add_subdirectory(JoystickSubscriber)
 add_subdirectory(Sensor)
 add_subdirectory(Controller)
 
