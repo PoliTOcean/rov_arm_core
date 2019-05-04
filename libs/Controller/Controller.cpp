@@ -15,7 +15,7 @@ namespace Politocean {
 
 #include "unistd.h"
 
-Controller::Controller()
+void Controller::setup()
 {
     wiringPiSetup();
     wiringPiSPISetup(DEFAULT_SPI_CHANNEL, DEFAULT_SPI_SPEED);

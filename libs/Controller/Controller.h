@@ -18,9 +18,19 @@ public:
     static const int DEFAULT_SPI_CHANNEL    = 0;
     static const int DEFAULT_SPI_SPEED      = 1000000;
 
-    Controller();
+    Controller() = default;
 
+    // It sets up the controller
+    void setup();
+
+    /**
+     * It returns the value read from SPI
+     * 
+     * @data : value to send via SPI
+     */
     unsigned char SPIDataRW(unsigned char data);
+
+    // It resets the controller
     void reset();
 };
 
