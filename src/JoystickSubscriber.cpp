@@ -39,7 +39,7 @@ class Listener
 					(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-    unsigned char button_;
+	unsigned char button_;
 
 public:
 	// Returns the @axes_ vector
@@ -49,14 +49,14 @@ public:
 	unsigned char button();
 
 	/**
-     * Callback functions.
-     * They read the joystick data (@payload) from JoystickPublisher
-     * 
-     * @payload: the string that recives from the JoystickPublisher
-     *
-     * listenForButtons : converts the string @payload into an unsigned char value and stores it inside @button_.
-     * listenForAxes    : parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
-     */
+	 * Callback functions.
+	 * They read the joystick data (@payload) from JoystickPublisher
+	 * 
+	 * @payload: the string that recives from the JoystickPublisher
+	 * 
+	 * listenForButtons : converts the string @payload into an unsigned char value and stores it inside @button_.
+	 * listenForAxes    : parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
+	 */
 	void listenForAxes(const std::string& payload);
 	void listenForButton(const std::string& payload);
 
@@ -101,13 +101,16 @@ int main(int argc, const char *argv[])
 	Politocean::logger::enableLevel(Politocean::logger::DEBUG, true);
 
 	// Try to connect to publisher logger
-    try {
-        pub.connect();
-    } catch(const mqtt::exception& e) {
-        ptoLogger.logError(e);
-    } catch(const std::exception& e) {
-        ptoLogger.logError(e);
-    }
+	try
+	{
+		pub.connect();
+	} catch (const mqtt::exception& e)
+	{
+		ptoLogger.logError(e);
+	} catch(const std::exception& e)
+	{
+		ptoLogger.logError(e);
+	}
 
 	/**
 	 * @sensors : vector of sensors object with value type unsigned char (8 bit)
@@ -152,7 +155,7 @@ int main(int argc, const char *argv[])
 
 	// Setup sensors
 	for (auto sensor_type : Politocean::sensor_t())
-            sensors.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
+		sensors.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
 
 	// Setup the SPI communication
 	bool isCommunicating = true;
@@ -172,10 +175,10 @@ int main(int argc, const char *argv[])
 			std::vector<int> axes = listener.axes();
 
 			std::vector<int> axesBuffer = {
-                axes[Politocean::Constants::Commands::Axes::X],
-                axes[Politocean::Constants::Commands::Axes::Y],
-                axes[Politocean::Constants::Commands::Axes::RZ]
-            };
+				axes[Politocean::Constants::Commands::Axes::X],
+				axes[Politocean::Constants::Commands::Axes::Y],
+				axes[Politocean::Constants::Commands::Axes::RZ]
+			};
 
 			unsigned char data = Politocean::map(axesBuffer[sensor], 0, INT_MAX);
 			
@@ -184,7 +187,7 @@ int main(int argc, const char *argv[])
 			sensors[sensor].setValue(controller.SPIDataRW(data));
 
 			if (++sensor > sensors.size())
-                sensor = 0;
+			sensor = 0;
 		}
 	});
 	std::thread SPIButtonThread([&]() {
