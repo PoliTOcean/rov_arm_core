@@ -204,25 +204,32 @@ int main(int argc, const char *argv[])
 			
 			std::lock_guard<std::mutex> lock(mutex_);
 
-			sensors[sensor].setValue(controller.SPIDataRW(data));
+			sensors[sensor++].setValue(controller.SPIDataRW(data));
 
-			if (++sensor > sensors.size())
+			// Check if I received the last sensor
+			if (sensor > sensors.size())
 			sensor = 0;
 		}
 	});
 	std::thread SPIButtonThread([&]() {
 		while (joystickSubscriber.is_connected())
 		{
-
 			if(!listener.isButtonUpdated()) continue;
 
 			unsigned char data = listener.button();
 			
 			std::lock_guard<std::mutex> lock(mutex_);
-
-			sensors[sensor].setValue(controller.SPIDataRW(data));			
-
-			if (++sensor > sensors.size())
+			
+			// Tell to Microcontroller that there is arriving a command
+			sensors[sensor++].setValue(controller.SPIDataRW(0x00));
+			// Check if I received the last sensor
+			if (sensor > sensors.size())
+				sensor = 0;
+			
+			// Send to Microcontroller command
+			sensors[sensor++].setValue(controller.SPIDataRW(data));
+			// Check if I received the last sensor
+			if (sensor > sensors.size())
 				sensor = 0;
 		}
 	});
