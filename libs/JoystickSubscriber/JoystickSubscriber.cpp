@@ -59,8 +59,13 @@ void JoystickSubscriber::stopListening()
 {
     isListening_ = false;
     listeningThread_->join();
-    
+
     unsubscribeFrom({ Constants::Topics::JOYSTICK_BUTTONS, Constants::Topics::JOYSTICK_AXES });
+}
+
+bool JoystickSubscriber::isListening()
+{
+    return isListening_;
 }
 
 }
