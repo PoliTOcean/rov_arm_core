@@ -105,13 +105,45 @@ bool Listener::isButtonUpdated(){
  * Main section
  **************************************************/
 
+
+using namespace Politocean;
+using namespace Politocean::Constants;
+
 /**
  * @mutex : to handle the critical sections
  */
 std::mutex mutex_;
 
-using namespace Politocean;
-using namespace Politocean::Constants;
+/**
+ * @controller : to access to Raspberry Pi features
+ */
+Controller controller;
+
+/**
+ * @sensors : vector of sensors object with value type unsigned char (8 bit)
+ */
+std::vector<Sensor<unsigned char>> sensors;
+unsigned int sensor = 0;
+
+
+void sendBufferToSpi(const std::vector<unsigned char>& buffer){
+	for(unsigned int i=0; i<buffer.size(); ++i){
+		std::lock_guard<std::mutex> lock(mutex_);
+
+		unsigned char data = controller.SPIDataRW(data);
+
+		if(data==0xFF){
+			sensor=0;
+			continue;
+		}
+
+		sensors[sensor++].setValue(data);
+
+		// Check if I received the last sensor
+		if (sensor > sensors.size())
+			sensor = 0;
+	}
+}
 
 int main(int argc, const char *argv[])
 {
@@ -133,20 +165,15 @@ int main(int argc, const char *argv[])
 	}
 
 	/**
-	 * @sensors : vector of sensors object with value type unsigned char (8 bit)
-	 */
-	std::vector<Politocean::Sensor<unsigned char>> sensors;
-
-	/**
 	 * @joystickSubscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener			: object with the callbacks for @joystickSubscriber and methods to retreive data read
 	 */
-	Politocean::Subscriber joystickSubscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
+	Subscriber joystickSubscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @joystickSubscriber to joystick publisher topics
-	joystickSubscriber.subscribeTo(Politocean::Constants::Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	joystickSubscriber.subscribeTo(Politocean::Constants::Topics::JOYSTICK_BUTTONS,	&Listener::listenForButton, 	&listener);
+	joystickSubscriber.subscribeTo(Topics::JOYSTICK_AXES, 		&Listener::listenForAxes, 		&listener);
+	joystickSubscriber.subscribeTo(Topics::JOYSTICK_BUTTONS,	&Listener::listenForButton, 	&listener);
 
 	// Try to connect @joystickSubscriber
 	try
@@ -157,11 +184,6 @@ int main(int argc, const char *argv[])
 		std::cerr << "Error on subscriber connection : " << e.what() << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
-
-	/**
-	 * @controller : to access to Raspberry Pi features
-	 */
-	Politocean::Controller controller;
 
 	// Try to setup @controller
 	try
@@ -178,9 +200,6 @@ int main(int argc, const char *argv[])
 	for (auto sensor_type : Politocean::sensor_t())
 		sensors.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
 
-	// Setup the SPI communication
-	int sensor = 0;
-
 	/**
 	 * Threads that handle with SPI
 	 *
@@ -194,21 +213,14 @@ int main(int argc, const char *argv[])
 
 			std::vector<int> axes = listener.axes();
 
-			std::vector<int> axesBuffer = {
-				axes[Politocean::Constants::Commands::Axes::X],
-				axes[Politocean::Constants::Commands::Axes::Y],
-				axes[Politocean::Constants::Commands::Axes::RZ]
+			std::vector<unsigned char> buffer = {
+				0xFF,
+				(unsigned char) Politocean::map(axes[Commands::Axes::X], 0, INT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 0, INT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 0, INT_MAX, 1, UCHAR_MAX-1)
 			};
 
-			unsigned char data = Politocean::map(axesBuffer[sensor], 0, INT_MAX, 1, UCHAR_MAX-1);
-			
-			std::lock_guard<std::mutex> lock(mutex_);
-
-			sensors[sensor++].setValue(controller.SPIDataRW(data));
-
-			// Check if I received the last sensor
-			if (sensor > sensors.size())
-			sensor = 0;
+			sendBufferToSpi(buffer);
 		}
 	});
 	std::thread SPIButtonThread([&]() {
@@ -218,19 +230,12 @@ int main(int argc, const char *argv[])
 
 			unsigned char data = listener.button();
 			
-			std::lock_guard<std::mutex> lock(mutex_);
-			
-			// Tell to Microcontroller that there is arriving a command
-			sensors[sensor++].setValue(controller.SPIDataRW(0x00));
-			// Check if I received the last sensor
-			if (sensor > sensors.size())
-				sensor = 0;
-			
-			// Send to Microcontroller command
-			sensors[sensor++].setValue(controller.SPIDataRW(data));
-			// Check if I received the last sensor
-			if (sensor > sensors.size())
-				sensor = 0;
+			std::vector<unsigned char> buffer = {
+				0x00,
+				data
+			};
+
+			sendBufferToSpi(buffer);
 		}
 	});
 
