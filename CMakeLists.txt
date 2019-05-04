@@ -13,14 +13,10 @@ add_subdirectory(libs)
 include_directories(include)
 
 # Add executable
-add_executable(JoystickSub src/joystickSub.cpp)
+add_executable(JoystickSubscriber src/JoystickSubscriber.cpp)
 
 # Linking the libraries
-target_link_libraries(JoystickSub 
-    # Add here all the libraries as:
-    # Name_of_the_library       --- if it's internal (e.g. Subscriber)
-    # -lname_of_the_library     --- if it's a standard c++ library (e.g. -lpthread)
-    PolitoceanRovArmCore::JoystickSubscriber
-    PolitoceanCommon::mqttLogger
-    PolitoceanCommon::logger
-    PolitoceanCommon::Publisher)
+target_link_libraries(JoystickSubscriber
+    -lpthread
+    PolitoceanRovArmCore::Sensor PolitoceanRovArmCore::Controller
+    PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
