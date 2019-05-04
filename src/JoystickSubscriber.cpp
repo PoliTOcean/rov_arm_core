@@ -88,6 +88,9 @@ unsigned char Listener::button()
  * Main section
  **************************************************/
 
+/**
+ * @mutex : to handle the critical sections
+ */
 std::mutex mutex;
 
 int main(int argc, const char *argv[])
@@ -158,7 +161,6 @@ int main(int argc, const char *argv[])
 	/**
 	 * Threads that handle with SPI
 	 *
-	 * @mutex			: to handle with critical section (shared sensors variables)
 	 * @SPIAxesThread 	: sends axes via SPI
 	 * @SPIButtonThread	: sends buttons via SPI
 	 */
