@@ -40,6 +40,7 @@ class Listener
 	 */
 	std::vector<int> axes_;
 	unsigned char button_;
+	bool axesUpdated_ = false, buttonUpdated_ = false;
 
 public:
 	// Returns the @axes_ vector
@@ -59,6 +60,8 @@ public:
 	 */
 	void listenForAxes(const std::string& payload);
 	void listenForButton(const std::string& payload);
+	bool isAxesUpdated();
+	bool isButtonUpdated();
 
 };
 
@@ -67,21 +70,35 @@ void Listener::listenForAxes(const std::string& payload)
 	auto c_map = nlohmann::json::parse(payload);
 
 	axes_ = c_map["axes"].get<std::vector<int>>();
+
+	axesUpdated_ = true;
 }
 
 void Listener::listenForButton(const std::string& payload)
 {
 	button_ = static_cast<unsigned char>(std::stoi(payload));
+
+	buttonUpdated_ = true;
 }
 
 std::vector<int> Listener::axes()
 {
+	axesUpdated_ = false;
 	return axes_;
 }
 
 unsigned char Listener::button()
 {
+	buttonUpdated_ = false;
 	return button_;
+}
+
+bool Listener::isAxesUpdated(){
+	return axesUpdated_;
+}
+
+bool Listener::isButtonUpdated(){
+	return buttonUpdated_;
 }
 
 /***************************************************
@@ -91,14 +108,17 @@ unsigned char Listener::button()
 /**
  * @mutex : to handle the critical sections
  */
-std::mutex mutex;
+std::mutex mutex_;
+
+using namespace Politocean;
+using namespace Politocean::Constants;
 
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Politocean::Publisher pub("127.0.0.1", Politocean::Constants::Rov::CLIENT_ID);
-	Politocean::mqttLogger ptoLogger(&pub);
-	Politocean::logger::enableLevel(Politocean::logger::DEBUG, true);
+	Publisher pub(Hmi::IP_ADDRESS, Rov::SPI_ID_PUB);
+	mqttLogger ptoLogger(&pub);
+	logger::enableLevel(logger::DEBUG, true);
 
 	// Try to connect to publisher logger
 	try
@@ -121,7 +141,7 @@ int main(int argc, const char *argv[])
 	 * @joystickSubscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener			: object with the callbacks for @joystickSubscriber and methods to retreive data read
 	 */
-	Politocean::Subscriber joystickSubscriber(DFLT_ADDRESS, DFLT_CLIENT_ID);
+	Politocean::Subscriber joystickSubscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @joystickSubscriber to joystick publisher topics
@@ -150,6 +170,7 @@ int main(int argc, const char *argv[])
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
+		ptoLogger.logError(e);
 		std::exit(EXIT_FAILURE);
 	}
 
@@ -158,7 +179,6 @@ int main(int argc, const char *argv[])
 		sensors.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
 
 	// Setup the SPI communication
-	bool isCommunicating = true;
 	int sensor = 0;
 
 	/**
@@ -168,10 +188,10 @@ int main(int argc, const char *argv[])
 	 * @SPIButtonThread	: sends buttons via SPI
 	 */
 	std::thread SPIAxesThread([&]() {
-		while (isCommunicating)
+		while (joystickSubscriber.is_connected())
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			
+			if(!listener.isAxesUpdated()) continue;
+
 			std::vector<int> axes = listener.axes();
 
 			std::vector<int> axesBuffer = {
@@ -182,7 +202,7 @@ int main(int argc, const char *argv[])
 
 			unsigned char data = Politocean::map(axesBuffer[sensor], 0, INT_MAX);
 			
-			std::lock_guard<std::mutex> lock(mutex);
+			std::lock_guard<std::mutex> lock(mutex_);
 
 			sensors[sensor].setValue(controller.SPIDataRW(data));
 
@@ -191,18 +211,14 @@ int main(int argc, const char *argv[])
 		}
 	});
 	std::thread SPIButtonThread([&]() {
-		unsigned char lastButton = -1;
-
-		while (isCommunicating)
+		while (joystickSubscriber.is_connected())
 		{
+
+			if(!listener.isButtonUpdated()) continue;
+
 			unsigned char data = listener.button();
-
-			if (data == lastButton)
-				continue;
-
-			lastButton = data;
 			
-			std::lock_guard<std::mutex> lock(mutex);
+			std::lock_guard<std::mutex> lock(mutex_);
 
 			sensors[sensor].setValue(controller.SPIDataRW(data));			
 
