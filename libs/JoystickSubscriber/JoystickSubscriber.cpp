@@ -29,25 +29,37 @@ void JoystickSubscriber::listenForAxes(const std::string& payload)
 
 void JoystickSubscriber::startListening()
 {
+    if (isListening_)
+        return ;
+
     subscribeTo(Constants::Topics::JOYSTICK_AXES, &JoystickSubscriber::listenForAxes, this);
     subscribeTo(Constants::Topics::JOYSTICK_BUTTONS, &JoystickSubscriber::listenForButtons, this);
-    
-    std::vector<int> axesBuffer = {
-        axes_[COMMANDS::AXIS::X],
-        axes_[COMMANDS::AXIS::Y],
-        axes_[COMMANDS::AXIS::RZ]
-    };
 
-    unsigned char data = (current_ >= axesBuffer.size()) ? button_: map(axesBuffer[current_], 0, INT_MAX);
-    sensors_[current_].setValue(controller_.SPIDataRW(data));
+    isListening_ = true;
+    listeningThread_ = new std::thread([this]() {
+        while (isListening_)
+        {   
+            std::vector<int> axesBuffer = {
+                axes_[COMMANDS::AXIS::X],
+                axes_[COMMANDS::AXIS::Y],
+                axes_[COMMANDS::AXIS::RZ]
+            };
 
-    if (++current_ > sensors_.size())
-        current_ = 0;
+            unsigned char data = (current_ >= axesBuffer.size()) ? button_: map(axesBuffer[current_], 0, INT_MAX);
+            sensors_[current_].setValue(controller_.SPIDataRW(data));
+
+            if (++current_ > sensors_.size())
+                current_ = 0;
+        }
+    });
 
 }
 
 void JoystickSubscriber::stopListening()
 {
+    isListening_ = false;
+    listeningThread_->join();
+    
     unsubscribeFrom({ Constants::Topics::JOYSTICK_BUTTONS, Constants::Topics::JOYSTICK_AXES });
 }
 

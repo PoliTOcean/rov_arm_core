@@ -39,6 +39,8 @@ class JoystickSubscriber : public Subscriber
      * listenForButtons : converts the string @payload into an unsigned char value and stores it inside @button_.
      * listenForAxes    : parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
      */
+    bool isListening_;
+    std::thread *listeningThread_;
     void listenForButtons(const std::string& payload);
     void listenForAxes(const std::string& payload);
 
@@ -61,7 +63,7 @@ public:
      * @clientID: subscriber client id
      */
     JoystickSubscriber(const std::string& address, const std::string& clientID) 
-        : Subscriber(address, clientID), controller_(), current_(0)
+        : Subscriber(address, clientID), controller_(), current_(0), isListening_(false), listeningThread_(nullptr)
     {
         for (auto sensor_type : sensor_t())
             sensors_.emplace_back(Sensor<unsigned char>(sensor_type, 0));
