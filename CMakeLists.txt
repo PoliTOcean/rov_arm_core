@@ -14,9 +14,15 @@ include_directories(include)
 
 # Add executable
 add_executable(JoystickSubscriber src/JoystickSubscriber.cpp)
+add_executable(Arm src/Arm.cpp)
 
 # Linking the libraries
 target_link_libraries(JoystickSubscriber
     -lpthread
     PolitoceanRovArmCore::Sensor PolitoceanRovArmCore::Controller
     PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
+
+
+target_link_libraries(Arm
+    PolitoceanCommon::Subscriber
+    -lwiringPi -lrt -lcrypt)
