@@ -127,8 +127,10 @@ unsigned int sensor = 0;
 
 
 void sendBufferToSpi(const std::vector<unsigned char>& buffer){
+
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	for(unsigned int i=0; i<buffer.size(); ++i){
-		std::lock_guard<std::mutex> lock(mutex_);
 
 		unsigned char data = controller.SPIDataRW(data);
 
@@ -223,6 +225,7 @@ int main(int argc, const char *argv[])
 			sendBufferToSpi(buffer);
 		}
 	});
+	
 	std::thread SPIButtonThread([&]() {
 		while (joystickSubscriber.is_connected())
 		{
@@ -243,5 +246,8 @@ int main(int argc, const char *argv[])
 	SPIAxesThread.join();
 	SPIButtonThread.join();
 
+	//safe reset at the end
+	controller.reset();
+	
 	return 0;
 }
