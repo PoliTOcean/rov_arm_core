@@ -12,6 +12,7 @@ add_subdirectory(libs)
 
 # Add executable
 add_executable(RovArmCore main.cpp)
+add_executable(Arm src/Arm.cpp)
 
 # Linking the libraries
 target_link_libraries(RovArmCore 
@@ -22,3 +23,8 @@ target_link_libraries(RovArmCore
     PolitoceanCommon::mqttLogger
     PolitoceanCommon::logger
     PolitoceanCommon::Publisher)
+
+
+target_link_libraries(Arm
+    PolitoceanCommon::Subscriber
+    -lwiringPi -lrt -lcrypt)

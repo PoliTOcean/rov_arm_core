@@ -9,7 +9,7 @@ public:
     JoystickSubscriber() : JoystickSubscriber(DFLT_ADDRESS, DFLT_CLIENT_ID, DFLT_TOPIC) {}
 
     JoystickSubscriber(const std::string& address, const std::string& clientID, const std::string& topic) 
-        : Subscriber(address, clientID, topic, &JoystickSubscriber::callback, this) {}
+        : Subscriber(address, clientID) {}
 
     void callback(const std::string& payload);
 };
