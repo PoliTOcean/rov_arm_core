@@ -19,8 +19,11 @@ int main(){
     int acc[3] = { 0, 0, 0 };
 
     while(true){
-        value |= controller.SPIDataRW(0xFF);
-
+        unsigned char dato = controller.SPIDataRW(0xFF);
+        if(dato==0xFF){
+            continue; 
+        }
+        value |= dato;
         if(nReading % 2 == 1){
             acc[nReading / 2] = value;
             value = 0;
