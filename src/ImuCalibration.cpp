@@ -20,7 +20,7 @@ int main(){
     int acc[3] = { 0, 0, 0 };
 
     while(true){
-        usleep(30);
+        usleep(30000);
         unsigned char dato = controller.SPIDataRW(0xFF);
         if(dato==0xFF){
             continue; 
