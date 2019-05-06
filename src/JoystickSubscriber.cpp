@@ -238,7 +238,7 @@ int main(int argc, const char *argv[])
 			if(!listener.isButtonUpdated()) continue;
 
 			std::string btn = listener.button();
-			unsigned char data;
+			unsigned char data = 0xFF;
 			if(btn==Commands::Actions::MOTORS_SWAP){
 				started = !started;
 				if(started) data = 0x01;
