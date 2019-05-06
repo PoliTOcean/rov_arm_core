@@ -36,7 +36,7 @@ class Listener
 					(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	string button_;
+	std::string button_;
 
 	/**
 	 * @axesUpdated_	: it is true if @axes_ values has changed
@@ -49,7 +49,7 @@ public:
 	std::vector<int> axes();
 
 	// Returns the @button_ variable
-	unsigned char button();
+	std::string button();
 
 	/**
 	 * Callback functions.
@@ -90,7 +90,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-string Listener::button()
+std::string Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -237,7 +237,7 @@ int main(int argc, const char *argv[])
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			string btn = listener.button();
+			std::string btn = listener.button();
 			unsigned char data;
 			if(btn==Commands::Actions::MOTORS_SWAP){
 				started = !started;
@@ -265,7 +265,7 @@ int main(int argc, const char *argv[])
 			}
 
 			if (!sendToSPI)
-				continue;*
+				continue;*/
 
 			std::vector<unsigned char> buffer = {
 				0x00,
