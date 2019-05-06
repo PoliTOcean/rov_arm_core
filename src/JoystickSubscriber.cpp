@@ -36,7 +36,7 @@ class Listener
 					(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	unsigned char button_;
+	string button_;
 
 	/**
 	 * @axesUpdated_	: it is true if @axes_ values has changed
@@ -127,11 +127,11 @@ void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffe
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	for(auto it = buffer.begin(); it != buffer.end(); it++)
+	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
 		unsigned char data = controller.SPIDataRW(*it);
 
-		if(*it == 0xFF)
+		if (*it == 0xFF)
 		{
 			sensor=0;
 			it = buffer.begin();
@@ -173,8 +173,8 @@ int main(int argc, const char *argv[])
 	Listener listener;
 
 	// Subscribe @joystickSubscriber to joystick publisher topics
-	joystickSubscriber.subscribeTo(Topics::JOYSTICK_AXES, 		&Listener::listenForAxes, 		&listener);
-	joystickSubscriber.subscribeTo(Topics::JOYSTICK_BUTTONS,	&Listener::listenForButton, 	&listener);
+	joystickSubscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
+	joystickSubscriber.subscribeTo(Topics::BUTTONS,			&Listener::listenForButton, 	&listener);
 
 	// Try to connect @joystickSubscriber
 	try
@@ -189,7 +189,7 @@ int main(int argc, const char *argv[])
 	/**
 	 * @controller : to access to Raspberry Pi features
 	 */
-	
+
 	Controller controller;
 
 	// Try to setup @controller
@@ -244,10 +244,12 @@ int main(int argc, const char *argv[])
 			switch (id)
 			{
 				case Constants::Commands::Buttons::RESET:
-					controller.reset();
+					if (value)
+						controller.reset();
 					break;
 				case Constants::Commands::Buttons::MOTORS:
-					controller.switchMotors();
+					if (value)
+						controller.switchMotors();
 					break;
 				default:
 					sendToSPI = true;
