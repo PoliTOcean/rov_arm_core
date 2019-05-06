@@ -79,7 +79,7 @@ void Listener::listenForAxes(const std::string& payload)
 
 void Listener::listenForButton(const std::string& payload)
 {
-	button_ = static_cast<unsigned char>(std::stoi(payload));
+	button_ = payload;
 
 	buttonUpdated_ = true;
 }
@@ -150,7 +150,7 @@ void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffe
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Hmi::IP_ADDRESS, Rov::SPI_ID_PUB);
+	Publisher pub("10.0.0.1", Rov::SPI_ID_PUB);
 	mqttLogger ptoLogger(&pub);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -170,7 +170,7 @@ int main(int argc, const char *argv[])
 	 * @joystickSubscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener			: object with the callbacks for @joystickSubscriber and methods to retreive data read
 	 */
-	Subscriber joystickSubscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
+	Subscriber joystickSubscriber("10.0.0.1", Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @joystickSubscriber to joystick publisher topics
