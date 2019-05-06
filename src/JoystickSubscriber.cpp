@@ -111,6 +111,7 @@ bool Listener::isButtonUpdated(){
 
 using namespace Politocean;
 using namespace Politocean::Constants;
+using namespace std;
 
 /**
  * @mutex : to handle the critical sections
@@ -238,7 +239,7 @@ int main(int argc, const char *argv[])
 
 			string btn = listener.button();
 			unsigned char data;
-			if(btn==Actions::MOTORS_SWAP){
+			if(btn==Commands::Actions::MOTORS_SWAP){
 				started = !started;
 				if(started) data = 0x01;
 				else 0x02;
