@@ -5,20 +5,18 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include <climits>
+#include "PolitoceanConstants.h"
 
 namespace Politocean {
 
-namespace PINOUT {
-    static const int RESET = 7;
-}
-
 class Controller {
+    bool motors_;
+
 public:
     static const int DEFAULT_SPI_CHANNEL    = 0;
     static const int DEFAULT_SPI_SPEED      = 1000000;
 
-    Controller() = default;
+    Controller() : motors_(false) {}
 
     // It sets up the controller
     void setup();
@@ -29,6 +27,8 @@ public:
      * @data : value to send via SPI
      */
     unsigned char SPIDataRW(unsigned char data);
+
+    void switchMotors();
 
     // It resets the controller
     void reset();

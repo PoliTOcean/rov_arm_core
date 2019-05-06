@@ -35,10 +35,17 @@ unsigned char Controller::SPIDataRW(unsigned char data)
 
 void Controller::reset()
 {
-    digitalWrite(PINOUT::RESET, LOW);
+    digitalWrite(Constants::Pinout::RESET, LOW);
     usleep(100);
-    digitalWrite(PINOUT::RESET, HIGH);
+    digitalWrite(Constants::Pinout::RESET, HIGH);
     sleep(3);
+}
+
+void Controller::switchMotors()
+{
+    motors_ = !motors_;
+    
+    digitalWrite(Constants::Pinout::MOTORS, motors_);
 }
 
 }
