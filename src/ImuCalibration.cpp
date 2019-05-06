@@ -2,6 +2,7 @@
 #include "Controller.h"
 #include "mqttLogger.h"
 #include "Publisher.h"
+#include <unistd.h>
 
 using namespace std;
 using namespace Politocean;
@@ -19,6 +20,7 @@ int main(){
     int acc[3] = { 0, 0, 0 };
 
     while(true){
+        usleep(30);
         unsigned char dato = controller.SPIDataRW(0xFF);
         if(dato==0xFF){
             continue; 
