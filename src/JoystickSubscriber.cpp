@@ -68,9 +68,8 @@ public:
 void Listener::listenForAxes(const std::string& payload)
 {
 	auto c_map = nlohmann::json::parse(payload);
-
-	axes_ = c_map["axes"].get<std::vector<int>>();
-
+	axes_ = c_map.get<std::vector<int>>();
+	
 	axesUpdated_ = true;
 }
 
@@ -117,7 +116,7 @@ std::mutex mutex_;
 /**
  * @controller : to access to Raspberry Pi features
  */
-Controller controller;
+// Controller controller;
 
 /**
  * @sensors : vector of sensors object with value type unsigned char (8 bit)
@@ -132,14 +131,14 @@ void sendBufferToSpi(const std::vector<unsigned char>& buffer){
 
 	for(unsigned int i=0; i<buffer.size(); ++i){
 
-		unsigned char data = controller.SPIDataRW(data);
+		// unsigned char data = controller.SPIDataRW(data);
 
-		if(data==0xFF){
+		if(buffer[i]==0xFF){
 			sensor=0;
 			continue;
 		}
 
-		sensors[sensor++].setValue(data);
+		sensors[sensor++].setValue(i);
 
 		// Check if I received the last sensor
 		if (sensor >= sensors.size())
@@ -188,6 +187,7 @@ int main(int argc, const char *argv[])
 	}
 
 	// Try to setup @controller
+	/*
 	try
 	{
 		controller.setup();
@@ -197,6 +197,7 @@ int main(int argc, const char *argv[])
 		ptoLogger.logError(e);
 		std::exit(EXIT_FAILURE);
 	}
+	*/
 
 	// Setup sensors
 	for (auto sensor_type : Politocean::sensor_t())
@@ -211,18 +212,17 @@ int main(int argc, const char *argv[])
 	std::thread SPIAxesThread([&]() {
 		while (joystickSubscriber.is_connected())
 		{
-			if(!listener.isAxesUpdated()) continue;
-
 			std::vector<int> axes = listener.axes();
 
+			/*
 			std::vector<unsigned char> buffer = {
-				0xFF,
 				(unsigned char) Politocean::map(axes[Commands::Axes::X], 0, INT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 0, INT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 0, INT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			sendBufferToSpi(buffer);
+			*/
 		}
 	});
 	
