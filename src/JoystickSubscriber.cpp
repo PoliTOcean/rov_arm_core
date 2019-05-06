@@ -36,7 +36,7 @@ class Listener
 					(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	std::string button_;
+	string button_;
 
 	/**
 	 * @axesUpdated_	: it is true if @axes_ values has changed
@@ -49,7 +49,7 @@ public:
 	std::vector<int> axes();
 
 	// Returns the @button_ variable
-	std::string button();
+	unsigned char button();
 
 	/**
 	 * Callback functions.
@@ -79,7 +79,7 @@ void Listener::listenForAxes(const std::string& payload)
 
 void Listener::listenForButton(const std::string& payload)
 {
-	button_ = payload;
+	button_ = static_cast<unsigned char>(std::stoi(payload));
 
 	buttonUpdated_ = true;
 }
@@ -90,7 +90,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-std::string Listener::button()
+unsigned char Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -111,7 +111,6 @@ bool Listener::isButtonUpdated(){
 
 using namespace Politocean;
 using namespace Politocean::Constants;
-using namespace std;
 
 /**
  * @mutex : to handle the critical sections
@@ -150,7 +149,7 @@ void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffe
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub("10.0.0.1", Rov::SPI_ID_PUB);
+	Publisher pub(Hmi::IP_ADDRESS, Rov::SPI_ID_PUB);
 	mqttLogger ptoLogger(&pub);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -170,7 +169,7 @@ int main(int argc, const char *argv[])
 	 * @joystickSubscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener			: object with the callbacks for @joystickSubscriber and methods to retreive data read
 	 */
-	Subscriber joystickSubscriber("10.0.0.1", Rov::SPI_ID_SUB);
+	Subscriber joystickSubscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @joystickSubscriber to joystick publisher topics
@@ -232,19 +231,11 @@ int main(int argc, const char *argv[])
 	});
 	
 	std::thread SPIButtonThread([&]() {
-		bool started = false;
 		while (joystickSubscriber.is_connected())
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			std::string btn = listener.button();
-			unsigned char data = 0xFF;
-			if(btn==Commands::Actions::MOTORS_SWAP){
-				started = !started;
-				if(started) data = 0x01;
-				else 0x02;
-			}
-		/*	
+			unsigned char data = listener.button();
 
 			bool value 				= (data >> 7) & 0x01;
       		unsigned short int id 	= data & 0x7F;
@@ -265,7 +256,7 @@ int main(int argc, const char *argv[])
 			}
 
 			if (!sendToSPI)
-				continue;*/
+				continue;
 
 			std::vector<unsigned char> buffer = {
 				0x00,
