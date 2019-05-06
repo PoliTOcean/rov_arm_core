@@ -134,6 +134,7 @@ void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffe
 		if(*it == 0xFF)
 		{
 			sensor=0;
+			it = buffer.begin();
 			continue;
 		}
 
@@ -235,6 +236,25 @@ int main(int argc, const char *argv[])
 			if(!listener.isButtonUpdated()) continue;
 
 			unsigned char data = listener.button();
+
+			bool value 				= (data >> 7) & 0x01;
+      		unsigned short int id 	= data & 0x7F;
+
+			bool sendToSPI 			= false;
+			switch (id)
+			{
+				case Constants::Commands::Buttons::RESET:
+					controller.reset();
+					break;
+				case Constants::Commands::Buttons::MOTORS:
+					controller.switchMotors();
+					break;
+				default:
+					sendToSPI = true;
+			}
+
+			if (!sendToSPI)
+				continue;
 
 			std::vector<unsigned char> buffer = {
 				0x00,
