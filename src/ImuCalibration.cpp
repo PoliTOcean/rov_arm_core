@@ -9,7 +9,7 @@ using namespace Politocean;
 int main(){
     Controller controller;
     Publisher pub("10.0.0.1", "imuCalibration");
-
+    pub.connect();
     mqttLogger ptoLogger(&pub);
 
     controller.setup();
