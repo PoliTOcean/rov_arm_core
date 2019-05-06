@@ -21,9 +21,6 @@
 
 #include "json.hpp"
 
-#define DFLT_ADDRESS 	"tcp://localhost:1883"
-#define DFLT_CLIENT_ID	"JoystickSubscriber"
-
 /***************************************************
  * Listener class for JoystickSubscriber
  **************************************************/
@@ -40,6 +37,11 @@ class Listener
 	 */
 	std::vector<int> axes_;
 	unsigned char button_;
+
+	/**
+	 * @axesUpdated_	: it is true if @axes_ values has changed
+	 * @buttonUpdated_	: it is true if @button_ value has changed
+	 */
 	bool axesUpdated_ = false, buttonUpdated_ = false;
 
 public:
@@ -60,6 +62,8 @@ public:
 	 */
 	void listenForAxes(const std::string& payload);
 	void listenForButton(const std::string& payload);
+
+	// To check if @axes_ values or @button_ value has changed
 	bool isAxesUpdated();
 	bool isButtonUpdated();
 
@@ -114,31 +118,26 @@ using namespace Politocean::Constants;
 std::mutex mutex_;
 
 /**
- * @controller : to access to Raspberry Pi features
- */
-// Controller controller;
-
-/**
  * @sensors : vector of sensors object with value type unsigned char (8 bit)
  */
 std::vector<Sensor<unsigned char>> sensors;
 unsigned int sensor = 0;
 
-
-void sendBufferToSpi(const std::vector<unsigned char>& buffer){
+void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffer){
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	for(unsigned int i=0; i<buffer.size(); ++i){
+	for(auto it = buffer.begin(); it != buffer.end(); it++)
+	{
+		unsigned char data = controller.SPIDataRW(*it);
 
-		// unsigned char data = controller.SPIDataRW(data);
-
-		if(buffer[i]==0xFF){
+		if(*it == 0xFF)
+		{
 			sensor=0;
 			continue;
 		}
 
-		sensors[sensor++].setValue(i);
+		sensors[sensor++].setValue(data);
 
 		// Check if I received the last sensor
 		if (sensor >= sensors.size())
@@ -186,8 +185,13 @@ int main(int argc, const char *argv[])
 		std::exit(EXIT_FAILURE);
 	}
 
+	/**
+	 * @controller : to access to Raspberry Pi features
+	 */
+	
+	Controller controller;
+
 	// Try to setup @controller
-	/*
 	try
 	{
 		controller.setup();
@@ -197,7 +201,6 @@ int main(int argc, const char *argv[])
 		ptoLogger.logError(e);
 		std::exit(EXIT_FAILURE);
 	}
-	*/
 
 	// Setup sensors
 	for (auto sensor_type : Politocean::sensor_t())
@@ -212,17 +215,17 @@ int main(int argc, const char *argv[])
 	std::thread SPIAxesThread([&]() {
 		while (joystickSubscriber.is_connected())
 		{
+			if(!listener.isAxesUpdated()) continue;
+
 			std::vector<int> axes = listener.axes();
 
-			/*
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Politocean::map(axes[Commands::Axes::X], 0, INT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 0, INT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 0, INT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Politocean::map(axes[Commands::Axes::X],	0, INT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 	0, INT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 	0, INT_MAX, 1, UCHAR_MAX-1)
 			};
 
-			sendBufferToSpi(buffer);
-			*/
+			bufferToSPI(controller, buffer);
 		}
 	});
 	
@@ -232,13 +235,13 @@ int main(int argc, const char *argv[])
 			if(!listener.isButtonUpdated()) continue;
 
 			unsigned char data = listener.button();
-			
+
 			std::vector<unsigned char> buffer = {
 				0x00,
 				data
 			};
 
-			sendBufferToSpi(buffer);
+			bufferToSPI(controller, buffer);
 		}
 	});
 
