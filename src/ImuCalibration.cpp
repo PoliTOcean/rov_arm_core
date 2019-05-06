@@ -22,9 +22,7 @@ int main(){
     while(true){
         usleep(30000);
         unsigned char dato = controller.SPIDataRW(0xFF);
-        if(dato==0xFF){
-            continue; 
-        }
+
         value <<= 8;
         value |= dato;
         if(nReading % 2 == 1){
