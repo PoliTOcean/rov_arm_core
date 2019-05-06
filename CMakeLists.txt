@@ -15,6 +15,7 @@ include_directories(include)
 # Add executable
 add_executable(JoystickSubscriber src/JoystickSubscriber.cpp)
 add_executable(Arm src/Arm.cpp)
+add_executable(ImuCalibration src/ImuCalibration.cpp)
 
 # Linking the libraries
 target_link_libraries(JoystickSubscriber
@@ -26,3 +27,6 @@ target_link_libraries(JoystickSubscriber
 target_link_libraries(Arm
     PolitoceanCommon::Subscriber
     -lwiringPi -lrt -lcrypt)
+
+target_link_libraries(ImuCalibration
+    PolitoceanRovArmCore::Controller)
