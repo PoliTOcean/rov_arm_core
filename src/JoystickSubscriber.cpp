@@ -90,7 +90,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-unsigned char Listener::button()
+string Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -231,11 +231,19 @@ int main(int argc, const char *argv[])
 	});
 	
 	std::thread SPIButtonThread([&]() {
+		bool started = false;
 		while (joystickSubscriber.is_connected())
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data = listener.button();
+			string btn = listener.button();
+			unsigned char data;
+			if(btn==Actions::MOTORS_SWAP){
+				started = !started;
+				if(started) data = 0x01;
+				else 0x02;
+			}
+		/*	
 
 			bool value 				= (data >> 7) & 0x01;
       		unsigned short int id 	= data & 0x7F;
@@ -256,7 +264,7 @@ int main(int argc, const char *argv[])
 			}
 
 			if (!sendToSPI)
-				continue;
+				continue;*
 
 			std::vector<unsigned char> buffer = {
 				0x00,
