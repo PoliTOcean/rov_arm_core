@@ -29,4 +29,6 @@ target_link_libraries(Arm
     -lwiringPi -lrt -lcrypt)
 
 target_link_libraries(ImuCalibration
-    PolitoceanRovArmCore::Controller)
+    PolitoceanRovArmCore::Controller
+    PolitoceanCommon::Publisher
+    PolitoceanCommon::mqttLogger)

@@ -1,11 +1,16 @@
 #include <iostream>
 #include "Controller.h"
+#include "mqttLogger.h"
+#include "Publisher.h"
 
 using namespace std;
 using namespace Politocean;
 
 int main(){
     Controller controller;
+    Publisher pub("10.0.0.1", "imuCalibration");
+
+    mqttLogger ptoLogger(&pub);
 
     controller.setup();
     
@@ -22,10 +27,13 @@ int main(){
         }
 
         if(nReading == 5){
-            cout << acc[0] << "\t" << acc[1] << "\t" << acc[2] << endl;
+            stringstream ss;
+            ss << acc[0] << "\t" << acc[1] << "\t" << acc[2];
+            ptoLogger.logInfo(ss.str());
             nReading = 0;
         }else
             nReading++;
+        
     }
 
     return 0;
