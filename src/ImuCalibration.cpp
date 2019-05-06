@@ -12,7 +12,6 @@ int main(){
     Publisher pub("10.0.0.1", "imuCalibration");
     pub.connect();
     mqttLogger ptoLogger(&pub);
-    logger::enableLevel(logger::INFO, false);
 
     controller.setup();
     
@@ -29,7 +28,6 @@ int main(){
         value <<= 8;
         value |= dato;
         if(nReading % 2 == 1){
-            cout << value << nReading << endl;
             acc[nReading / 2] = value;
             value = 0;
         }
