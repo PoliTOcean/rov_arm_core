@@ -26,6 +26,7 @@ int main(){
         if(dato==0xFF){
             continue; 
         }
+        value <<= 8;
         value |= dato;
         if(nReading % 2 == 1){
             cout << value << nReading << endl;
