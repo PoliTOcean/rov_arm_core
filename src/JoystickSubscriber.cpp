@@ -123,14 +123,14 @@ std::mutex mutex_;
 std::vector<Sensor<unsigned char>> sensors;
 unsigned int sensor = 0;
 
-void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffer){
+void bufferToSPI(Controller &controller, std::vector<unsigned char> buffer){
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
 		std::cout << "Sending: " << *it << std::endl;
-		
+
 		unsigned char data = controller.SPIDataRW(*it);
 
 		if (*it == 0xFF)
