@@ -237,7 +237,7 @@ int main(int argc, const char *argv[])
 
 			unsigned char data = listener.button();
 
-			std::cout << "Received: " << data << std::endl;
+			std::cout << "Received: " << (int)data << std::endl;
 
 			bool sendToSPI 			= false;
 			switch (data)
