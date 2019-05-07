@@ -36,7 +36,7 @@ class Listener
 					(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	string button_;
+	unsigned char button_;
 
 	/**
 	 * @axesUpdated_	: it is true if @axes_ values has changed
@@ -243,13 +243,11 @@ int main(int argc, const char *argv[])
 			bool sendToSPI 			= false;
 			switch (id)
 			{
-				case Constants::Commands::Buttons::RESET:
-					if (value)
-						controller.reset();
+				case Constants::Commands::Actions::RESET:
+					controller.reset();
 					break;
-				case Constants::Commands::Buttons::MOTORS:
-					if (value)
-						controller.switchMotors();
+				case Constants::Commands::Actions::MOTORS_SWAP:
+					controller.switchMotors();
 					break;
 				default:
 					sendToSPI = true;
