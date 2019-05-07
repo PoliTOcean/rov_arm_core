@@ -123,14 +123,12 @@ std::mutex mutex_;
 std::vector<Sensor<unsigned char>> sensors;
 unsigned int sensor = 0;
 
-void bufferToSPI(Controller &controller, std::vector<unsigned char> buffer){
+void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffer){
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
-	{
-		std::cout << "Sending: " << *it << std::endl;
-
+	{	
 		unsigned char data = controller.SPIDataRW(*it);
 
 		if (*it == 0xFF)
@@ -221,6 +219,11 @@ int main(int argc, const char *argv[])
 			if(!listener.isAxesUpdated()) continue;
 
 			std::vector<int> axes = listener.axes();
+
+			for (auto it = axes.begin(); it != axes.end(); it++)
+				std::cout << (int)*it << "\t";
+			std::cout << std::endl;
+			
 
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Politocean::map(axes[Commands::Axes::X],	0, INT_MAX, 1, UCHAR_MAX-1),
