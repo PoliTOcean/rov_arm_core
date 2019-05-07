@@ -237,11 +237,8 @@ int main(int argc, const char *argv[])
 
 			unsigned char data = listener.button();
 
-			bool value 				= (data >> 7) & 0x01;
-      		unsigned short int id 	= data & 0x7F;
-
 			bool sendToSPI 			= false;
-			switch (id)
+			switch (data)
 			{
 				case Constants::Commands::Actions::RESET:
 					controller.reset();
