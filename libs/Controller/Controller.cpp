@@ -17,10 +17,13 @@ namespace Politocean {
 
 void Controller::setup()
 {
-    wiringPiSetup();
+    wiringPiSetupPhys();
     wiringPiSPISetup(DEFAULT_SPI_CHANNEL, DEFAULT_SPI_SPEED);
 
     pinMode(Constants::Pinout::MOTORS, OUTPUT);
+    pinMode(Constants::Pinout::RESET, OUTPUT);
+    
+    reset();
 
     std::cout << "Controller is ready" << std::endl;
 }
