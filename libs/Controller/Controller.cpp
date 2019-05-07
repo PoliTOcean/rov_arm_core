@@ -17,7 +17,7 @@ namespace Politocean {
 
 void Controller::setup()
 {
-    wiringPiSetupPhys();
+    wiringPiSetup();
     wiringPiSPISetup(DEFAULT_SPI_CHANNEL, DEFAULT_SPI_SPEED);
 
     pinMode(Constants::Pinout::MOTORS, OUTPUT);
