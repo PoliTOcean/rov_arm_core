@@ -129,6 +129,8 @@ void bufferToSPI(Controller &controller, const std::vector<unsigned char>& buffe
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
+		std::cout << "Sending: " << *it << std::endl;
+		
 		unsigned char data = controller.SPIDataRW(*it);
 
 		if (*it == 0xFF)
