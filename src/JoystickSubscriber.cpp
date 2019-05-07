@@ -220,11 +220,6 @@ int main(int argc, const char *argv[])
 
 			std::vector<int> axes = listener.axes();
 
-			for (auto it = axes.begin(); it != axes.end(); it++)
-				std::cout << (int)*it << "\t";
-			std::cout << std::endl;
-			
-
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Politocean::map(axes[Commands::Axes::X],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
