@@ -226,9 +226,9 @@ int main(int argc, const char *argv[])
 			
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Politocean::map(axes[Commands::Axes::X],	0, INT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 	0, INT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 	0, INT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Politocean::map(axes[Commands::Axes::X],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::Y], 	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::Axes::RZ], 	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			bufferToSPI(controller, buffer);
