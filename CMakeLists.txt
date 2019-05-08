@@ -10,21 +10,25 @@ include_directories(politocean_common/include)
 # Add project internal libs
 add_subdirectory(libs)
 
+include_directories(include)
+
 # Add executable
-add_executable(RovArmCore main.cpp)
+add_executable(JoystickSubscriber src/JoystickSubscriber.cpp)
 add_executable(Arm src/Arm.cpp)
+add_executable(ImuCalibration src/ImuCalibration.cpp)
 
 # Linking the libraries
-target_link_libraries(RovArmCore 
-    # Add here all the libraries as:
-    # Name_of_the_library       --- if it's internal (e.g. Subscriber)
-    # -lname_of_the_library     --- if it's a standard c++ library (e.g. -lpthread)
-    PolitoceanRovArmCore::JoystickSubscriber
-    PolitoceanCommon::mqttLogger
-    PolitoceanCommon::logger
-    PolitoceanCommon::Publisher)
+target_link_libraries(JoystickSubscriber
+    -lpthread
+    PolitoceanRovArmCore::Sensor PolitoceanRovArmCore::Controller
+    PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
 
 
 target_link_libraries(Arm
     PolitoceanCommon::Subscriber
     -lwiringPi -lrt -lcrypt)
+
+target_link_libraries(ImuCalibration
+    PolitoceanRovArmCore::Controller
+    PolitoceanCommon::Publisher
+    PolitoceanCommon::mqttLogger)
