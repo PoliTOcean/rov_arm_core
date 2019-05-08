@@ -55,7 +55,7 @@ bool ButtonListener::isUpdated()
  ******************************************************/
 
 class StepperListener {
-	Controller::Direction direction_;
+	Controller::Direction direction_ = Controller::Direction::NONE;
 
 public:
 	void listen(const std::string& payload);
@@ -102,6 +102,9 @@ public:
 	bool isShouldering();
 	bool isWristing();
 	bool isMoving();
+
+	void enable(Controller::Stepper stepper);
+	void disable(Controller::Stepper stepper);
 };
 
 void Arm::setup()
@@ -126,6 +129,7 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 
 			std::cout << "Starting shoulder...\n";
 
+			enable(Controller::Stepper::SHOULDER);
 			isShouldering_ = true;
 			isMoving_ = true;
 			shoulderThread = new std::thread([&]() {
@@ -134,11 +138,8 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 					Controller::Direction direction = listener.getDirection();
 
 					if (direction == Controller::Direction::NONE)
-					{
-						controller.set(Controller::Stepper::SHOULDER, 1);
 						continue;
-					}
-
+					
 					controller.set(Controller::Stepper::SHOULDER, direction);
 					controller.step(Controller::Stepper::SHOULDER);		
 				}
@@ -160,7 +161,7 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 
 					if (direction == Controller::Direction::NONE)
 					{
-						controller.set(Controller::Stepper::WRIST, 1);
+						disable(Controller::Stepper::WRIST);
 						continue;
 					}
 
@@ -173,6 +174,29 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 		default: break;
 	}
 }
+
+void Arm::enable(Controller::Stepper stepper){
+	switch(stepper){
+		case Controller::Stepper::WRIST:
+			controller.set(Controller::Stepper::WRIST, 0);
+			break;
+		case Controller::Stepper::SHOULDER:
+			controller.set(Controller::Stepper::SHOULDER, 0);
+			break;
+	}
+}
+
+void Arm::disable(Controller::Stepper stepper){
+	switch(stepper){
+		case Controller::Stepper::WRIST:
+			controller.set(Controller::Stepper::WRIST, 1);
+			break;
+		case Controller::Stepper::SHOULDER:
+			controller.set(Controller::Stepper::SHOULDER, 1);
+			break;
+	}
+}
+
 
 void Arm::stop()
 {
@@ -253,6 +277,7 @@ int main (void)
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
 				arm.stop(Controller::Stepper::WRIST);
+				arm.disable(Controller::Stepper::WRIST);
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
@@ -261,6 +286,7 @@ int main (void)
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
 				arm.stop(Controller::Stepper::SHOULDER);
+				arm.disable(Controller::Stepper::SHOULDER);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
