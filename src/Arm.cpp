@@ -221,7 +221,7 @@ bool Arm::isMoving()
 
 int main (void)
 {
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
+	Subscriber subscriber(Constants::Hmi::IP_ADDRESS, Constants::Rov::ARM_ID);
 	StepperListener shoulderListener, wristListener;
 	ButtonListener buttonListener;
 
