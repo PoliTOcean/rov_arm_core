@@ -196,6 +196,8 @@ int main(int argc, const char *argv[])
 	try
 	{
 		controller.setup();
+		controller.setupMotors();
+		controller.setupSPI();
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
