@@ -129,7 +129,6 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 
 			std::cout << "Starting shoulder...\n";
 
-			enable(Controller::Stepper::SHOULDER);
 			isShouldering_ = true;
 			isMoving_ = true;
 			shoulderThread = new std::thread([&]() {
@@ -281,6 +280,7 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
+				arm.enable(Controller::Stepper::WRIST);
 				arm.start(Controller::Stepper::WRIST, wristListener);
 				break;
 
@@ -290,6 +290,7 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
+				arm.enable(Controller::Stepper::SHOULDER);
 				arm.start(Controller::Stepper::SHOULDER, shoulderListener);
 				break;
 		}
