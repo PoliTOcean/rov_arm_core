@@ -6,8 +6,6 @@
 
 #include "PolitoceanConstants.h"
 
-#include "json.hpp"
-
 using namespace Politocean;
 
 /*******************************************************
