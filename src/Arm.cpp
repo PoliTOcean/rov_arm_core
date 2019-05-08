@@ -91,7 +91,7 @@ class Arm {
 public:
 	Arm() : controller() {}
 
-	void setController();
+	void setup();
 
 	void start(StepperListener &shoulderListener, StepperListener &wristListener);
 	void start(Controller::Stepper stepper, StepperListener &listener);
@@ -103,6 +103,11 @@ public:
 	bool isWristing();
 	bool isMoving();
 };
+
+void Arm::setup()
+{
+	controller.setupArm();
+}
 
 void Arm::start(StepperListener &shoulderListener, StepperListener &wristListener)
 {
@@ -129,12 +134,12 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 
 					if (direction == Controller::Direction::NONE)
 					{
-						controller.set(Controller::Stepper::SHOULDER, 0);
+						controller.set(Controller::Stepper::SHOULDER, 1);
 						continue;
 					}
 
 					controller.set(Controller::Stepper::SHOULDER, direction);
-					controller.step(Controller::Stepper::SHOULDER);
+					controller.step(Controller::Stepper::SHOULDER);		
 				}
 			});
 		break;
@@ -154,7 +159,7 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 
 					if (direction == Controller::Direction::NONE)
 					{
-						controller.set(Controller::Stepper::WRIST, 0);
+						controller.set(Controller::Stepper::WRIST, 1);
 						continue;
 					}
 
@@ -235,33 +240,29 @@ int main (void)
 	subscriber.connect();
 
 	Arm arm;
-	arm.start(shoulderListener, wristListener);
 
+	arm.setup();
+	
 	while (subscriber.is_connected())
 	{
 		if (!buttonListener.isUpdated())
 			continue ;
 
-		std::cout << "Before switch, received: " << buttonListener.button() << "\n";
 		switch (buttonListener.button())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
-				std::cout << "wrist off\n";
 				arm.stop(Controller::Stepper::WRIST);
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
-				std::cout << "wrist on\n";
 				arm.start(Controller::Stepper::WRIST, wristListener);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
-				std::cout << "shoulder off\n";
 				arm.stop(Controller::Stepper::SHOULDER);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
-				std::cout << "shoulder on\n";
 				arm.start(Controller::Stepper::SHOULDER, shoulderListener);
 				break;
 		}
