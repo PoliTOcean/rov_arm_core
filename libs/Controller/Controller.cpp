@@ -47,13 +47,23 @@ void Controller::setupArm()
 }
 
 void Controller::set(Stepper stepper, bool value)
-{
+{   
+    switch (stepper)
+    {
+        case Stepper::SHOULDER:
+            std::cout << "Shoulder set at: " << value << std::endl;
+            break;
+        case Stepper::WRIST:
+            std::cout << "Wrist set at: " << value << std::endl;
+            break;
+    }
+    
     int pin = getStepperEnable(stepper);
 
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    digitalWrite(pin, value);
+    digitalWrite(pin, (value)?HIGH:LOW);
 }
 
 void Controller::set(Stepper stepper, Direction direction)
