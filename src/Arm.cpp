@@ -1,91 +1,262 @@
-#include <wiringPi.h>
-#include <json.hpp>
-#include <PolitoceanConstants.h>
-#include <chrono>
+#include "Subscriber.h"
+#include "Controller.h"
+
 #include <thread>
-#include <Subscriber.h>
+#include <chrono>
 
-#define DIR1 28 // Direction GPIO Pin
-#define STEP1 27 // Direction GPIO Pin
-#define EN_n1 29 // Enable Pin active low
+#include "PolitoceanConstants.h"
 
-#define delay 0.001
-
-#define CW 1	  //Clockwise Rotation
-#define CCW 0 // Counterclockwise Rotation
+#include "json.hpp"
 
 using namespace Politocean;
-using namespace Politocean::Constants;
 
-int Status3;
-int Status4;
+/*******************************************************
+ * Listener class for button 
+ ******************************************************/
 
-void cleanup(){
+class ButtonListener {
+	int button_;
 
-	pinMode(DIR1, INPUT);
-	pinMode(STEP1, INPUT);
-	pinMode(EN_n1, INPUT);
-	
-}
+	bool isListening_ = false, isUpdated_ = false;
 
-void joystickButtCallback(const std::string& payload)
+public:
+	void listen(const std::string& payload);
+
+	int button();
+
+	bool isListening();
+	bool isUpdated();
+};
+
+void ButtonListener::listen(const std::string& payload)
 {
-	std::cout << payload << std::endl;
-	if(payload == "back_up")
+	isUpdated_ = true;
+}
+
+int ButtonListener::button()
+{
+	isUpdated_ = false;
+
+	return button_;
+}
+
+bool ButtonListener::isListening()
+{
+	return isListening_;
+}
+
+bool ButtonListener::isUpdated()
+{
+	return isUpdated_;
+}
+
+/*******************************************************
+ * Listener class for stepper subscriber
+ ******************************************************/
+
+class StepperListener {
+	Controller::Direction direction_;
+
+public:
+	void listen(const std::string& payload);
+
+	Controller::Direction getDirection();
+};
+
+void StepperListener::listen(const std::string& payload)
+{
+	if (payload == "back_up")
+		direction_ = Controller::Direction::CW;
+	else if (payload == "back_down")
+		direction_ = Controller::Direction::CCW;
+	else
+		direction_ = Controller::Direction::NONE;
+}
+
+Controller::Direction StepperListener::getDirection()
+{
+	return direction_;
+}
+
+/*******************************************************
+ * Arm class
+ ******************************************************/
+
+class Arm {
+	std::thread *shoulderThread, *wristThread;
+	bool isShouldering_ = false, isWristing_ = false, isMoving_ = false;
+
+	Controller controller;
+
+public:
+	Arm() : controller() {}
+
+	void setController();
+
+	void start(StepperListener &shoulderListener, StepperListener &wristListener);
+	void start(Controller::Stepper stepper, StepperListener &listener);
+
+	void stop();
+	void stop(Controller::Stepper stepper);
+
+	bool isShouldering();
+	bool isWristing();
+	bool isMoving();
+};
+
+void Arm::start(StepperListener &shoulderListener, StepperListener &wristListener)
+{
+	start(Controller::Stepper::SHOULDER, shoulderListener);
+	start(Controller::Stepper::WRIST, wristListener);
+}
+
+void Arm::start(Controller::Stepper stepper, StepperListener &listener)
+{
+	switch (stepper)
 	{
-		digitalWrite(EN_n1, LOW);
-		digitalWrite(DIR1, CW);
-	
-		digitalWrite(STEP1, LOW);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		digitalWrite(STEP1, HIGH);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	else if(payload == "back_down")
-	{
-		digitalWrite(EN_n1, LOW);
-		digitalWrite(DIR1, CCW);
-	
-		digitalWrite(STEP1, LOW);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		digitalWrite(STEP1, HIGH);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	else 
-	{
-		digitalWrite(EN_n1, HIGH);
+		case Controller::Stepper::SHOULDER:
+			if (isShouldering_)
+				break;
+
+			isShouldering_ = true;
+			isMoving_ = true;
+			shoulderThread = new std::thread([&]() {
+				while (isShouldering_)
+				{
+					Controller::Direction direction = listener.getDirection();
+
+					if (direction == Controller::Direction::NONE)
+					{
+						controller.set(Controller::Stepper::SHOULDER, 0);
+						continue;
+					}
+
+					controller.set(Controller::Stepper::SHOULDER, direction);
+					controller.step(Controller::Stepper::SHOULDER);
+				}
+			});
+		break;
+
+		case Controller::Stepper::WRIST:
+			if (isWristing_)
+				break;
+
+			isWristing_ = true;
+			isMoving_ = true;
+			wristThread = new std::thread([&]() {
+				while (isWristing)
+				{
+					Controller::Direction direction = listener.getDirection();
+
+					if (direction == Controller::Direction::NONE)
+					{
+						controller.set(Controller::Stepper::WRIST, 0);
+						continue;
+					}
+
+					controller.set(Controller::Stepper::WRIST, direction);
+					controller.step(Controller::Stepper::WRIST);
+				}
+			});
+		break;
+
+		default: break;
 	}
 }
+
+void Arm::stop()
+{
+	isShouldering_ 	= false;
+	isWristing_ 	= false;
+	isMoving_ 		= false;
+}
+
+void Arm::stop(Controller::Stepper stepper)
+{
+	switch (stepper)
+	{
+		case Controller::Stepper::SHOULDER:
+			isShouldering_ = false;
+
+			if (!isWristing_)
+				isMoving_ = false;
+		break;
+
+		case Controller::Stepper::WRIST:
+			isWristing_ = false;
+
+			if (!isShouldering_)
+				isMoving_ = false;
+		break;
+
+		default: break;
+	}
+}
+
+bool Arm::isShouldering()
+{
+	return isShouldering_;
+}
+
+bool Arm::isWristing()
+{
+	return isWristing_;
+}
+
+bool Arm::isMoving()
+{
+	return isMoving_;
+}
+
+/*******************************************************
+ * Main section
+ ******************************************************/
 
 int main (void)
 {
+	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
+	StepperListener shoulderListener, wristListener;
+	ButtonListener buttonListener;
 
-	wiringPiSetup() ;
+	Controller controller;
 
-	pinMode(DIR1, OUTPUT);
-	pinMode(STEP1, OUTPUT);
-	pinMode(EN_n1, OUTPUT);
+	subscriber.subscribeTo(Constants::Topics::ARM_SHOULDER, &StepperListener::listen, &shoulderListener);
+	subscriber.subscribeTo(Constants::Topics::ARM_WRIST, 	&StepperListener::listen, &wristListener);
+	subscriber.subscribeTo(Constants::Topics::BUTTONS, 		&ButtonListener::listen, &buttonListener);
 
-	digitalWrite(EN_n1, HIGH);
-	digitalWrite(DIR1, CCW);
-	
-	Status3 = 0;
-	Status4 = 0;
-	
-	//Iscrizione al subscriber
-	Subscriber Sub("tcp://localhost127.0.0.1", Rov::ARM_ID);
-	Sub.subscribeTo(Topics::ROV_ARM, &joystickButtCallback);
-	Sub.connect();
-	
-	Sub.wait();
+	subscriber.connect();
 
-	cleanup();
-	
+	Arm arm;
+	arm.start(shoulderListener, wristListener);
+
+	while (buttonListener.isListening())
+	{
+		if (!buttonListener.isUpdated())
+			continue ;
+
+		switch (buttonListener.button())
+		{
+			case Constants::Commands::Actions::WRIST_OFF:
+				arm.stop(Controller::Stepper::WRIST);
+				break;
+
+			case Constants::Commands::Actions::WRIST_ON:
+				arm.start(Controller::Stepper::WRIST, wristListener);
+				break;
+
+			case Constants::Commands::Actions::SHOULDER_OFF:
+				arm.stop(Controller::Stepper::SHOULDER);
+				break;
+
+			case Constants::Commands::Actions::SHOULDER_ON:
+				arm.start(Controller::Stepper::SHOULDER, shoulderListener);
+				break;
+		}
+	}
+
+	subscriber.wait();
+
+	controller.resetArm();
+
 	return 0;
 }
-
-
-
-
-
-
