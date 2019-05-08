@@ -125,6 +125,7 @@ void Controller::switchMotors()
 {
     motors_ = !motors_;
 
+    pinMode(Constants::Pinout::MOTORS, OUTPUT);
     pinMode(Constants::Pinout::SHOULDER_EN, OUTPUT);
     pinMode(Constants::Pinout::WRIST_EN, OUTPUT);
     digitalWrite(Constants::Pinout::SHOULDER_EN, HIGH);
