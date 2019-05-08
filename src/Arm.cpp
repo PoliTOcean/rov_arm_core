@@ -28,7 +28,6 @@ public:
 
 void ButtonListener::listen(const std::string& payload)
 {
-	std::cout << payload << std::endl;
 	button_ = std::stoi(payload);
 	isUpdated_ = true;
 }
@@ -65,7 +64,6 @@ public:
 
 void StepperListener::listen(const std::string& payload)
 {
-	std::cout << payload << std::endl;
 	if (payload == to_string(Constants::Commands::Actions::SHOULDER_UP))
 		direction_ = Controller::Direction::CW;
 	else if (payload == to_string(Constants::Commands::Actions::SHOULDER_DOWN))
@@ -246,18 +244,22 @@ int main (void)
 		switch (buttonListener.button())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
+				std::cout << "wrist off\n";
 				arm.stop(Controller::Stepper::WRIST);
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
+				std::cout << "wrist on\n";
 				arm.start(Controller::Stepper::WRIST, wristListener);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
+				std::cout << "shoulder off\n";
 				arm.stop(Controller::Stepper::SHOULDER);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
+				std::cout << "shoulder on\n";
 				arm.start(Controller::Stepper::SHOULDER, shoulderListener);
 				break;
 		}
