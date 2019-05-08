@@ -30,6 +30,7 @@ void ButtonListener::listen(const std::string& payload)
 {
 	button_ = std::stoi(payload);
 	isUpdated_ = true;
+	isListening_ = true;
 }
 
 int ButtonListener::button()
@@ -236,11 +237,12 @@ int main (void)
 	Arm arm;
 	arm.start(shoulderListener, wristListener);
 
-	while (buttonListener.isListening())
+	while (subscriber.is_connected())
 	{
 		if (!buttonListener.isUpdated())
 			continue ;
 
+		std::cout << "Before switch, received: " << buttonListener.button() << "\n";
 		switch (buttonListener.button())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
