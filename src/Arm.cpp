@@ -106,6 +106,7 @@ public:
 
 void Arm::setup()
 {
+	controller.setup();
 	controller.setupArm();
 }
 
