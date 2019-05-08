@@ -64,9 +64,9 @@ public:
 
 void StepperListener::listen(const std::string& payload)
 {
-	if (payload == "back_up")
+	if (payload == Constants::Commands::Actions::SHOULDER_UP)
 		direction_ = Controller::Direction::CW;
-	else if (payload == "back_down")
+	else if (payload == Constants::Commands::Actions::SHOULDER_DOWN)
 		direction_ = Controller::Direction::CCW;
 	else
 		direction_ = Controller::Direction::NONE;
@@ -143,7 +143,7 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 			isWristing_ = true;
 			isMoving_ = true;
 			wristThread = new std::thread([&]() {
-				while (isWristing)
+				while (isWristing_)
 				{
 					Controller::Direction direction = listener.getDirection();
 
