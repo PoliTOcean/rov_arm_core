@@ -24,9 +24,10 @@ target_link_libraries(JoystickSubscriber
     PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
 
 
-target_link_libraries(Arm
-    PolitoceanCommon::Subscriber
-    -lwiringPi -lrt -lcrypt)
+target_link_libraries(Arm -lpthread
+    PolitoceanRovArmCore::Controller
+    
+    PolitoceanCommon::Subscriber)
 
 target_link_libraries(ImuCalibration
     PolitoceanRovArmCore::Controller
