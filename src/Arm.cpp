@@ -117,6 +117,8 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 			if (isShouldering_)
 				break;
 
+			std::cout << "Starting shoulder...\n";
+
 			isShouldering_ = true;
 			isMoving_ = true;
 			shoulderThread = new std::thread([&]() {
@@ -139,6 +141,8 @@ void Arm::start(Controller::Stepper stepper, StepperListener &listener)
 		case Controller::Stepper::WRIST:
 			if (isWristing_)
 				break;
+
+			std::cout << "Starting wrist...\n";
 
 			isWristing_ = true;
 			isMoving_ = true;
@@ -168,6 +172,8 @@ void Arm::stop()
 	isShouldering_ 	= false;
 	isWristing_ 	= false;
 	isMoving_ 		= false;
+
+	std::cout << "Stopping all...\n";
 }
 
 void Arm::stop(Controller::Stepper stepper)
@@ -177,6 +183,7 @@ void Arm::stop(Controller::Stepper stepper)
 		case Controller::Stepper::SHOULDER:
 			isShouldering_ = false;
 
+			std::cout << "Stopping shoulder...\n";
 			if (!isWristing_)
 				isMoving_ = false;
 		break;
@@ -184,6 +191,7 @@ void Arm::stop(Controller::Stepper stepper)
 		case Controller::Stepper::WRIST:
 			isWristing_ = false;
 
+			std::cout << "Stopping wrist...\n";
 			if (!isShouldering_)
 				isMoving_ = false;
 		break;
