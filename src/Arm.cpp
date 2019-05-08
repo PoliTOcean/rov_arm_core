@@ -30,6 +30,7 @@ public:
 
 void ButtonListener::listen(const std::string& payload)
 {
+	button_ = std::stoi(payload);
 	isUpdated_ = true;
 }
 
