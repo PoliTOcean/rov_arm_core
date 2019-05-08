@@ -28,6 +28,7 @@ public:
 
 void ButtonListener::listen(const std::string& payload)
 {
+	std::cout << payload << std::endl;
 	button_ = std::stoi(payload);
 	isUpdated_ = true;
 }
@@ -64,6 +65,7 @@ public:
 
 void StepperListener::listen(const std::string& payload)
 {
+	std::cout << payload << std::endl;
 	if (payload == to_string(Constants::Commands::Actions::SHOULDER_UP))
 		direction_ = Controller::Direction::CW;
 	else if (payload == to_string(Constants::Commands::Actions::SHOULDER_DOWN))
