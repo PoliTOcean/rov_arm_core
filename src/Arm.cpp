@@ -64,9 +64,9 @@ public:
 
 void StepperListener::listen(const std::string& payload)
 {
-	if (payload == Constants::Commands::Actions::SHOULDER_UP)
+	if (payload == to_string(Constants::Commands::Actions::SHOULDER_UP))
 		direction_ = Controller::Direction::CW;
-	else if (payload == Constants::Commands::Actions::SHOULDER_DOWN)
+	else if (payload == to_string(Constants::Commands::Actions::SHOULDER_DOWN))
 		direction_ = Controller::Direction::CCW;
 	else
 		direction_ = Controller::Direction::NONE;
