@@ -299,8 +299,9 @@ int main (void)
 	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
 	Listener listener;
 
-	subscriber.subscribeTo(Constants::Topics::SHOULDER, &Listener::listenForShoulder, &listener);
-	subscriber.subscribeTo(Constants::Topics::WRIST, 	&Listener::listenForWrist, &listener);
+	subscriber.subscribeTo(Constants::Topics::SHOULDER, 		&Listener::listenForShoulder, &listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST, 			&Listener::listenForWrist, &listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY,	&Listener::listenForWristDirection, &listener);
 
 	subscriber.connect();
 
