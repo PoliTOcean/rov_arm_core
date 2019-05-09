@@ -393,7 +393,7 @@ int main(int argc, const char *argv[])
 
 	SPI spi;
 
-	// Try to setp @spi
+	// Try to setup @spi
 	try
 	{
 		spi.setup(controller);
@@ -401,11 +401,29 @@ int main(int argc, const char *argv[])
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-	}
+	}	
 	
 	spi.startSPI(controller, listener);
 
+	Publisher sensorsPublisher(Hmi::IP_ADDRESS, Hmi::SENSORS_ID_PUB);
+	Talker talker;
+
+	// Try to connect @sensorsPublisher
+	try
+	{
+		sensorsPublisher.connect();
+	}
+	catch(const mqttException::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+
+	talker.startTalking(sensorsPublisher, listener);
+
 	while (subscriber.is_connected());
+
+	talker.stopTalking();
+	spi.stopSPI();
 
 	//safe reset at the end
 	controller.reset();
