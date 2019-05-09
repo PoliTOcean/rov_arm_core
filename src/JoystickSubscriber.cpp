@@ -26,7 +26,6 @@
  **************************************************/
 
 using namespace Politocean;
-using namespace Politocean::Constants;
 
 class Listener
 {
@@ -254,9 +253,9 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Politocean::map(axes[Commands::Axes::X],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::Y],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::Axes::RZ],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::X],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::Y],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::RZ],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			send(buffer, controller, listener);
@@ -338,7 +337,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Hmi::IP_ADDRESS, Rov::SPI_ID_PUB);
+	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID_PUB);
 	mqttLogger ptoLogger(&pub);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -354,14 +353,14 @@ int main(int argc, const char *argv[])
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
-	 * @listener			: object with the callbacks for @subscriber and methods to retreive data read
+	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Hmi::IP_ADDRESS, Rov::SPI_ID_SUB);
+	Subscriber subscriber(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::BUTTONS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Constants::Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Constants::Topics::BUTTONS,			&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try
@@ -405,7 +404,7 @@ int main(int argc, const char *argv[])
 	
 	spi.startSPI(controller, listener);
 
-	Publisher sensorsPublisher(Hmi::IP_ADDRESS, Hmi::SENSORS_ID_PUB);
+	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID_PUB);
 	Talker talker;
 
 	// Try to connect @sensorsPublisher
@@ -422,6 +421,7 @@ int main(int argc, const char *argv[])
 
 	while (subscriber.is_connected());
 
+	// Stop sensors talker and SPI
 	talker.stopTalking();
 	spi.stopSPI();
 
