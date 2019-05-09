@@ -39,9 +39,11 @@ void Controller::setupArm()
     pinMode(Constants::Pinout::WRIST_EN, OUTPUT);
     digitalWrite(Constants::Pinout::WRIST_EN, HIGH);
 
-    pinMode(Constants::Pinout::SHOULDER_EN, OUTPUT);
     pinMode(Constants::Pinout::SHOULDER_DIR, OUTPUT);
     pinMode(Constants::Pinout::SHOULDER_STEPPER, OUTPUT);
+
+    pinMode(Constants::Pinout::WRIST_DIR, OUTPUT);
+    pinMode(Constants::Pinout::WRIST_STEPPER, OUTPUT);
 }
 
 unsigned char Controller::SPIDataRW(unsigned char data)
