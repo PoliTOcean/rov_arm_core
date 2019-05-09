@@ -44,7 +44,7 @@ void Listener::listenForShoulder(const std::string& payload)
 {
 	action_ = Constants::Commands::Actions::NONE;
 
-	if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_UP)
+	if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_UP))
 		shoulderDirection_ = Controller::Stepper::Direction::CW;
 	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_DOWN))
 		shoulderDirection_ = Controller::Stepper::Direction::CCW;
