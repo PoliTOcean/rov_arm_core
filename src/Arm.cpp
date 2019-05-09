@@ -278,18 +278,22 @@ int main (void)
 		switch (listener.action())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
+				std::cout << "WRIST OFF" << std::endl;
 				arm.stopWrist();
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
+				std::cout << "WRIST ON" << std::endl;
 				arm.startWrist(listener);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
+				std::cout << "SHOULDER OFF" << std::endl;
 				arm.stopShoulder();
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
+				std::cout << "SHOULDER ON" << std::endl;
 				arm.startShoulder(listener);
 				break;
 		}
