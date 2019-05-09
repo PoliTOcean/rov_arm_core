@@ -67,6 +67,10 @@ void Listener::listenForWrist(const std::string& payload)
 		action_ = Constants::Commands::Actions::WRIST_START;
 	else if (payload == std::to_string(Constants::Commands::Actions::WRIST_STOP))
 		action_ = Constants::Commands::Actions::WRIST_STOP;
+	else if (payload == std::to_string(Constants::Commands::Actions::WRIST_ON))
+		action_ = Constants::Commands::Actions::WRIST_ON;
+	else if (payload == std::to_string(Constants::Commands::Actions::WRIST_OFF))
+		action_ = Constants::Commands::Actions::WRIST_OFF;
 	else
 		action_ = Constants::Commands::Actions::NONE;
 	
