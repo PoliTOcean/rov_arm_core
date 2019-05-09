@@ -285,7 +285,7 @@ int main (void)
 	subscriber.connect();
 
 	Arm arm;
-
+	arm.setup();
 
 	while (subscriber.is_connected())
 	{
