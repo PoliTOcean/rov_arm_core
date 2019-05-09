@@ -151,7 +151,7 @@ void Controller::Stepper::setVelocity(int velocity)
 
 void Controller::Stepper::step()
 {
-    set(LOW);
+    enable();
 
     int pin = getStepperPin();
 

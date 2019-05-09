@@ -159,9 +159,7 @@ void Arm::startShoulder(Listener& listener)
 				shoulder_.disable();
 				continue;
 			}
-			
-			std::cout << "RUNNN" << std::endl;
-			
+
 			shoulder_.setDirection(direction);
 			shoulder_.step();
 		}
