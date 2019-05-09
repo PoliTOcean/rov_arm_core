@@ -11,186 +11,198 @@
 using namespace Politocean;
 
 /*******************************************************
- * Listener class for button 
- ******************************************************/
-
-class ButtonListener {
-	int button_;
-
-	bool isListening_ = false, isUpdated_ = false;
-
-public:
-	void listen(const std::string& payload);
-
-	int button();
-
-	bool isListening();
-	bool isUpdated();
-};
-
-void ButtonListener::listen(const std::string& payload)
-{
-	isUpdated_ = true;
-}
-
-int ButtonListener::button()
-{
-	isUpdated_ = false;
-
-	return button_;
-}
-
-bool ButtonListener::isListening()
-{
-	return isListening_;
-}
-
-bool ButtonListener::isUpdated()
-{
-	return isUpdated_;
-}
-
-/*******************************************************
  * Listener class for stepper subscriber
  ******************************************************/
 
-class StepperListener {
-	Controller::Direction direction_;
+class Listener
+{
+	Controller::Stepper::Direction shoulderDirection_, wristDirection_;
+	bool shoulderEnable_, wristEnable_, isUpdated_, isListening_;
+
+	int action_;
 
 public:
-	void listen(const std::string& payload);
+	Listener() :
+		shoulderDirection_(Controller::Stepper::Direction::NONE), wristDirection_(Controller::Stepper::Direction::NONE),
+		shoulderEnable_(false), wristEnable_(false), isUpdated_(false), isListening_(false) {}
 
-	Controller::Direction getDirection();
+	void listenForShoulder(const std::string& payload);
+	void listenForWrist(const std::string& payload);
+
+	int action();
+
+	Controller::Stepper::Direction getShoulderDirection();
+	Controller::Stepper::Direction getWristDirection();
+
+	bool isShoulderEnable();
+	bool isWristEnable();
+
+	bool isUpdated();
 };
 
-void StepperListener::listen(const std::string& payload)
+void Listener::listenForShoulder(const std::string& payload)
 {
 	if (payload == "back_up")
-		direction_ = Controller::Direction::CW;
+		shoulderDirection_ = Controller::Stepper::Direction::CW;
 	else if (payload == "back_down")
-		direction_ = Controller::Direction::CCW;
+		shoulderDirection_ = Controller::Stepper::Direction::CCW;
+	else if (payload == "on")
+		shoulderEnable_ = true;
+	else if (payload == "off")
+		shoulderEnable_ = false;
 	else
-		direction_ = Controller::Direction::NONE;
+	{
+		shoulderDirection_ = Controller::Stepper::Direction::NONE;
+		shoulderEnable_ = false;
+	}
+
+	isUpdated_ = true;
 }
 
-Controller::Direction StepperListener::getDirection()
+void Listener::listenForWrist(const std::string& payload)
 {
-	return direction_;
+	//
+}
+
+int Listener::action()
+{
+	return action_;
+}
+
+Controller::Stepper::Direction Listener::getShoulderDirection()
+{
+	return shoulderDirection_;
+}
+
+Controller::Stepper::Direction Listener::getWristDirection()
+{
+	return wristDirection_;
+}
+
+bool Listener::isUpdated()
+{
+	return isUpdated_;
 }
 
 /*******************************************************
  * Arm class
  ******************************************************/
 
-class Arm {
+class Arm
+{
+	Controller controller;
+	Controller::Stepper shoulder_, wrist_;
+
 	std::thread *shoulderThread, *wristThread;
+	
 	bool isShouldering_ = false, isWristing_ = false, isMoving_ = false;
 
-	Controller controller;
-
 public:
-	Arm() : controller() {}
+	Arm() : controller(), shoulder_(Controller::Stepper::Name::SHOULDER), wrist_(Controller::Stepper::Name::WRIST) {}
 
-	void setController();
-
-	void start(StepperListener &shoulderListener, StepperListener &wristListener);
-	void start(Controller::Stepper stepper, StepperListener &listener);
-
+	void start(Listener& shoulderListener, Listener& wristListener);
 	void stop();
-	void stop(Controller::Stepper stepper);
+
+	void startShoulder(Listener& wristListener);
+	void stopShoulder();
+
+	void startWrist(Listener& wristListener);
+	void stopWrist();
 
 	bool isShouldering();
 	bool isWristing();
 	bool isMoving();
+
+	void enableShoulder();
+	void disableShoulder();
+
+	void enableWrist();
+	void disableWrist();
+
+	void enable();
+	void disable();
 };
 
-void Arm::start(StepperListener &shoulderListener, StepperListener &wristListener)
+void Arm::start(Listener& shoulderListener, Listener& wristListener)
 {
-	start(Controller::Stepper::SHOULDER, shoulderListener);
-	start(Controller::Stepper::WRIST, wristListener);
+	startShoulder(shoulderListener);
+	startWrist(wristListener);
 }
 
-void Arm::start(Controller::Stepper stepper, StepperListener &listener)
+void Arm::startShoulder(Listener& listener)
 {
-	switch (stepper)
-	{
-		case Controller::Stepper::SHOULDER:
-			if (isShouldering_)
-				break;
+	if (isShouldering_)
+		return ;
 
-			isShouldering_ = true;
-			isMoving_ = true;
-			shoulderThread = new std::thread([&]() {
-				while (isShouldering_)
-				{
-					Controller::Direction direction = listener.getDirection();
+	shoulderThread = new std::thread([&]() {
+		isShouldering_ 	= true;
+		isMoving_ 		= true;
 
-					if (direction == Controller::Direction::NONE)
-					{
-						controller.set(Controller::Stepper::SHOULDER, 0);
-						continue;
-					}
+		shoulder_.enable();
 
-					controller.set(Controller::Stepper::SHOULDER, direction);
-					controller.step(Controller::Stepper::SHOULDER);
-				}
-			});
-		break;
+		while (isShouldering_)
+		{
+			Controller::Stepper::Direction direction = listener.getShoulderDirection();
 
-		case Controller::Stepper::WRIST:
-			if (isWristing_)
-				break;
+			if (direction == Controller::Stepper::Direction::NONE)
+			{
+				shoulder_.disable();
+				continue;
+			}
+			
+			shoulder_.setDirection(direction);
+			shoulder_.step();
+		}
+	});
+}
 
-			isWristing_ = true;
-			isMoving_ = true;
-			wristThread = new std::thread([&]() {
-				while (isWristing)
-				{
-					Controller::Direction direction = listener.getDirection();
+void Arm::startWrist(Listener& listener)
+{
+	if (isWristing_)
+		return ;
+		
+	wristThread = new std::thread([&]() {
+		isWristing_ = true;
+		isMoving_ 	= true;
 
-					if (direction == Controller::Direction::NONE)
-					{
-						controller.set(Controller::Stepper::WRIST, 0);
-						continue;
-					}
+		wrist_.enable();
 
-					controller.set(Controller::Stepper::WRIST, direction);
-					controller.step(Controller::Stepper::WRIST);
-				}
-			});
-		break;
+		while (isWristing_)
+		{
+			Controller::Stepper::Direction direction = listener.getWristDirection();
 
-		default: break;
-	}
+			if (direction == Controller::Stepper::Direction::NONE)
+			{
+				wrist_.disable();
+				continue;
+			}
+
+			wrist_.setDirection(direction);
+			wrist_.step();
+		}
+	});
 }
 
 void Arm::stop()
 {
-	isShouldering_ 	= false;
-	isWristing_ 	= false;
-	isMoving_ 		= false;
+	stopShoulder();
+	stopWrist();
 }
 
-void Arm::stop(Controller::Stepper stepper)
+void Arm::stopShoulder()
 {
-	switch (stepper)
-	{
-		case Controller::Stepper::SHOULDER:
-			isShouldering_ = false;
+	shoulder_.disable();
 
-			if (!isWristing_)
-				isMoving_ = false;
-		break;
+	isShouldering_ 	= false;
+	isMoving_ 		= isWristing_;
+}
 
-		case Controller::Stepper::WRIST:
-			isWristing_ = false;
+void Arm::stopWrist()
+{
+	wrist_.disable();
 
-			if (!isShouldering_)
-				isMoving_ = false;
-		break;
-
-		default: break;
-	}
+	isWristing_	= false;
+	isMoving_ 	= isWristing_;
 }
 
 bool Arm::isShouldering()
@@ -208,6 +220,38 @@ bool Arm::isMoving()
 	return isMoving_;
 }
 
+void Arm::enableShoulder()
+{
+	shoulder_.enable();
+}
+
+void Arm::disableShoulder()
+{
+	shoulder_.disable();
+}
+
+void Arm::enableWrist()
+{
+	wrist_.enable();
+}
+
+void Arm::disableWrist()
+{
+	wrist_.disable();
+}
+
+void Arm::enable()
+{
+	enableShoulder();
+	enableWrist();
+}
+
+void Arm::disable()
+{
+	disableShoulder();
+	disableWrist();
+}
+
 /*******************************************************
  * Main section
  ******************************************************/
@@ -215,41 +259,38 @@ bool Arm::isMoving()
 int main (void)
 {
 	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
-	StepperListener shoulderListener, wristListener;
-	ButtonListener buttonListener;
+	Listener listener;
 
 	Controller controller;
 
-	subscriber.subscribeTo(Constants::Topics::ARM_SHOULDER, &StepperListener::listen, &shoulderListener);
-	subscriber.subscribeTo(Constants::Topics::ARM_WRIST, 	&StepperListener::listen, &wristListener);
-	subscriber.subscribeTo(Constants::Topics::BUTTONS, 		&ButtonListener::listen, &buttonListener);
+	subscriber.subscribeTo(Constants::Topics::SHOULDER, &Listener::listenForShoulder, &listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST, 	&Listener::listenForWrist, &listener);
 
 	subscriber.connect();
 
 	Arm arm;
-	arm.start(shoulderListener, wristListener);
 
-	while (buttonListener.isListening())
+	while (subscriber.is_connected())
 	{
-		if (!buttonListener.isUpdated())
+		if (!listener.isUpdated())
 			continue ;
 
-		switch (buttonListener.button())
+		switch (listener.action())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
-				arm.stop(Controller::Stepper::WRIST);
+				arm.stopWrist();
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
-				arm.start(Controller::Stepper::WRIST, wristListener);
+				arm.startWrist(listener);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
-				arm.stop(Controller::Stepper::SHOULDER);
+				arm.stopShoulder();
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
-				arm.start(Controller::Stepper::SHOULDER, shoulderListener);
+				arm.startShoulder(listener);
 				break;
 		}
 	}
