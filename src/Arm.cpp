@@ -308,6 +308,7 @@ int main (void)
 				break;
 			
 			case Constants::Commands::Actions::WRIST_START:
+				std::cout << "Wrist Start" << std::endl;
 				arm.setWristDirection(listener.getWristDirection());
 				arm.startWrist();
 				break;
