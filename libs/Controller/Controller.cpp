@@ -157,8 +157,6 @@ void Controller::Stepper::setVelocity(int velocity)
 
 void Controller::Stepper::step()
 {
-    enable();
-
     int pin = getStepperPin();
 
     if (pin == -1)
@@ -167,10 +165,10 @@ void Controller::Stepper::step()
     std::cout << "STEPPING" << std::endl;
 
     digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
 
     digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
 }
 
 }
