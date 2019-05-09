@@ -181,7 +181,6 @@ void Talker::startTalking(Publisher& publisher, Listener& listener)
 
 	isTalking_ = true;
 	sensorThread_ = new std::thread([&]() {
-		std::cout << publisher.is_connected() << " " << isTalking_ << std::endl;
 		while (publisher.is_connected() && isTalking_)
 		{
 			if (!listener.isSensorsUpdated())
@@ -384,6 +383,7 @@ int main(int argc, const char *argv[])
 	try
 	{
 		controller.setup();
+		controller.setupMotors();
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
