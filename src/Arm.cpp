@@ -126,7 +126,7 @@ public:
 
 	void setup();
 
-	void start(Listener& shoulderListener, Listener& wristListener);
+	void start(Controller::Stepper::Direction shoulderDirection, Controller::Stepper::Direction wristDirection);
 	void stop();
 
 	void startShoulder(Controller::Stepper::Direction direction);
@@ -155,10 +155,10 @@ void Arm::setup()
 	controller.setupArm();
 }
 
-void Arm::start(Listener& shoulderListener, Listener& wristListener)
+void Arm::start(Controller::Stepper::Direction shoulderDirection, Controller::Stepper::Direction wristDirection)
 {
-	startShoulder(shoulderListener);
-	startWrist(wristListener);
+	startShoulder(shoulderDirection);
+	startWrist(wristDirection);
 }
 
 void Arm::startShoulder(Controller::Stepper::Direction direction)
@@ -173,10 +173,7 @@ void Arm::startShoulder(Controller::Stepper::Direction direction)
 		while (isShouldering_)
 		{
 			if (direction == Controller::Stepper::Direction::NONE)
-			{
-				shoulder_.disable();
 				continue;
-			}
 
 			shoulder_.setDirection(direction);
 			shoulder_.step();
@@ -214,12 +211,16 @@ void Arm::stopShoulder()
 {
 	isShouldering_ 	= false;
 	isMoving_ 		= isWristing_;
+
+	shoulderThread->join();
 }
 
 void Arm::stopWrist()
 {
 	isWristing_	= false;
 	isMoving_ 	= isWristing_;
+
+	wristThread->join();
 }
 
 bool Arm::isShouldering()
@@ -315,7 +316,19 @@ int main (void)
 				break;
 			
 			case Constants::Commands::Actions::SHOULDER_DOWN:
-				arm.startShoulder(listener.getShoulderDirection());
+				arm.stopShoulder();
+				break;
+			
+			case Constants::Commands::Actions::WRIST_START:
+				arm.startWrist(listener.getWristDirection());
+				break;
+
+			case Constants::Commands::Actions::WRIST_STOP:
+				arm.stopWrist();
+				break;
+
+			case Constants::Commands::Actions::NONE:
+				arm.stop();
 				break;
 		}
 	}
