@@ -40,43 +40,6 @@ void Controller::setupArm()
     digitalWrite(Constants::Pinout::WRIST_EN, HIGH);
 }
 
-void Controller::set(Stepper stepper, bool value)
-{
-    int pin = getStepperEnable(stepper);
-
-    if (pin == -1)
-        std::exit(EXIT_FAILURE);
-
-    digitalWrite(pin, value);
-}
-
-void Controller::set(Stepper stepper, Direction direction)
-{
-    int pin = getStepperDirection(stepper);
-
-    if (pin == -1)
-        std::exit(EXIT_FAILURE);
-
-    digitalWrite(pin, static_cast<int>(direction));
-}
-
-void Controller::step(Stepper stepper)
-{
-    set(stepper, LOW);
-
-    int pin = getStepper(stepper);
-
-    if (pin == -1)
-        std::exit(EXIT_FAILURE);
-
-    digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-    digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-}
-
-
 unsigned char Controller::SPIDataRW(unsigned char data)
 {
     unsigned char tmp;
@@ -115,49 +78,91 @@ void Controller::switchMotors()
     digitalWrite(Constants::Pinout::MOTORS, motors_);
 }
 
-int Controller::getStepper(Stepper stepper)
-{
-    switch (stepper)
-    {
-        case Stepper::SHOULDER:
-            return Constants::Pinout::SHOULDER_STEPPER;
-        case Stepper::WRIST:
-            return Constants::Pinout::WRIST_STEPPER;
-        default:
-            break;
-    }
 
-    return -1;
+
+
+
+
+
+int Controller::Stepper::getEnablePin()
+{
+    switch (name_)
+    {
+        case Name::SHOULDER:    return Constants::Pinout::SHOULDER_EN;
+        case Name::WRIST:       return Constants::Pinout::WRIST_EN;
+        default:                return -1;
+    }
 }
 
-int Controller::getStepperDirection(Stepper stepper)
+int Controller::Stepper::getDirectionPin()
 {
-    switch (stepper)
+    switch (name_)
     {
-        case Stepper::SHOULDER:
-            return Constants::Pinout::SHOULDER_DIR;
-        case Stepper::WRIST:
-            return Constants::Pinout::WRIST_STEPPER;
-        default:
-            break;
+        case Name::SHOULDER:    return Constants::Pinout::SHOULDER_DIR;
+        case Name::WRIST:       return Constants::Pinout::WRIST_DIR;
+        default:                return -1;
     }
-
-    return -1;
 }
 
-int Controller::getStepperEnable(Stepper stepper)
+int Controller::Stepper::getStepperPin()
 {
-    switch (stepper)
+    switch (name_)
     {
-        case Stepper::SHOULDER:
-            return Constants::Pinout::SHOULDER_EN;
-        case Stepper::WRIST:
-            return Constants::Pinout::WRIST_EN;
-        default:
-            break;
+        case Name::SHOULDER:    return Constants::Pinout::SHOULDER_STEPPER;
+        case Name::WRIST:       return Constants::Pinout::WRIST_STEPPER;
+        default:                return -1;
     }
+}
 
-    return -1;
+void Controller::Stepper::set(bool value)
+{
+    int pin = getEnablePin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+
+    digitalWrite(pin, value);
+}
+
+void Controller::Stepper::enable()
+{
+    set(Controller::Stepper::ENABLE);
+}
+
+void Controller::Stepper::disable()
+{
+    set(Controller::Stepper::DISABLE);
+}
+
+void Controller::Stepper::setDirection(Direction direction)
+{
+    int pin = getDirectionPin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+
+    digitalWrite(pin, static_cast<int>(direction));
+}
+
+void Controller::Stepper::setVelocity(int velocity)
+{
+    velocity_ = velocity;
+}
+
+void Controller::Stepper::step()
+{
+    set(LOW);
+
+    int pin = getStepperPin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+
+    digitalWrite(pin, LOW);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    digitalWrite(pin, HIGH);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 }
