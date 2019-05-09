@@ -355,7 +355,7 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID_SUB);
+	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID_SUB);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
@@ -383,6 +383,7 @@ int main(int argc, const char *argv[])
 	try
 	{
 		controller.setup();
+		controller.setupMotors();
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
