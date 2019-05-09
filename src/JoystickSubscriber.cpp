@@ -181,6 +181,7 @@ void Talker::startTalking(Publisher& publisher, Listener& listener)
 
 	isTalking_ = true;
 	sensorThread_ = new std::thread([&]() {
+		std::cout << publisher.is_connected() << " " << isTalking_ << std::endl;
 		while (publisher.is_connected() && isTalking_)
 		{
 			if (!listener.isSensorsUpdated())
