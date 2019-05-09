@@ -285,9 +285,7 @@ int main (void)
 			continue ;
 
 		std::cout << "I'm in!" << std::endl;
-
-		std::cout << listener.action() << std::endl;
-
+		
 		switch (listener.action())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
