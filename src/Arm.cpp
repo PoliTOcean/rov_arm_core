@@ -286,6 +286,7 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
+				std::cout << "WRIST ENABLE" << std::endl;
 				arm.enableWrist();
 				break;
 
