@@ -161,10 +161,10 @@ void Controller::Stepper::step()
     std::cout << "STEPPING" << std::endl;
 
     digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 }
