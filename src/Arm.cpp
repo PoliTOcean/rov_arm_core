@@ -42,6 +42,8 @@ public:
 
 void Listener::listenForShoulder(const std::string& payload)
 {
+	action_ = Constants::Commands::Actions::NONE;
+	
 	if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_UP))
 	{
 		std::cout << "SWITCH SHOULDER UP" << std::endl;
@@ -56,11 +58,13 @@ void Listener::listenForShoulder(const std::string& payload)
 	{
 		std::cout << "SWITCH SHOULDER ON" << std::endl;
 		shoulderEnable_ = true;
+		action_ = Constants::Commands::Actions::SHOULDER_ON;
 	}
 	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_OFF))
 	{
 		std::cout << "SWITCH SHOULDER OFF" << std::endl;
 		shoulderEnable_ = false;
+		action_ = Constants::Commands::Actions::SHOULDER_OFF;
 	}
 	else
 	{
