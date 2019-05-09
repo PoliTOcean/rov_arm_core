@@ -303,12 +303,12 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_UP:
-				arm.setShoulderDirection(Controller::Stepper::Direction::CW);
+				arm.setShoulderDirection(Controller::Stepper::Direction::CCW);
 				arm.startShoulder();
 				break;
 			
 			case Constants::Commands::Actions::SHOULDER_DOWN:
-				arm.setShoulderDirection(Controller::Stepper::Direction::CCW);
+				arm.setShoulderDirection(Controller::Stepper::Direction::CW);
 				arm.startShoulder();
 				break;
 			
