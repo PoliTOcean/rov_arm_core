@@ -404,7 +404,7 @@ int main(int argc, const char *argv[])
 	
 	spi.startSPI(controller, listener);
 
-	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID_PUB);
+	Publisher sensorsPublisher(Constants::Rov::IP_ADDRESS, Constants::Hmi::SENSORS_ID_PUB);
 	Talker talker;
 
 	// Try to connect @sensorsPublisher
