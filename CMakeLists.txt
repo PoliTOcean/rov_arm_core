@@ -26,7 +26,6 @@ target_link_libraries(JoystickSubscriber
 
 target_link_libraries(Arm -lpthread
     PolitoceanRovArmCore::Controller
-    
     PolitoceanCommon::Subscriber)
 
 target_link_libraries(ImuCalibration
