@@ -138,6 +138,7 @@ public:
 void Arm::setup()
 {
 	controller.setup();
+	controller.setupArm();
 }
 
 void Arm::start(Listener& shoulderListener, Listener& wristListener)
