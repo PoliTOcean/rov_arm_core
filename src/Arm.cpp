@@ -28,6 +28,7 @@ public:
 
 	void listenForShoulder(const std::string& payload);
 	void listenForWrist(const std::string& payload);
+	void listenForWristDirection(const std::string& payload);
 
 	int action();
 
@@ -70,7 +71,26 @@ void Listener::listenForShoulder(const std::string& payload)
 
 void Listener::listenForWrist(const std::string& payload)
 {
-	//
+	action_ = Constants::Commands::Actions::NONE;
+
+	if (payload == std::to_string(Constants::Commands::Actions::WRIST_ON))
+		action_ = Constants::Commands::Actions::WRIST_ON;
+	else if (payload == std::to_string(Constants::Commands::Actions::WRIST_OFF))
+		action_ = Constants::Commands::Actions::WRIST_OFF;
+	else
+		action_ = Constants::Commands::Actions::NONE;
+	
+	isUpdated_ = true;
+}
+
+void Listener::listenForWristDirection(const std::string& payload)
+{
+	if (std::stoi(payload) > 0)
+		wristDirection_ = Controller::Stepper::Direction::CW;
+	else if (std::stoi(payload) < 0)
+		wristDirection_ = Controller::Stepper::Direction::CCW;
+	else
+		wristDirection_ = Controller::Stepper::Direction::NONE;
 }
 
 int Listener::action()
@@ -292,27 +312,21 @@ int main (void)
 		if (!listener.isUpdated())
 			continue ;
 
-		std::cout << "I'm in!" << std::endl;
-
 		switch (listener.action())
 		{
 			case Constants::Commands::Actions::WRIST_OFF:
-				std::cout << "WRIST OFF" << std::endl;
 				arm.stopWrist();
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
-				std::cout << "WRIST ON" << std::endl;
 				arm.startWrist(listener);
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_OFF:
-				std::cout << "SHOULDER OFF" << std::endl;
 				arm.stopShoulder();
 				break;
 
 			case Constants::Commands::Actions::SHOULDER_ON:
-				std::cout << "SHOULDER ON" << std::endl;
 				arm.startShoulder(listener);
 				break;
 		}
