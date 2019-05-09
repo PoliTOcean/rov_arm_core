@@ -201,18 +201,12 @@ void Arm::stopShoulder()
 {
 	isShouldering_ 	= false;
 	isMoving_ 		= isWristing_;
-
-	shoulderThread->join();
-	delete shoulderThread;
 }
 
 void Arm::stopWrist()
 {
 	isWristing_	= false;
 	isMoving_ 	= isWristing_;
-
-	wristThread->join();
-	delete wristThread;
 }
 
 bool Arm::isShouldering()
