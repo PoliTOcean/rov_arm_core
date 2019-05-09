@@ -175,6 +175,7 @@ void Arm::startShoulder(Controller::Stepper::Direction direction)
 			if (direction == Controller::Stepper::Direction::NONE)
 				continue;
 
+			std::cout << "UPPPP" << std::endl;
 			shoulder_.setDirection(direction);
 			shoulder_.step();
 		}
