@@ -9,59 +9,22 @@
 
 namespace Politocean {
 
-class Controller
-{
-
+class Controller {
 public:
-
-    class Stepper
-    {
-    public:
-        enum class Name { WRIST, SHOULDER };
-        enum class Direction { CCW, CW, NONE };
-
-        static const int ENABLE     = 0;
-        static const int DISABLE    = 1;
-
-    private:
-        Name name_;
-        Direction direction_;
-        int velocity_;
-
-        bool enable_;
-
-        int getStepperPin();
-        int getEnablePin();
-        int getDirectionPin();
-
-        void set(bool value);
-
-    public:
-        Stepper(Name name) : name_(name), direction_(Direction::NONE), velocity_(0), enable_(false) {}
-         
-        int velocity();
-        Name name();
-        Direction direction();
-
-        void enable();
-        void disable();
-
-        void setDirection(Direction direction);
-        void setVelocity(int velocity);
-        
-        void step();
-
-        bool isEnable();
-    };
+    enum class Stepper { WRIST, SHOULDER };
+    enum class Direction { CCW, CW, NONE };
 
 private:
     bool motors_ = false;
 
+    int getStepperEnable(Stepper stepper);
+    int getStepperDirection(Stepper stepper);
+    int getStepper(Stepper stepper);
 public:
     static const int DEFAULT_SPI_CHANNEL    = 0;
     static const int DEFAULT_SPI_SPEED      = 1000000;
 
-    Controller() = default;
+    Controller() {}
 
     // It sets up the controller
     void setup();
@@ -69,6 +32,11 @@ public:
     void setupSPI();
     void setupMotors();
     void setupArm();
+
+    void set(Stepper stepper, bool value);
+    void set(Stepper stepper, Direction direction);
+    
+    void step(Stepper stepper);
 
     /**
      * It returns the value read from SPI
