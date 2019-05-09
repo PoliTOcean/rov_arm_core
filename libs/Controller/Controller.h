@@ -20,8 +20,8 @@ public:
         enum class Name { WRIST, SHOULDER };
         enum class Direction { CCW, CW, NONE };
 
-        static const int ENABLE     = 0;
-        static const int DISABLE    = 1;
+        static const int ENABLE     = 1;
+        static const int DISABLE    = 0;
 
     private:
         Name name_;

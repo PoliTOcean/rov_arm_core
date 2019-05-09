@@ -141,19 +141,6 @@ void Controller::Stepper::setDirection(Direction direction)
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    switch (direction)
-    {
-        case Direction::CCW:
-            std::cout << "CCW" << std::endl;
-            break;
-        case Direction::CW:
-            std::cout << "CW" << std::endl;
-            break;
-        case Direction::NONE:
-            std::cout << "NONE" << std::endl;
-            break;
-    }
-
     digitalWrite(pin, static_cast<int>(direction));
 }
 
