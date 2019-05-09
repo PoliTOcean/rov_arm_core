@@ -337,7 +337,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID_PUB);
+	Publisher pub(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID_PUB);
 	mqttLogger ptoLogger(&pub);
 	logger::enableLevel(logger::DEBUG, true);
 
