@@ -110,6 +110,8 @@ class Arm
 public:
 	Arm() : controller(), shoulder_(Controller::Stepper::Name::SHOULDER), wrist_(Controller::Stepper::Name::WRIST) {}
 
+	void setup();
+
 	void start(Listener& shoulderListener, Listener& wristListener);
 	void stop();
 
@@ -132,6 +134,11 @@ public:
 	void enable();
 	void disable();
 };
+
+void Arm::setup()
+{
+	controller.setup();
+}
 
 void Arm::start(Listener& shoulderListener, Listener& wristListener)
 {
@@ -271,14 +278,13 @@ int main (void)
 	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
 	Listener listener;
 
-	Controller controller;
-
 	subscriber.subscribeTo(Constants::Topics::SHOULDER, &Listener::listenForShoulder, &listener);
 	subscriber.subscribeTo(Constants::Topics::WRIST, 	&Listener::listenForWrist, &listener);
 
 	subscriber.connect();
 
 	Arm arm;
+
 
 	while (subscriber.is_connected())
 	{
@@ -312,8 +318,6 @@ int main (void)
 	}
 
 	subscriber.wait();
-
-	controller.resetArm();
 
 	return 0;
 }
