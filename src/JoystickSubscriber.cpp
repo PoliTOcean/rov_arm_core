@@ -253,9 +253,9 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::X],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::Y],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Constants::Commands::Axes::RZ],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Politocean::map(axes[0],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[1],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			send(buffer, controller, listener);
