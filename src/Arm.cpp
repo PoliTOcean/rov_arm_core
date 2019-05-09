@@ -45,21 +45,22 @@ void Listener::listenForShoulder(const std::string& payload)
 	action_ = Constants::Commands::Actions::NONE;
 
 	if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_UP))
-		shoulderDirection_ = Controller::Stepper::Direction::CW;
-	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_DOWN))
-		shoulderDirection_ = Controller::Stepper::Direction::CCW;
-	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_ON))
 	{
-		shoulderEnable_ = true;
+		shoulderDirection_ = Controller::Stepper::Direction::CW;
 		action_ = Constants::Commands::Actions::SHOULDER_ON;
 	}
-	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_OFF))
+	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_DOWN))
 	{
-		shoulderEnable_ = false;
-		action_ = Constants::Commands::Actions::SHOULDER_OFF;
+		shoulderDirection_ = Controller::Stepper::Direction::CCW;
+		action_ = Constants::Commands::Actions::SHOULDER_ON;
 	}
+	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_ON))
+		shoulderEnable_ = true;
+	else if (payload == std::to_string(Constants::Commands::Actions::SHOULDER_OFF))
+		shoulderEnable_ = false;
 	else
 	{
+		action_ = Constants::Commands::Actions::SHOULDER_OFF;
 		shoulderDirection_ = Controller::Stepper::Direction::NONE;
 		shoulderEnable_ = false;
 	}
