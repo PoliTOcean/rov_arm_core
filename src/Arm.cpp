@@ -281,7 +281,6 @@ void Arm::stopHand()
 {
 	isHanding_	= false;
 	isMoving_ 	= (isWristing_ || isShouldering_);
-	hand_.stopPWM();
 }
 
 void Arm::stopShoulder()
