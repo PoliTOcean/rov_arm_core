@@ -49,6 +49,7 @@ public:
         void setVelocity(int velocity);
         
         void step();
+        void step(int milliseconds);
 
         bool isEnable();
     };

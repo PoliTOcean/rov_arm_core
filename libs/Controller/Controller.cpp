@@ -180,16 +180,22 @@ void Controller::Stepper::setVelocity(int velocity)
 
 void Controller::Stepper::step()
 {
+    step(Constants::Timing::Millisenconds::DFLT_STEPPER);
+}
+
+void Controller::Stepper::step(int milliseconds)
+{
     int pin = getStepperPin();
 
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
     digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 
     digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+
 }
 
 /***********************************************************************

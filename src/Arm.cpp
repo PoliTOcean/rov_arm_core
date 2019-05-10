@@ -87,20 +87,25 @@ void Listener::listenForWrist(const std::string& payload)
 
 void Listener::listenForWristDirection(const std::string& payload)
 {
-	if (std::stoi(payload) > 0)
+	int velocity = std::stoi(payload);
+
+	if (velocity)
 		wristDirection_ = Controller::Stepper::Direction::CW;
 	else if (std::stoi(payload) < 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
-	
+
+	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
+	velocity = ((velocity + mask) ^ mask);
+
+	velocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, Constants::Timing::Millisenconds::MAX_WRIST);
+
 	isUpdated_ = true;
 }
 
 void Listener::listenForHand(const std::string& payload)
-{
-	std::cout << "I'm listening to Hand" << std::endl;
-	
+{	
 	if (payload == std::to_string(Constants::Commands::Actions::HAND_START))
 		action_ = Constants::Commands::Actions::HAND_START;
 	else if (payload == std::to_string(Constants::Commands::Actions::HAND_STOP))
@@ -185,7 +190,7 @@ public:
 	void startShoulder();
 	void stopShoulder();
 
-	void startWrist();
+	void startWrist(int velocity);
 	void stopWrist();
 
 	void startHand(Controller::DCMotor::Direction direction, int velocity);
@@ -249,7 +254,7 @@ void Arm::startShoulder()
 	});
 }
 
-void Arm::startWrist()
+void Arm::startWrist(int velocity)
 {
 	if (isWristing_)
 		return ;
@@ -259,7 +264,7 @@ void Arm::startWrist()
 		isMoving_ 	= true;
 
 		while (isWristing_)
-			wrist_.step();
+			wrist_.step(velocity);
 	});
 }
 
@@ -404,7 +409,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.getWristDirection());
-				arm.startWrist();
+				arm.startWrist(listener.velocity());
 				break;
 
 			case Constants::Commands::Actions::WRIST_STOP:
