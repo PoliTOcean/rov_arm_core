@@ -237,7 +237,7 @@ void Controller::DCMotor::setDirection(Direction direction)
 
 void Controller::DCMotor::setVelocity(int velocity)
 {
-    velocity_ = 50;
+    velocity_ = velocity;
 }
 
 void Controller::DCMotor::startPWM()
@@ -247,7 +247,7 @@ void Controller::DCMotor::startPWM()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    softPwmCreate(Pinout::HAND_PWM, 0, 200);
+    softPwmCreate(Pinout::HAND_PWM, 20, 200);
     softPwmWrite(pin, velocity_);
 }
 

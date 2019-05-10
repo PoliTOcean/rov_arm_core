@@ -5,6 +5,7 @@
 #include <chrono>
 
 #include "PolitoceanConstants.h"
+#include "PolitoceanUtils.hpp"
 
 #include "json.hpp"
 
@@ -122,7 +123,9 @@ void Listener::listenForHandVelocity(const std::string& payload)
 		handDirection_ = Controller::DCMotor::Direction::NONE;
 
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
-	velocity_ = ((velocity + mask) ^ mask);
+	velocity = ((velocity + mask) ^ mask);
+
+	velocity_ = Politocean::map(velocity, 0, SHRT_MAX, Controller::DCMotor::MIN_PWM, Controller::DCMotor::MAX_PWM);
 }
 
 int Listener::action()
@@ -378,7 +381,6 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::WRIST_ON:
-				std::cout << "WRIST ENABLE" << std::endl;
 				arm.enableWrist();
 				break;
 
@@ -401,7 +403,6 @@ int main (void)
 				break;
 			
 			case Constants::Commands::Actions::WRIST_START:
-				std::cout << "Wrist Start" << std::endl;
 				arm.setWristDirection(listener.getWristDirection());
 				arm.startWrist();
 				break;
@@ -411,12 +412,10 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
-				std::cout << "HAND START" << std::endl;
 				arm.startHand(listener.getHandDirection(), listener.velocity());
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:
-				std::cout << "HAND STOP" << std::endl;
 				arm.stopHand();
 				break;
 

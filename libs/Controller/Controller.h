@@ -59,6 +59,9 @@ public:
         enum class Name { HAND };
         enum class Direction { CCW, CW, NONE };
 
+        static const int MIN_PWM    = 20;
+        static const int MAX_PWM    = 200;
+
     private:
         Name name_;
         Direction direction_;
