@@ -185,8 +185,6 @@ void Controller::Stepper::step()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    std::cout << "Stepping with " << velocity_ << std::endl;
-
     digitalWrite(pin, LOW);
     std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 

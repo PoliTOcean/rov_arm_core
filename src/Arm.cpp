@@ -28,7 +28,9 @@ public:
 	Listener() :
 		shoulderDirection_(Controller::Stepper::Direction::NONE), wristDirection_(Controller::Stepper::Direction::NONE),
 		handDirection_(Controller::DCMotor::Direction::NONE),
-		shoulderEnable_(false), wristEnable_(false), isUpdated_(false) {}
+		shoulderEnable_(false), wristEnable_(false), isUpdated_(false),
+		action_(Constants::Commands::Actions::NONE),
+		wristVelocity_(0), handVelocity_(0) {}
 
 	void listenForShoulder(const std::string& payload);
 	void listenForWrist(const std::string& payload);
@@ -101,6 +103,8 @@ void Listener::listenForWristDirection(const std::string& payload)
 	velocity = ((velocity + mask) ^ mask);
 
 	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, Constants::Timing::Millisenconds::MAX_WRIST);
+
+	std::cout << wristVelocity_ << std::endl;
 
 	isUpdated_ = true;
 }
