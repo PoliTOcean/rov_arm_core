@@ -13,7 +13,6 @@ class Controller
 {
 
 public:
-
     class Stepper
     {
     public:
@@ -38,10 +37,10 @@ public:
 
     public:
         Stepper(Name name) : name_(name), direction_(Direction::NONE), velocity_(0), enable_(false) {}
-         
-        int velocity();
+
         Name name();
         Direction direction();
+        int velocity();
 
         void enable();
         void disable();
@@ -52,6 +51,33 @@ public:
         void step();
 
         bool isEnable();
+    };
+
+    class DCMotor
+    {
+    public:
+        enum class Name { HAND };
+        enum class Direction { CCW, CW, NONE };
+
+    private:
+        Name name_;
+        Direction direction_;
+
+        int getDirPin();
+        int getPWMPin();
+
+    public:
+        DCMotor(Name name) : name_(name), direction_(Direction::NONE) {};
+
+        Name name();
+        Direction direction();
+        
+        void setup();
+
+        void setDirection(Direction direction);
+
+        void pwm(int velocity);
+        void pwm(Direction direction, int velocity);
     };
 
 private:

@@ -20,7 +20,7 @@ add_executable(ImuCalibration src/ImuCalibration.cpp)
 # Linking the libraries
 target_link_libraries(JoystickSubscriber
     -lpthread
-    PolitoceanRovArmCore::Sensor PolitoceanRovArmCore::Controller
+    PolitoceanCommon::Sensor PolitoceanRovArmCore::Controller
     PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
 
 
