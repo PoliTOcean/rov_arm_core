@@ -21,6 +21,7 @@ class Listener
 	bool shoulderEnable_, wristEnable_, isUpdated_;
 
 	int action_;
+	int velocity_;
 
 public:
 	Listener() :
@@ -35,6 +36,7 @@ public:
 	void listenForHandVelocity(const std::string& payload);
 
 	int action();
+	int velocity();
 
 	Controller::Stepper::Direction getShoulderDirection();
 	Controller::Stepper::Direction getWristDirection();
@@ -114,13 +116,19 @@ void Listener::listenForHandVelocity(const std::string& payload)
 		handDirection_ = Controller::DCMotor::Direction::NONE;
 
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
-	action_ = ((velocity + mask) ^ mask);
+	velocity_ = ((velocity + mask) ^ mask);
 }
 
 int Listener::action()
 {
 	isUpdated_ = false;
 	return action_;
+}
+
+int Listener::velocity()
+{
+	isUpdated_ = false;
+	return velocity_;
 }
 
 Controller::Stepper::Direction Listener::getShoulderDirection()
@@ -398,7 +406,7 @@ int main (void)
 
 			case Constants::Commands::Actions::HAND_START:
 				std::cout << "HAND START" << std::endl;
-				arm.startHand(listener.getHandDirection(), listener.action());
+				arm.startHand(listener.getHandDirection(), listener.velocity());
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:
