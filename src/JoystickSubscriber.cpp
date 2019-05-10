@@ -320,7 +320,6 @@ void SPI::send(const std::vector<unsigned char>& buffer, Controller& controller,
 		if (data == 0xFF)
 		{
 			listener.resetCurrentSensor();
-			it = buffer.begin();
 			continue;
 		}
 		
