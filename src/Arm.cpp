@@ -265,12 +265,15 @@ void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
 	if (isHanding_)
 		return ;
 	
+	hand_.setVelocity(velocity);
+	hand_.setDirection(direction);
+
 	handThread_ = new std::thread([&]() {
 		isHanding_	= true;
 		isMoving_	= true;
 
 		while (isHanding_)
-			hand_.pwm(direction, velocity);
+			hand_.pwm();
 	});
 }
 
@@ -411,7 +414,6 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
-				std::cout << "HAND START" << std::endl;
 				arm.startHand(listener.getHandDirection(), listener.velocity());
 				break;
 

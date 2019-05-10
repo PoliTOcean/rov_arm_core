@@ -62,6 +62,7 @@ public:
     private:
         Name name_;
         Direction direction_;
+        int velocity_;
 
         int getDirPin();
         int getPWMPin();
@@ -71,13 +72,14 @@ public:
 
         Name name();
         Direction direction();
+        int velocity();
         
         void setup();
 
         void setDirection(Direction direction);
+        void setVelocity(int velocity);
 
-        void pwm(int velocity);
-        void pwm(Direction direction, int velocity);
+        void pwm();
     };
 
 private:

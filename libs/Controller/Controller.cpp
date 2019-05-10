@@ -13,8 +13,9 @@
 
 namespace Politocean {
 
-#include "wiringPi.h"
-#include "wiringPiSPI.h"
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
+#include <softPwm.h>
 
 /***********************************************************************
  * Controller class implementation
@@ -205,11 +206,17 @@ Controller::DCMotor::Direction Controller::DCMotor::direction()
     return direction_;
 }
 
+int Controller::DCMotor::velocity()
+{
+    return velocity_;
+}
+
 void Controller::DCMotor::setup()
 {
     switch (name_)
     {
     case Name::HAND:
+        pinMode(Pinout::HAND_DIR, OUTPUT);
         pinMode(Pinout::HAND_PWM, PWM_OUTPUT);
         break;
 
@@ -220,17 +227,27 @@ void Controller::DCMotor::setup()
 
 void Controller::DCMotor::setDirection(Direction direction)
 {
-    direction_ = direction;
+    int pin = getDirPin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+
+    digitalWrite(pin, static_cast<int>(direction));
 }
 
-void Controller::DCMotor::pwm(int velocity)
+void Controller::DCMotor::setVelocity(int velocity)
 {
-    pwmWrite(static_cast<int>(direction_), velocity);
+    velocity_ = velocity;
 }
 
-void Controller::DCMotor::pwm(Direction direction, int velocity)
+void Controller::DCMotor::pwm()
 {
-    pwmWrite(static_cast<int>(direction), velocity);
+    int pin = getPWMPin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+
+    pwmWrite(pin, velocity_);
 }
 
 int Controller::DCMotor::getDirPin()
