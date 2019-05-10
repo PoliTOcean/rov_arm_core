@@ -208,8 +208,12 @@ public:
 	void stop();
 
 	void setShoulderDirection(Controller::Stepper::Direction direction);
+
 	void setWristDirection(Controller::Stepper::Direction direction);
+	void setWristVelocity(int velocity);
+
 	void setHandDirection(Controller::DCMotor::Direction);
+	void setHandVelocity(int velocity);
 
 	bool isShouldering();
 	bool isWristing();
@@ -255,6 +259,11 @@ void Arm::setWristDirection(Controller::Stepper::Direction direction)
 	}
 
 	wrist_.setDirection(direction);
+}
+
+void Arm::setWristVelocity(int velocity)
+{
+	wrist_.setVelocity(velocity);
 }
 
 void Arm::setHandDirection(Controller::DCMotor::Direction direction)
@@ -431,6 +440,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.getWristDirection());
+				arm.setWristVelocity(listener.wristVelocity());
 				arm.startWrist();
 				break;
 

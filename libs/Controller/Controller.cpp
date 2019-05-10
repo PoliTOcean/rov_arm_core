@@ -186,10 +186,10 @@ void Controller::Stepper::step()
         std::exit(EXIT_FAILURE);
 
     digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
+    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 
     digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(Constants::Timing::Millisenconds::DFLT_STEPPER));
+    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 }
 
 /***********************************************************************
