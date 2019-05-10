@@ -268,18 +268,12 @@ void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
 	hand_.setVelocity(velocity);
 	hand_.setDirection(direction);
 
-	handThread_ = new std::thread([&]() {
-		isHanding_	= true;
-		isMoving_	= true;
-
-		hand_.startPWM();
-
-		while (isHanding_);
-	});
+	hand_.startPWM();
 }
 
 void Arm::stopHand()
 {
+	hand_.stopPWM();
 	isHanding_	= false;
 	isMoving_ 	= (isWristing_ || isShouldering_);
 }

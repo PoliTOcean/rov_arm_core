@@ -249,6 +249,7 @@ void Controller::DCMotor::startPWM()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
+    digitalWrite(pin, OUTPUT);
     softPwmWrite(pin, velocity_);
 }
 
