@@ -92,12 +92,17 @@ void Listener::listenForWristDirection(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
-	if (velocity)
+	if (velocity > 0)
 		wristDirection_ = Controller::Stepper::Direction::CW;
 	else if (velocity < 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
+
+	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
+	velocity = ((velocity + mask) ^ mask);
+
+	wristVelocity_ = Politocean::map(velocity, 0, SHRT_MAX, Controller::DCMotor::MIN_PWM, Controller::DCMotor::MAX_PWM);
 
 	isUpdated_ = true;
 }
