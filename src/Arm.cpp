@@ -92,16 +92,22 @@ void Listener::listenForWristDirection(const std::string& payload)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
+	
+	isUpdated_ = true;
 }
 
 void Listener::listenForHand(const std::string& payload)
 {
+	std::cout << "I'm listening to Hand" << std::endl;
+	
 	if (payload == std::to_string(Constants::Commands::Actions::HAND_START))
 		action_ = Constants::Commands::Actions::HAND_START;
 	else if (payload == std::to_string(Constants::Commands::Actions::HAND_STOP))
 		action_ = Constants::Commands::Actions::HAND_STOP;
 	else
 		action_ = Constants::Commands::Actions::NONE;
+	
+	isUpdated_ = true;
 }
 
 void Listener::listenForHandVelocity(const std::string& payload)
