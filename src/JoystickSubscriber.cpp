@@ -337,7 +337,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID_PUB);
+	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID);
 	mqttLogger ptoLogger(&pub);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -355,7 +355,7 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID_SUB);
+	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
@@ -406,7 +406,7 @@ int main(int argc, const char *argv[])
 	
 	spi.startSPI(controller, listener);
 
-	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID_PUB);
+	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID);
 	Talker talker;
 
 	// Try to connect @sensorsPublisher
