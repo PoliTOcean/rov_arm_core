@@ -92,9 +92,9 @@ void Listener::listenForWristDirection(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
-	if (velocity)
+	if (velocity > 0)
 		wristDirection_ = Controller::Stepper::Direction::CW;
-	else if (std::stoi(payload) < 0)
+	else if (velocity < 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
