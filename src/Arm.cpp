@@ -102,7 +102,7 @@ void Listener::listenForWristDirection(const std::string& payload)
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
 	velocity = ((velocity + mask) ^ mask);
 
-	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, Constants::Timing::Millisenconds::MAX_WRIST);
+	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, -Constants::Timing::Millisenconds::MAX_WRIST);
 
 	std::cout << wristVelocity_ << std::endl;
 
