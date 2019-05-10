@@ -183,20 +183,20 @@ void Controller::Stepper::step()
     step(Constants::Timing::Millisenconds::DFLT_STEPPER);
 }
 
-void Controller::Stepper::step(int milliseconds)
+void Controller::Stepper::step()
 {
     int pin = getStepperPin();
 
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    std::cout << "Stepping with " << milliseconds << std::endl;
+    std::cout << "Stepping with " << velocity_ << std::endl;
 
     digitalWrite(pin, LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 
     digitalWrite(pin, HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 
 }
 
