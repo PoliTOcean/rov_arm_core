@@ -429,7 +429,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.getWristDirection());
-				arm.setWristVelocity(listener.wristVelocity());
+				arm.setWristVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
 				arm.startWrist();
 				break;
 
