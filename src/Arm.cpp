@@ -267,13 +267,13 @@ void Arm::startWrist(int velocity)
 		return ;
 		
 	wrist_.setVelocity(velocity);
-	
+
 	wristThread_ = new std::thread([&]() {
 		isWristing_ = true;
 		isMoving_ 	= true;
 
 		while (isWristing_)
-			wrist_.step(velocity);
+			wrist_.step();
 	});
 }
 
