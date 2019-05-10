@@ -172,7 +172,7 @@ public:
 	void startWrist();
 	void stopWrist();
 
-	void startHand(Controller::DCMotor::Direction direction, int velocity);
+	void startHand();
 	void stopHand();
 
 	void stop();
@@ -274,7 +274,7 @@ void Arm::stopWrist()
 	isMoving_ 	= (isShouldering_ || isHanding_);
 }
 
-void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
+void Arm::startHand()
 {
 	if (isHanding_)
 		return ;
@@ -400,7 +400,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.wristDirection());
-				arm.setWristVelocity(listener.wristVelocity());
+				arm.setWristVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
 				arm.startWrist();
 				break;
 
