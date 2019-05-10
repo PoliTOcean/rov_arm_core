@@ -236,6 +236,19 @@ void Arm::setShoulderDirection(Controller::Stepper::Direction direction)
 
 void Arm::setWristDirection(Controller::Stepper::Direction direction)
 {
+	switch (direction)
+	{
+	case Controller::Stepper::Direction::CW:
+		std::cout << "CW" << std::endl;
+		break;
+	case Controller::Stepper::Direction::CCW:
+		std::cout << "CCW" << std::endl;
+		break;
+	
+	default:
+		break;
+	}
+	
 	wrist_.setDirection(direction);
 }
 
