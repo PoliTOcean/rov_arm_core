@@ -269,6 +269,8 @@ void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
 	hand_.setDirection(direction);
 
 	hand_.startPWM();
+
+	isHanding_ = true;
 }
 
 void Arm::stopHand()
