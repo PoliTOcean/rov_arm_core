@@ -102,7 +102,7 @@ void Listener::listenForWristDirection(const std::string& payload)
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
 	velocity = ((velocity + mask) ^ mask);
 
-	wristVelocity_ = Politocean::map(velocity, 0, SHRT_MAX, Controller::DCMotor::MIN_PWM, Controller::DCMotor::MAX_PWM);
+	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, -Constants::Timing::Millisenconds::MAX_WRIST);
 
 	isUpdated_ = true;
 }
@@ -251,7 +251,7 @@ void Arm::setWristDirection(Controller::Stepper::Direction direction)
 void Arm::setWristVelocity(int velocity)
 {
 	std::cout << velocity << std::endl;
-	
+
 	wrist_.setVelocity(velocity);
 }
 
