@@ -22,7 +22,7 @@ class Listener
 	bool shoulderEnable_, wristEnable_, isUpdated_;
 
 	int action_;
-	int velocity_;
+	int wristVelocity_, handVelocity_;
 
 public:
 	Listener() :
@@ -37,7 +37,8 @@ public:
 	void listenForHandVelocity(const std::string& payload);
 
 	int action();
-	int velocity();
+	int wristVelocity();
+	int handVelocity();
 
 	Controller::Stepper::Direction getShoulderDirection();
 	Controller::Stepper::Direction getWristDirection();
@@ -99,7 +100,7 @@ void Listener::listenForWristDirection(const std::string& payload)
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
 	velocity = ((velocity + mask) ^ mask);
 
-	velocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, Constants::Timing::Millisenconds::MAX_WRIST);
+	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, Constants::Timing::Millisenconds::MAX_WRIST);
 
 	isUpdated_ = true;
 }
@@ -130,7 +131,7 @@ void Listener::listenForHandVelocity(const std::string& payload)
 	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
 	velocity = ((velocity + mask) ^ mask);
 
-	velocity_ = Politocean::map(velocity, 0, SHRT_MAX, Controller::DCMotor::MIN_PWM, Controller::DCMotor::MAX_PWM);
+	handVelocity_ = Politocean::map(velocity, 0, SHRT_MAX, Controller::DCMotor::MIN_PWM, Controller::DCMotor::MAX_PWM);
 }
 
 int Listener::action()
@@ -139,10 +140,16 @@ int Listener::action()
 	return action_;
 }
 
-int Listener::velocity()
+int Listener::wristVelocity()
 {
 	isUpdated_ = false;
-	return velocity_;
+	return wristVelocity_;
+}
+
+int Listener::handVelocity()
+{
+	isUpdated_ = false;
+	return handVelocity_;
 }
 
 Controller::Stepper::Direction Listener::getShoulderDirection()
@@ -409,7 +416,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.getWristDirection());
-				arm.startWrist(listener.velocity());
+				arm.startWrist(listener.wristVelocity());
 				break;
 
 			case Constants::Commands::Actions::WRIST_STOP:
@@ -417,7 +424,7 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
-				arm.startHand(listener.getHandDirection(), listener.velocity());
+				arm.startHand(listener.getHandDirection(), listener.handVelocity());
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:
