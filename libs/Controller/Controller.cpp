@@ -217,7 +217,9 @@ void Controller::DCMotor::setup()
     {
     case Name::HAND:
         pinMode(Pinout::HAND_DIR, OUTPUT);
-        pinMode(Pinout::HAND_PWM, PWM_OUTPUT);
+        pinMode(Pinout::HAND_PWM, OUTPUT);
+
+        softPwmCreate(Pinout::HAND_PWM, 0, 200);
         break;
 
     default:
@@ -237,7 +239,7 @@ void Controller::DCMotor::setDirection(Direction direction)
 
 void Controller::DCMotor::setVelocity(int velocity)
 {
-    velocity_ = velocity;
+    velocity_ = 50;
 }
 
 void Controller::DCMotor::pwm()
@@ -247,7 +249,7 @@ void Controller::DCMotor::pwm()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    pwmWrite(pin, velocity_);
+    softPwmWrite(pin, velocity_);
 }
 
 int Controller::DCMotor::getDirPin()
