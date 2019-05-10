@@ -92,17 +92,12 @@ void Listener::listenForWristDirection(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
-	if (velocity > 0)
+	if (velocity)
 		wristDirection_ = Controller::Stepper::Direction::CW;
-	else if (velocity < 0)
+	else if (std::stoi(payload) < 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
-
-	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
-	velocity = ((velocity + mask) ^ mask);
-
-	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, -Constants::Timing::Millisenconds::MAX_WRIST);
 
 	isUpdated_ = true;
 }
@@ -208,12 +203,8 @@ public:
 	void stop();
 
 	void setShoulderDirection(Controller::Stepper::Direction direction);
-
 	void setWristDirection(Controller::Stepper::Direction direction);
-	void setWristVelocity(int velocity);
-
 	void setHandDirection(Controller::DCMotor::Direction);
-	void setHandVelocity(int velocity);
 
 	bool isShouldering();
 	bool isWristing();
@@ -246,13 +237,6 @@ void Arm::setShoulderDirection(Controller::Stepper::Direction direction)
 void Arm::setWristDirection(Controller::Stepper::Direction direction)
 {
 	wrist_.setDirection(direction);
-}
-
-void Arm::setWristVelocity(int velocity)
-{
-	std::cout << velocity << std::endl;
-
-	wrist_.setVelocity(velocity);
 }
 
 void Arm::setHandDirection(Controller::DCMotor::Direction direction)
@@ -429,7 +413,6 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.getWristDirection());
-				arm.setWristVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
 				arm.startWrist();
 				break;
 
