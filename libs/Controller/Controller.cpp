@@ -218,8 +218,6 @@ void Controller::DCMotor::setup()
     case Name::HAND:
         pinMode(Pinout::HAND_DIR, OUTPUT);
         pinMode(Pinout::HAND_PWM, OUTPUT);
-
-        softPwmCreate(Pinout::HAND_PWM, 0, 200);
         break;
 
     default:
@@ -249,7 +247,7 @@ void Controller::DCMotor::startPWM()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    digitalWrite(pin, HIGH);
+    softPwmCreate(Pinout::HAND_PWM, 0, 200);
     softPwmWrite(pin, velocity_);
 }
 
