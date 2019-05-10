@@ -17,6 +17,7 @@ using namespace Politocean;
 class Listener
 {
 	Controller::Stepper::Direction shoulderDirection_, wristDirection_;
+	Controller::DCMotor::Direction handDirection_;
 	bool shoulderEnable_, wristEnable_, isUpdated_;
 
 	int action_;
@@ -24,16 +25,20 @@ class Listener
 public:
 	Listener() :
 		shoulderDirection_(Controller::Stepper::Direction::NONE), wristDirection_(Controller::Stepper::Direction::NONE),
+		handDirection_(Controller::DCMotor::Direction::NONE),
 		shoulderEnable_(false), wristEnable_(false), isUpdated_(false) {}
 
 	void listenForShoulder(const std::string& payload);
 	void listenForWrist(const std::string& payload);
 	void listenForWristDirection(const std::string& payload);
+	void listenForHand(const std::string& payload);
+	void listenForHandVelocity(const std::string& payload);
 
 	int action();
 
 	Controller::Stepper::Direction getShoulderDirection();
 	Controller::Stepper::Direction getWristDirection();
+	Controller::DCMotor::Direction getHandDirection();
 
 	bool isShoulderEnable();
 	bool isWristEnable();
@@ -87,6 +92,31 @@ void Listener::listenForWristDirection(const std::string& payload)
 		wristDirection_ = Controller::Stepper::Direction::NONE;
 }
 
+void Listener::listenForHand(const std::string& payload)
+{
+	if (payload == std::to_string(Constants::Commands::Actions::HAND_START))
+		action_ = Constants::Commands::Actions::HAND_START;
+	else if (payload == std::to_string(Constants::Commands::Actions::HAND_STOP))
+		action_ = Constants::Commands::Actions::HAND_STOP;
+	else
+		action_ = Constants::Commands::Actions::NONE;
+}
+
+void Listener::listenForHandVelocity(const std::string& payload)
+{
+	int velocity = std::stoi(payload);
+
+	if (velocity > 0)
+		handDirection_ = Controller::DCMotor::Direction::CCW;
+	else if (velocity < 0)
+		handDirection_ = Controller::DCMotor::Direction::CW;
+	else
+		handDirection_ = Controller::DCMotor::Direction::NONE;
+
+	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
+	action_ = ((velocity + mask) ^ mask);
+}
+
 int Listener::action()
 {
 	isUpdated_ = false;
@@ -103,6 +133,11 @@ Controller::Stepper::Direction Listener::getWristDirection()
 	return wristDirection_;
 }
 
+Controller::DCMotor::Direction Listener::getHandDirection()
+{
+	return handDirection_;
+}
+
 bool Listener::isUpdated()
 {
 	return isUpdated_;
@@ -116,13 +151,17 @@ class Arm
 {
 	Controller controller;
 	Controller::Stepper shoulder_, wrist_;
+	Controller::DCMotor hand_;
 
-	std::thread *shoulderThread, *wristThread;
+	std::thread *shoulderThread_, *wristThread_, *handThread_;
 	
-	bool isShouldering_ = false, isWristing_ = false, isMoving_ = false;
+	bool isShouldering_, isWristing_, isHanding_, isMoving_;
 
 public:
-	Arm() : controller(), shoulder_(Controller::Stepper::Name::SHOULDER), wrist_(Controller::Stepper::Name::WRIST) {}
+	Arm() :
+		controller(),
+		shoulder_(Controller::Stepper::Name::SHOULDER), wrist_(Controller::Stepper::Name::WRIST), hand_(Controller::DCMotor::Name::HAND),
+		isShouldering_(false), isWristing_(false), isHanding_(false), isMoving_(false) {}
 
 	void setup();
 
@@ -132,13 +171,18 @@ public:
 	void startWrist();
 	void stopWrist();
 
+	void startHand(Controller::DCMotor::Direction direction, int velocity);
+	void stopHand();
+
 	void stop();
 
 	void setShoulderDirection(Controller::Stepper::Direction direction);
 	void setWristDirection(Controller::Stepper::Direction direction);
+	void setHandDirection(Controller::DCMotor::Direction);
 
 	bool isShouldering();
 	bool isWristing();
+	bool isHanding();
 	bool isMoving();
 
 	void enableShoulder();
@@ -155,6 +199,8 @@ void Arm::setup()
 {
 	controller.setup();
 	controller.setupArm();
+
+	hand_.setup();
 }
 
 void Arm::setShoulderDirection(Controller::Stepper::Direction direction)
@@ -167,12 +213,17 @@ void Arm::setWristDirection(Controller::Stepper::Direction direction)
 	wrist_.setDirection(direction);
 }
 
+void Arm::setHandDirection(Controller::DCMotor::Direction direction)
+{
+	hand_.setDirection(direction);
+}
+
 void Arm::startShoulder()
 {
 	if (isShouldering_)
 		return ;
 
-	shoulderThread = new std::thread([&]() {
+	shoulderThread_ = new std::thread([&]() {
 		isShouldering_ 	= true;
 		isMoving_ 		= true;
 
@@ -186,7 +237,7 @@ void Arm::startWrist()
 	if (isWristing_)
 		return ;
 		
-	wristThread = new std::thread([&]() {
+	wristThread_ = new std::thread([&]() {
 		isWristing_ = true;
 		isMoving_ 	= true;
 
@@ -195,10 +246,24 @@ void Arm::startWrist()
 	});
 }
 
-void Arm::stop()
+void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
 {
-	stopShoulder();
-	stopWrist();
+	if (isHanding_)
+		return ;
+	
+	handThread_ = new std::thread([&]() {
+		isHanding_	= true;
+		isMoving_	= true;
+
+		while (isHanding_)
+			hand_.pwm(direction, velocity);
+	});
+}
+
+void Arm::stopHand()
+{
+	isHanding_	= false;
+	isMoving_ 	= isWristing_;
 }
 
 void Arm::stopShoulder()
@@ -211,6 +276,13 @@ void Arm::stopWrist()
 {
 	isWristing_	= false;
 	isMoving_ 	= isWristing_;
+}
+
+void Arm::stop()
+{
+	stopShoulder();
+	stopWrist();
+	stopHand();
 }
 
 bool Arm::isShouldering()
@@ -269,9 +341,11 @@ int main (void)
 	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
 	Listener listener;
 
-	subscriber.subscribeTo(Constants::Topics::SHOULDER, 		&Listener::listenForShoulder, &listener);
-	subscriber.subscribeTo(Constants::Topics::WRIST, 			&Listener::listenForWrist, &listener);
-	subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY,	&Listener::listenForWristDirection, &listener);
+	subscriber.subscribeTo(Constants::Topics::SHOULDER, 		&Listener::listenForShoulder,		&listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST, 			&Listener::listenForWrist,			&listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY,	&Listener::listenForWristDirection,	&listener);
+	subscriber.subscribeTo(Constants::Topics::HAND,				&Listener::listenForHand, 			&listener);
+	subscriber.subscribeTo(Constants::Topics::HAND_VELOCITY,	&Listener::listenForHandVelocity,	&listener);
 
 	subscriber.connect();
 
@@ -320,6 +394,14 @@ int main (void)
 
 			case Constants::Commands::Actions::WRIST_STOP:
 				arm.stopWrist();
+				break;
+
+			case Constants::Commands::Actions::HAND_START:
+				arm.startHand(listener.getHandDirection(), listener.action());
+				break;
+
+			case Constants::Commands::Actions::HAND_STOP:
+				arm.stopHand();
 				break;
 
 			case Constants::Commands::Actions::NONE:
