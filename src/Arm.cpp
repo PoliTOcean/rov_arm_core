@@ -266,6 +266,8 @@ void Arm::startWrist(int velocity)
 	if (isWristing_)
 		return ;
 		
+	wrist_.setVelocity(velocity);
+	
 	wristThread_ = new std::thread([&]() {
 		isWristing_ = true;
 		isMoving_ 	= true;

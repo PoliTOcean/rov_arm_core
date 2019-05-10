@@ -180,11 +180,6 @@ void Controller::Stepper::setVelocity(int velocity)
 
 void Controller::Stepper::step()
 {
-    step(Constants::Timing::Millisenconds::DFLT_STEPPER);
-}
-
-void Controller::Stepper::step()
-{
     int pin = getStepperPin();
 
     if (pin == -1)
