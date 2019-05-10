@@ -242,7 +242,7 @@ void Controller::DCMotor::setVelocity(int velocity)
     velocity_ = 50;
 }
 
-void Controller::DCMotor::pwm()
+void Controller::DCMotor::startPWM()
 {
     int pin = getPWMPin();
 
@@ -250,6 +250,16 @@ void Controller::DCMotor::pwm()
         std::exit(EXIT_FAILURE);
 
     softPwmWrite(pin, velocity_);
+}
+
+void Controller::DCMotor::stopPWM()
+{
+    int pin = getPWMPin();
+
+    if (pin == -1)
+        std::exit(EXIT_FAILURE);
+    
+    softPwmStop(pin);
 }
 
 int Controller::DCMotor::getDirPin()

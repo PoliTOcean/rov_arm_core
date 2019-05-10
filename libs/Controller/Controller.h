@@ -79,7 +79,8 @@ public:
         void setDirection(Direction direction);
         void setVelocity(int velocity);
 
-        void pwm();
+        void startPWM();
+        void stopPWM();
     };
 
 private:
