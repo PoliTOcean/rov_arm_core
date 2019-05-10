@@ -397,10 +397,12 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
+				std::cout << "HAND START" << std::endl;
 				arm.startHand(listener.getHandDirection(), listener.action());
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:
+				std::cout << "HAND STOP" << std::endl;
 				arm.stopHand();
 				break;
 
