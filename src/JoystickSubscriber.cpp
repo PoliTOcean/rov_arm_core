@@ -52,7 +52,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(0)
+	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for (auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
