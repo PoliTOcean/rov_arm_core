@@ -106,8 +106,6 @@ void Listener::listenForSensor(unsigned char data)
 {
 	sensors_[static_cast<int>(currentSensor_)].setValue(data);
 
-	cout << sensors_[static_cast<int>(currentSensor_)] << std::endl;
-
 	if (++currentSensor_ > sensor_t::Last)
 		currentSensor_ = sensor_t::First;
 
@@ -255,6 +253,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
+				(unsigned char) 0xff,
 				(unsigned char) Politocean::map(axes[0],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[1],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
@@ -319,7 +318,6 @@ void SPI::send(const std::vector<unsigned char>& buffer, Controller& controller,
 		if (data == 0xFF)
 		{
 			listener.resetCurrentSensor();
-			it = buffer.begin();
 			continue;
 		}
 		
