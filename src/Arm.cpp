@@ -34,9 +34,9 @@ public:
 
 	void listenForShoulder(const std::string& payload);
 	void listenForWrist(const std::string& payload);
-	void listenForWristDirection(const std::string& payload);
+	void listenForWristDirectionAndVelocity(const std::string& payload);
 	void listenForHand(const std::string& payload);
-	void listenForHandVelocity(const std::string& payload);
+	void listenForHandDirectionAndVelocity(const std::string& payload);
 
 	int action();
 
@@ -89,7 +89,7 @@ void Listener::listenForWrist(const std::string& payload)
 	isUpdated_ = true;
 }
 
-void Listener::listenForWristDirection(const std::string& payload)
+void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
@@ -99,6 +99,11 @@ void Listener::listenForWristDirection(const std::string& payload)
 		wristDirection_ = Controller::Stepper::Direction::CW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
+
+	int const mask = velocity >> (sizeof(int) * __CHAR_BIT__ - 1);
+	velocity = ((velocity + mask) ^ mask);
+
+	wristVelocity_ = -Politocean::map(velocity, 0, SHRT_MAX, -Constants::Timing::Millisenconds::MIN_WRIST, -Constants::Timing::Millisenconds::MAX_WRIST);
 
 	isUpdated_ = true;
 }
@@ -115,7 +120,7 @@ void Listener::listenForHand(const std::string& payload)
 	isUpdated_ = true;
 }
 
-void Listener::listenForHandVelocity(const std::string& payload)
+void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
@@ -198,18 +203,23 @@ public:
 	void startWrist();
 	void stopWrist();
 
-	void startHand(Controller::DCMotor::Direction direction, int velocity);
+	void startHand();
 	void stopHand();
 
 	void stop();
 
 	void setShoulderDirection(Controller::Stepper::Direction direction);
 	void setWristDirection(Controller::Stepper::Direction direction);
-	void setHandDirection(Controller::DCMotor::Direction);
+	void setHandDirection(Controller::DCMotor::Direction direction);
+
+	void setShoulderVelocity(int velocity);
+	void setWristVelocity(int velocity);
+	void setHandVelocity(int velocity);
 
 	bool isShouldering();
 	bool isWristing();
 	bool isHanding();
+
 	bool isMoving();
 
 	void enableShoulder();
@@ -225,8 +235,9 @@ public:
 void Arm::setup()
 {
 	controller.setup();
-	controller.setupArm();
 
+	shoulder_.setup();
+	wrist_.setup();
 	hand_.setup();
 }
 
@@ -243,6 +254,21 @@ void Arm::setWristDirection(Controller::Stepper::Direction direction)
 void Arm::setHandDirection(Controller::DCMotor::Direction direction)
 {
 	hand_.setDirection(direction);
+}
+
+void Arm::setShoulderVelocity(int velocity)
+{
+	shoulder_.setVelocity(velocity);
+}
+
+void Arm::setWristVelocity(int velocity)
+{
+	wrist_.setVelocity(velocity);
+}
+
+void Arm::setHandVelocity(int velocity)
+{
+	hand_.setVelocity(velocity);
 }
 
 void Arm::startShoulder()
@@ -273,13 +299,10 @@ void Arm::startWrist()
 	});
 }
 
-void Arm::startHand(Controller::DCMotor::Direction direction, int velocity)
+void Arm::startHand()
 {
 	if (isHanding_)
 		return ;
-	
-	hand_.setVelocity(velocity);
-	hand_.setDirection(direction);
 
 	hand_.startPWM();
 
@@ -368,11 +391,11 @@ int main (void)
 	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ARM_ID);
 	Listener listener;
 
-	subscriber.subscribeTo(Constants::Topics::SHOULDER, 		&Listener::listenForShoulder,		&listener);
-	subscriber.subscribeTo(Constants::Topics::WRIST, 			&Listener::listenForWrist,			&listener);
-	subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY,	&Listener::listenForWristDirection,	&listener);
-	subscriber.subscribeTo(Constants::Topics::HAND,				&Listener::listenForHand, 			&listener);
-	subscriber.subscribeTo(Constants::Topics::HAND_VELOCITY,	&Listener::listenForHandVelocity,	&listener);
+	subscriber.subscribeTo(Constants::Topics::SHOULDER, &Listener::listenForShoulder, &listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST, &Listener::listenForWrist, &listener);
+	subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY, &Listener::listenForWristDirectionAndVelocity, &listener);
+	subscriber.subscribeTo(Constants::Topics::HAND, &Listener::listenForHand, &listener);
+	subscriber.subscribeTo(Constants::Topics::HAND_VELOCITY, &Listener::listenForHandDirectionAndVelocity, &listener);
 
 	subscriber.connect();
 
@@ -414,6 +437,7 @@ int main (void)
 			
 			case Constants::Commands::Actions::WRIST_START:
 				arm.setWristDirection(listener.wristDirection());
+				arm.setWristVelocity(listener.wristVelocity());
 				arm.startWrist();
 				break;
 
@@ -422,7 +446,9 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
-				arm.startHand(listener.handDirection(), listener.handVelocity());
+				arm.setHandDirection(listener.handDirection());
+				arm.setHandVelocity(listener.handVelocity());
+				arm.startHand();
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:
