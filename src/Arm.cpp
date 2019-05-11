@@ -72,14 +72,12 @@ void Listener::listenForWristDirection(const std::string& payload)
 	int velocity = std::stoi(payload);
 
 	if (velocity > 0)
-		wristDirection_ = Controller::Stepper::Direction::CW;
-	else if (velocity < 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
+	else if (velocity < 0)
+		wristDirection_ = Controller::Stepper::Direction::CW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
 	
-
-
 	isUpdated_ = true;
 }
 
@@ -124,17 +122,17 @@ int Listener::handVelocity()
 	return handVelocity_;
 }
 
-Controller::Stepper::Direction Listener::getShoulderDirection()
+Controller::Stepper::Direction Listener::shoulderDirection()
 {
 	return shoulderDirection_;
 }
 
-Controller::Stepper::Direction Listener::getWristDirection()
+Controller::Stepper::Direction Listener::wristDirection()
 {
 	return wristDirection_;
 }
 
-Controller::DCMotor::Direction Listener::getHandDirection()
+Controller::DCMotor::Direction Listener::handDirection()
 {
 	return handDirection_;
 }
