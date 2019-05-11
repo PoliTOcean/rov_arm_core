@@ -55,21 +55,6 @@ void Controller::setupMotors()
     pinMode(Pinout::MOTORS, OUTPUT);
 }
 
-void Controller::setupArm()
-{
-    pinMode(Pinout::SHOULDER_EN, OUTPUT);
-    digitalWrite(Pinout::SHOULDER_EN, HIGH);
-
-    pinMode(Pinout::WRIST_EN, OUTPUT);
-    digitalWrite(Pinout::WRIST_EN, HIGH);
-
-    pinMode(Pinout::SHOULDER_DIR, OUTPUT);
-    pinMode(Pinout::SHOULDER_STEPPER, OUTPUT);
-
-    pinMode(Pinout::WRIST_DIR, OUTPUT);
-    pinMode(Pinout::WRIST_STEPPER, OUTPUT);
-}
-
 unsigned char Controller::SPIDataRW(unsigned char data)
 {
     unsigned char tmp;
@@ -111,6 +96,28 @@ void Controller::switchMotors()
 /***********************************************************************
  * Stepper class implementation
  **********************************************************************/
+
+void Controller::Stepper::setup()
+{
+    switch (name_)
+    {
+        case Name::SHOULDER:
+            pinMode(Pinout::SHOULDER_EN, OUTPUT);
+            pinMode(Pinout::SHOULDER_DIR, OUTPUT);
+            pinMode(Pinout::SHOULDER_STEPPER, OUTPUT);
+            digitalWrite(Pinout::SHOULDER_EN, HIGH);
+            break;
+        
+        case Name::WRIST:
+            pinMode(Pinout::WRIST_EN, OUTPUT);
+            pinMode(Pinout::WRIST_DIR, OUTPUT);
+            pinMode(Pinout::WRIST_STEPPER, OUTPUT);
+            digitalWrite(Pinout::WRIST_EN, HIGH);
+            break;
+
+        default: break;
+    }
+}
 
 
 int Controller::Stepper::getEnablePin()

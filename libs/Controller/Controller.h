@@ -38,6 +38,8 @@ public:
     public:
         Stepper(Name name) : name_(name), direction_(Direction::NONE), velocity_(0), enable_(false) {}
 
+        void setup();
+
         Name name();
         Direction direction();
         int velocity();
@@ -100,7 +102,6 @@ public:
 
     void setupSPI();
     void setupMotors();
-    void setupArm();
 
     /**
      * It returns the value read from SPI
