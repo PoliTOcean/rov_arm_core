@@ -1,0 +1,1 @@
+enum class Direction { CW, CCW, NONE };
