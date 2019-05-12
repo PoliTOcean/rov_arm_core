@@ -26,6 +26,7 @@
  **************************************************/
 
 using namespace Politocean;
+using namespace Politocean::RPi;
 
 class Listener
 {
@@ -235,7 +236,7 @@ public:
 
 void SPI::setup(Controller& controller)
 {
-	controller.setupSPI();
+	controller.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
 void SPI::startSPI(Controller& controller, Listener& listener)
@@ -384,7 +385,7 @@ int main(int argc, const char *argv[])
 	{
 		controller.setup();
 		controller.setupMotors();
-		controller.setupSPI();
+		controller.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
