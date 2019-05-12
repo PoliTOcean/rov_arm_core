@@ -1,6 +1,6 @@
 #include "Subscriber.h"
 #include "Controller.h"
-#include "DCMotor.h"
+#include "PwmMotor.h"
 #include "Stepper.h"
 
 #include "PolitoceanConstants.h"
@@ -135,7 +135,7 @@ int main(int argc, const char *argv[])
     Controller controller;
     controller.setup();
     
-    DCMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, DCMotor::MIN_PWM, DCMotor::MAX_PWM);
+    PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
 
@@ -179,10 +179,10 @@ int main(int argc, const char *argv[])
         {
             hand.setDirection(listener.handDirection());
             hand.setVelocity(listener.handVelocity());
-            hand.pwmStart();
+            hand.startPwm();
         }
         else if (action == Constants::Commands::Actions::HAND_STOP)
-            hand.pwmStop();
+            hand.stopPwm();
         else continue;
     }
 }
