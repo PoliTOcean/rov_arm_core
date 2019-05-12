@@ -121,6 +121,41 @@ void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
     }
 }
 
+Direction Listener::shoulderDirection()
+{
+    return shoulderDirection_;
+}
+
+Direction Listener::wristDirection()
+{
+    return wristDirection_;
+}
+
+Direction Listener::handDirection()
+{
+    return handDirection_;
+}
+
+int Listener::shoulderVelocity()
+{
+    return shoulderVelocity_;
+}
+
+int Listener::wristVelocity()
+{
+    return wristVelocity_;
+}
+
+int Listener::handVelocity()
+{
+    return handVelocity_;
+}
+
+string Listener::action()
+{
+    return action_;
+}
+
 int main(int argc, const char *argv[])
 {
     Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SKELETON_ID);
