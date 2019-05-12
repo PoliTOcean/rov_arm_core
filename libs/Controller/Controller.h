@@ -5,119 +5,72 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "PolitoceanConstants.h"
-
-namespace Politocean {
-
-class Controller
+namespace Politocean
 {
-
-public:
-    class Stepper
+    namespace RPi
     {
-    public:
-        enum class Name { WRIST, SHOULDER };
-        enum class Direction { CCW, CW, NONE };
-
-        static const int ENABLE     = 0;
-        static const int DISABLE    = 1;
-
-    private:
-        Name name_;
-        Direction direction_;
-        int velocity_;
-
-        bool enable_;
-
-        int getStepperPin();
-        int getEnablePin();
-        int getDirectionPin();
-
-        void set(bool value);
-
-    public:
-        Stepper(Name name) : name_(name), direction_(Direction::NONE), velocity_(0), enable_(false) {}
-
-        void setup();
-
-        Name name();
-        Direction direction();
-        int velocity();
-
-        void enable();
-        void disable();
-
-        void setDirection(Direction direction);
-        void setVelocity(int velocity);
+        class Pinout
+        {
+        public:
+            static const int RESET              = 7;
+            static const int MOTORS             = 12;
+            
+            static const int SHOULDER_EN        = 15;
+            static const int SHOULDER_DIR       = 13;
+            static const int SHOULDER_STEP      = 11;
+            
+            static const int WRIST_EN           = 40;
+            static const int WRIST_DIR          = 38;
+            static const int WRIST_STEP         = 36;
+            
+            static const int HAND_DIR           = 16;
+            static const int HAND_PWM           = 18;
+            
+            static const int CAMERA_EN          = 33;
+            static const int CAMERA_DIR         = 31;
+            static const int CAMERA_STEP        = 29;
+        };
         
-        void step();
-
-        bool isEnable();
-    };
-
-    class DCMotor
-    {
-    public:
-        enum class Name { HAND };
-        enum class Direction { CCW, CW, NONE };
-
-        static const int MIN_PWM    = 20;
-        static const int MAX_PWM    = 200;
-
-    private:
-        Name name_;
-        Direction direction_;
-        int velocity_;
-
-        int getDirPin();
-        int getPWMPin();
-
-    public:
-        DCMotor(Name name) : name_(name), direction_(Direction::NONE) {};
-
-        Name name();
-        Direction direction();
-        int velocity();
+        class Controller
+        {
+            int spiDevice_;
+            
+            bool motors_;
         
-        void setup();
+        public:
+            enum class PinLevel { PIN_LOW, PIN_HIGH };
+            enum class PinMode { PIN_OUTPUT, PIN_INPUT };
+            
+            static const int DEFAULT_SPI_CHANNEL    = 0;
+            static const int DEFAULT_SPI_SPEED      = 1000000;
+            
+            Controller() : motors_(false) {}
+            
+            void setup();
 
-        void setDirection(Direction direction);
-        void setVelocity(int velocity);
-
-        void startPWM();
-        void stopPWM();
-    };
-
-private:
-    bool motors_ = false;
-
-public:
-    static const int DEFAULT_SPI_CHANNEL    = 0;
-    static const int DEFAULT_SPI_SPEED      = 1000000;
-
-    Controller() = default;
-
-    // It sets up the controller
-    void setup();
-
-    void setupSPI();
-    void setupMotors();
-
-    /**
-     * It returns the value read from SPI
-     * 
-     * @data : value to send via SPI
-     */
-    unsigned char SPIDataRW(unsigned char data);
-
-    void switchMotors();
-
-    // It resets the controller
-    void reset();
-
-    void resetArm();
-};
-
+            void pinMode(int pin, PinMode mode);
+            void digitalWrite(int pin, PinLevel level);
+            
+            void softPwmCreate(int pwmPin, int start, int stop);
+            void softPwmWrite(int pwmPin, int value);
+            void softPwmStop(int pwmPin);
+            
+            void setupSPI(int device, int frequency);
+            void setupMotors();
+            
+            /**
+             * It returns the value read from SPI
+             * 
+             * @data : value to send via SPI
+             */
+            unsigned char SPIDataRW(unsigned char data);
+            
+            void switchMotors();
+            
+            // It resets the controller
+            void reset();
+        };
+    }
 }
 
 
