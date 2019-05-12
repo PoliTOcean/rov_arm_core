@@ -27,7 +27,7 @@ target_link_libraries(JoystickSubscriber
 target_link_libraries(Skeleton -lpthread
     PolitoceanRovArmCore::Controller
     PolitoceanRovArmCore::Stepper
-    PolitoceanRovArmCore::DCMotor
+    PolitoceanRovArmCore::PwmMotor
     
     PolitoceanCommon::Subscriber)
 
