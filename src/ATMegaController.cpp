@@ -338,14 +338,14 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID);
-	mqttLogger ptoLogger(&pub);
+	Publisher publisher(Constants::Hmi::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	mqttLogger ptoLogger(&publisher);
 	logger::enableLevel(logger::DEBUG, false);
 
 	// Try to connect to publisher logger
 	try
 	{
-		pub.connect();
+		publisher.connect();
 	}
 	catch (const mqtt::exception& e)
 	{
@@ -356,7 +356,7 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID);
+	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
@@ -407,22 +407,11 @@ int main(int argc, const char *argv[])
 	
 	spi.startSPI(controller, listener);
 
-	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID);
 	Talker talker;
+	talker.startTalking(publisher, listener);
 
-	// Try to connect @sensorsPublisher
-	try
-	{
-		sensorsPublisher.connect();
-	}
-	catch(const mqttException::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
-
-	talker.startTalking(sensorsPublisher, listener);
-
-	while (subscriber.is_connected());
+	// wait until subscriber is is_connected
+	subscriber.wait();
 
 	// Stop sensors talker and SPI
 	talker.stopTalking();
