@@ -6,8 +6,6 @@
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
 
-#define ABS(N) ((N<0)?(-N):(N))
-
 using namespace Politocean;
 using namespace Politocean::RPi;
 
