@@ -13,12 +13,11 @@ add_subdirectory(libs)
 include_directories(include)
 
 # Add executable
-add_executable(JoystickSubscriber src/JoystickSubscriber.cpp)
+add_executable(ATMegaController src/ATMegaController.cpp)
 add_executable(Skeleton src/Skeleton.cpp)
-add_executable(ImuCalibration src/ImuCalibration.cpp)
 
 # Linking the libraries
-target_link_libraries(JoystickSubscriber
+target_link_libraries(ATMegaController
     -lpthread
     PolitoceanCommon::Sensor PolitoceanRovArmCore::Controller
     PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
@@ -31,7 +30,3 @@ target_link_libraries(Skeleton -lpthread
     
     PolitoceanCommon::Subscriber)
 
-target_link_libraries(ImuCalibration
-    PolitoceanRovArmCore::Controller
-    PolitoceanCommon::Publisher
-    PolitoceanCommon::mqttLogger)
