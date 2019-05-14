@@ -274,10 +274,8 @@ void SPI::startSPI(Listener& listener)
 
 			std::string data = listener.button();
 
-			std::cout << "Received: " << (int)data << std::endl;
-
 			bool sendToSPI = false;
-			if (data == std::to_string(Constants::Commands::Actions::RESET);
+			if (data == std::to_string(Constants::Commands::Actions::RESET))
 				controller_->reset();
 			else if (data == std::to_string(Constants::Commands::Actions::MOTORS_SWAP))
 				controller_->switchMotors();
