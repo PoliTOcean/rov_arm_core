@@ -20,13 +20,11 @@ void Controller::setup()
 
 void Controller::pinMode(int pin, PinMode mode)
 {
-    std::cout << pin << " " << static_cast<int>(mode) << std::endl;
     WiringPi::pinMode(pin, static_cast<int>(mode));
 }
 
 void Controller::digitalWrite(int pin, PinLevel level)
 {
-    std::cout << pin << " " << static_cast<int>(level) << std::endl;
     WiringPi::digitalWrite(pin, static_cast<int>(level));
 }
 

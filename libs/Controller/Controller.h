@@ -39,7 +39,7 @@ namespace Politocean
         
         public:
             enum class PinLevel { PIN_LOW, PIN_HIGH };
-            enum class PinMode { PIN_OUTPUT, PIN_INPUT };
+            enum class PinMode { PIN_INPUT, PIN_OUTPUT };
             
             static const int DEFAULT_SPI_CHANNEL    = 0;
             static const int DEFAULT_SPI_SPEED      = 1000000;
