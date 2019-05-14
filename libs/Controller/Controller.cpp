@@ -1,3 +1,4 @@
+#include <iostream>
 #include <thread>
 #include <chrono>
 
@@ -75,6 +76,8 @@ void Controller::setupMotors()
 void Controller::switchMotors()
 {
     motors_ = !motors_;
+
+    std::cout << "MOTORS" << std::endl;
 
     (motors_) ? digitalWrite(Pinout::MOTORS, PinLevel::PIN_HIGH) : digitalWrite(Pinout::MOTORS, PinLevel::PIN_LOW);
 }

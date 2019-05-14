@@ -277,15 +277,11 @@ void SPI::startSPI(Listener& listener)
 			try
 			{
 				data = static_cast<unsigned char>(std::stoi(listener.button()));
-				std::cout << data << std::endl;
 			}
 			catch (const std::exception& e)
 			{
-				std::cout << e.what() << std::endl;
 				continue ;
 			}
-
-			std::cout << "Received: " << (int)data << std::endl;
 
 			bool sendToSPI = false;
 			switch (data)
@@ -294,6 +290,7 @@ void SPI::startSPI(Listener& listener)
 					controller_->reset();
 					break;
 				case Constants::Commands::Actions::MOTORS_SWAP:
+					std::cout << "SWITCH" << std::endl;
 					controller_->switchMotors();
 					break;
 				default:
