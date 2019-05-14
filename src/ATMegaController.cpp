@@ -276,7 +276,7 @@ void SPI::startSPI(Listener& listener)
 
 			try
 			{
-				data = static_cast<unsigned char>(std::stoi(listener.button()));
+				data = static_cast<unsigned char>(std::stoi(listener.button().at[0]));
 				std::cout << data << std::endl;
 			}
 			catch (const std::exception& e)
