@@ -272,33 +272,17 @@ void SPI::startSPI(Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data;
-
-			try
-			{
-				data = static_cast<unsigned char>(std::stoi(listener.button()));
-				std::cout << data << std::endl;
-			}
-			catch (const std::exception& e)
-			{
-				std::cout << e.what() << std::endl;
-				continue ;
-			}
+			std::string data = listener.button();
 
 			std::cout << "Received: " << (int)data << std::endl;
 
 			bool sendToSPI = false;
-			switch (data)
-			{
-				case Constants::Commands::Actions::RESET:
-					controller_->reset();
-					break;
-				case Constants::Commands::Actions::MOTORS_SWAP:
-					controller_->switchMotors();
-					break;
-				default:
-					sendToSPI = true;
-			}
+			if (data == std::to_string(Constants::Commands::Actions::RESET);
+				controller_->reset();
+			else if (data == std::to_string(Constants::Commands::Actions::MOTORS_SWAP))
+				controller_->switchMotors();
+			else
+				sendToSPI = true;
 
 			if (!sendToSPI)
 				continue;
