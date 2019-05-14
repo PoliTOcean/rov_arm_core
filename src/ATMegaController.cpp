@@ -349,7 +349,7 @@ int main(int argc, const char *argv[])
 	// Enable logging
 	Publisher publisher(Constants::Hmi::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
 	mqttLogger ptoLogger(&publisher);
-	logger::enableLevel(logger::DEBUG, false);
+	logger::enableLevel(logger::DEBUG, true);
 
 	// Try to connect to publisher logger
 	try
