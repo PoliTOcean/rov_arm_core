@@ -186,7 +186,10 @@ int main(int argc, const char *argv[])
         string action = listener.action();
 
         if (action == Constants::Commands::Actions::SHOULDER_ON)
+        {
+            std::cout << "SHOULDER ON" << std::endl;
             shoulder.enable();
+        }
         else if (action == Constants::Commands::Actions::SHOULDER_OFF)
             shoulder.disable();
         else if (action == Constants::Commands::Actions::SHOULDER_UP)
