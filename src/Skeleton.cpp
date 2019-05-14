@@ -184,12 +184,11 @@ int main(int argc, const char *argv[])
     while (subscriber.is_connected())
     {
         string action = listener.action();
+        
+        std::cout << action << std::endl;
 
         if (action == Constants::Commands::Actions::SHOULDER_ON)
-        {
-            std::cout << "SHOULDER ON" << std::endl;
             shoulder.enable();
-        }
         else if (action == Constants::Commands::Actions::SHOULDER_OFF)
             shoulder.disable();
         else if (action == Constants::Commands::Actions::SHOULDER_UP)
