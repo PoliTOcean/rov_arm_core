@@ -63,7 +63,7 @@ public:
 	// Returns the @axes_ vector
 	std::vector<int> axes();
 	// Returns the @button_ variable
-	string button();
+	std::string button();
 	// Returns the @sensor_ vector
 	std::vector<int> sensors();
 
@@ -126,7 +126,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-string Listener::button()
+std::string Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -273,6 +273,7 @@ void SPI::startSPI(Listener& listener)
 			if(!listener.isButtonUpdated()) continue;
 
 			unsigned char data;
+
 			try
 			{
 				data = static_cast<unsigned char>(std::stoi(listener.button()));
