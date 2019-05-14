@@ -278,6 +278,7 @@ void SPI::startSPI(Listener& listener)
 			}
 			catch (const std::exception& e)
 			{
+				std::cout << e.what() << std::endl;
 				continue ;
 			}
 
