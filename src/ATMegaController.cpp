@@ -287,7 +287,7 @@ void SPI::startSPI(Listener& listener)
 
 			std::vector<unsigned char> buffer = {
 				0x00,
-				data
+				static_cast<unsigned char>(std::stoi(data))
 			};
 
 			send(buffer, listener);
