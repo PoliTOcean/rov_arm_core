@@ -39,12 +39,13 @@ public:
 	void listenForHandVelocity(const std::string& payload);
 
 	int action();
+
 	int wristVelocity();
 	int handVelocity();
 
-	Controller::Stepper::Direction getShoulderDirection();
-	Controller::Stepper::Direction getWristDirection();
-	Controller::DCMotor::Direction getHandDirection();
+	Controller::Stepper::Direction shoulderDirection();
+	Controller::Stepper::Direction wristDirection();
+	Controller::DCMotor::Direction handDirection();
 
 	bool isShoulderEnable();
 	bool isWristEnable();
@@ -92,10 +93,10 @@ void Listener::listenForWristDirection(const std::string& payload)
 {
 	int velocity = std::stoi(payload);
 
-	if (velocity)
-		wristDirection_ = Controller::Stepper::Direction::CW;
-	else if (std::stoi(payload) < 0)
+	if (velocity > 0)
 		wristDirection_ = Controller::Stepper::Direction::CCW;
+	else if (velocity < 0)
+		wristDirection_ = Controller::Stepper::Direction::CW;
 	else
 		wristDirection_ = Controller::Stepper::Direction::NONE;
 
@@ -149,17 +150,17 @@ int Listener::handVelocity()
 	return handVelocity_;
 }
 
-Controller::Stepper::Direction Listener::getShoulderDirection()
+Controller::Stepper::Direction Listener::shoulderDirection()
 {
 	return shoulderDirection_;
 }
 
-Controller::Stepper::Direction Listener::getWristDirection()
+Controller::Stepper::Direction Listener::wristDirection()
 {
 	return wristDirection_;
 }
 
-Controller::DCMotor::Direction Listener::getHandDirection()
+Controller::DCMotor::Direction Listener::handDirection()
 {
 	return handDirection_;
 }
@@ -412,7 +413,7 @@ int main (void)
 				break;
 			
 			case Constants::Commands::Actions::WRIST_START:
-				arm.setWristDirection(listener.getWristDirection());
+				arm.setWristDirection(listener.wristDirection());
 				arm.startWrist();
 				break;
 
@@ -421,7 +422,7 @@ int main (void)
 				break;
 
 			case Constants::Commands::Actions::HAND_START:
-				arm.startHand(listener.getHandDirection(), listener.handVelocity());
+				arm.startHand(listener.handDirection(), listener.handVelocity());
 				break;
 
 			case Constants::Commands::Actions::HAND_STOP:

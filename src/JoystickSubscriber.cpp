@@ -41,7 +41,7 @@ class Listener
 	unsigned char button_;
 
 	std::vector<Sensor<unsigned char>> sensors_;
-	unsigned short int currentSensor_;
+	sensor_t currentSensor_;
 
 	/**
 	 * @axesUpdated_	: it is true if @axes_ values has changed
@@ -52,7 +52,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(0)
+	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for (auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
@@ -104,17 +104,17 @@ void Listener::listenForButton(const std::string& payload)
 
 void Listener::listenForSensor(unsigned char data)
 {
-	sensors_[currentSensor_++].setValue(data);
+	sensors_[static_cast<int>(currentSensor_)].setValue(data);
 
-	if (currentSensor_ >= sensors_.size())
-		currentSensor_ = 0;
+	if (++currentSensor_ > sensor_t::Last)
+		currentSensor_ = sensor_t::First;
 
 	sensorsUpdated_ = true;
 }
 
 void Listener::resetCurrentSensor()
 {
-	currentSensor_ = 0;
+	currentSensor_ = sensor_t::First;
 }
 
 std::vector<int> Listener::axes()
@@ -253,6 +253,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
+				(unsigned char) 0xff,
 				(unsigned char) Politocean::map(axes[0],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[1],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
@@ -311,13 +312,12 @@ void SPI::send(const std::vector<unsigned char>& buffer, Controller& controller,
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
-	{	
+	{
 		unsigned char data = controller.SPIDataRW(*it);
 
 		if (data == 0xFF)
 		{
 			listener.resetCurrentSensor();
-			it = buffer.begin();
 			continue;
 		}
 		
@@ -339,7 +339,7 @@ int main(int argc, const char *argv[])
 	// Enable logging
 	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID);
 	mqttLogger ptoLogger(&pub);
-	logger::enableLevel(logger::DEBUG, true);
+	logger::enableLevel(logger::DEBUG, false);
 
 	// Try to connect to publisher logger
 	try

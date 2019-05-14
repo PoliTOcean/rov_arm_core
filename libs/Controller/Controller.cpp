@@ -247,7 +247,7 @@ void Controller::DCMotor::startPWM()
     if (pin == -1)
         std::exit(EXIT_FAILURE);
 
-    softPwmCreate(Pinout::HAND_PWM, 20, 200);
+    softPwmCreate(Pinout::HAND_PWM, MIN_PWM, MAX_PWM);
     softPwmWrite(pin, velocity_);
 }
 
