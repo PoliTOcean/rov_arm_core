@@ -165,6 +165,15 @@ int main(int argc, const char *argv[])
     subscriber.subscribeTo(Constants::Topics::HAND,             &Listener::listenForHand,                       &listener);
     subscriber.subscribeTo(Constants::Topics::HAND_VELOCITY,    &Listener::listenForHandDirectionAndVelocity,   &listener);
 
+    try
+    {
+        subscriber.connect();
+    }
+    catch (const mqttException& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
     Controller controller;
     controller.setup();
     
