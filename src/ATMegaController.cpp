@@ -7,6 +7,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <exception>
 
 #include "Publisher.h"
 #include "Subscriber.h"
@@ -26,6 +27,7 @@
  **************************************************/
 
 using namespace Politocean;
+using namespace Politocean::RPi;
 
 class Listener
 {
@@ -38,7 +40,7 @@ class Listener
 						(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	unsigned char button_;
+	string button_;
 
 	std::vector<Sensor<unsigned char>> sensors_;
 	sensor_t currentSensor_;
@@ -61,7 +63,7 @@ public:
 	// Returns the @axes_ vector
 	std::vector<int> axes();
 	// Returns the @button_ variable
-	unsigned char button();
+	std::string button();
 	// Returns the @sensor_ vector
 	std::vector<int> sensors();
 
@@ -97,7 +99,8 @@ void Listener::listenForAxes(const std::string& payload)
 
 void Listener::listenForButton(const std::string& payload)
 {
-	button_ = static_cast<unsigned char>(std::stoi(payload));
+	std::cout << payload << std::endl;
+	button_ = payload;
 
 	buttonUpdated_ = true;
 }
@@ -123,7 +126,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-unsigned char Listener::button()
+std::string Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -215,30 +218,31 @@ bool Talker::isTalking()
 
 class SPI
 {
+	Controller *controller_;
 	std::mutex mutex_;
 
 	std::thread *SPIAxesThread_, *SPIButtonThread_;
 	bool isUsing_;
 
-	void send(const std::vector<unsigned char>& buffer, Controller& controller, Listener &listener);
+	void send(const std::vector<unsigned char>& buffer, Listener &listener);
 
 public:
-	SPI() : isUsing_(false) {}
+	SPI(Controller *controller) : controller_(controller), isUsing_(false) {}
 
-	void setup(Controller& controller);
+	void setup();
 
-	void startSPI(Controller& controller, Listener& listener);
+	void startSPI(Listener& listener);
 	void stopSPI();
 
 	bool isUsing();
 };
 
-void SPI::setup(Controller& controller)
+void SPI::setup()
 {
-	controller.setupSPI();
+	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
-void SPI::startSPI(Controller& controller, Listener& listener)
+void SPI::startSPI(Listener& listener)
 {
 	if (isUsing_)
 		return ;
@@ -259,7 +263,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
-			send(buffer, controller, listener);
+			send(buffer, listener);
 		}
 	});
 
@@ -268,18 +272,26 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data = listener.button();
+			unsigned char data;
 
-			std::cout << "Received: " << (int)data << std::endl;
+			try
+			{
+				data = static_cast<unsigned char>(std::stoi(listener.button()));
+			}
+			catch (const std::exception& e)
+			{
+				continue ;
+			}
 
 			bool sendToSPI = false;
 			switch (data)
 			{
 				case Constants::Commands::Actions::RESET:
-					controller.reset();
+					controller_->reset();
 					break;
 				case Constants::Commands::Actions::MOTORS_SWAP:
-					controller.switchMotors();
+					std::cout << "SWITCH" << std::endl;
+					controller_->switchMotors();
 					break;
 				default:
 					sendToSPI = true;
@@ -293,7 +305,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 				data
 			};
 
-			send(buffer, controller, listener);
+			send(buffer, listener);
 		}
 	});
 }
@@ -307,13 +319,13 @@ void SPI::stopSPI()
 	SPIAxesThread_->join(); SPIButtonThread_->join();
 }
 
-void SPI::send(const std::vector<unsigned char>& buffer, Controller& controller, Listener& listener)
+void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = controller.SPIDataRW(*it);
+		unsigned char data = controller_->SPIDataRW(*it);
 
 		if (data == 0xFF)
 		{
@@ -337,14 +349,14 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher pub(Constants::Hmi::IP_ADDRESS, Constants::Rov::SPI_ID);
-	mqttLogger ptoLogger(&pub);
-	logger::enableLevel(logger::DEBUG, false);
+	Publisher publisher(Constants::Hmi::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	mqttLogger ptoLogger(&publisher);
+	logger::enableLevel(logger::DEBUG, true);
 
 	// Try to connect to publisher logger
 	try
 	{
-		pub.connect();
+		publisher.connect();
 	}
 	catch (const mqtt::exception& e)
 	{
@@ -355,7 +367,7 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SPI_ID);
+	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
@@ -384,7 +396,6 @@ int main(int argc, const char *argv[])
 	{
 		controller.setup();
 		controller.setupMotors();
-		controller.setupSPI();
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
@@ -392,36 +403,25 @@ int main(int argc, const char *argv[])
 		std::exit(EXIT_FAILURE);
 	}
 
-	SPI spi;
+	SPI spi(&controller);
 
 	// Try to setup @spi
 	try
 	{
-		spi.setup(controller);
+		spi.setup();
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
 	}	
 	
-	spi.startSPI(controller, listener);
+	spi.startSPI(listener);
 
-	Publisher sensorsPublisher(Constants::Hmi::IP_ADDRESS, Constants::Hmi::SENSORS_ID);
 	Talker talker;
+	talker.startTalking(publisher, listener);
 
-	// Try to connect @sensorsPublisher
-	try
-	{
-		sensorsPublisher.connect();
-	}
-	catch(const mqttException::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
-
-	talker.startTalking(sensorsPublisher, listener);
-
-	while (subscriber.is_connected());
+	// wait until subscriber is is_connected
+	subscriber.wait();
 
 	// Stop sensors talker and SPI
 	talker.stopTalking();
