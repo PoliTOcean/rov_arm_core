@@ -217,30 +217,31 @@ bool Talker::isTalking()
 
 class SPI
 {
+	Controller *controller_;
 	std::mutex mutex_;
 
 	std::thread *SPIAxesThread_, *SPIButtonThread_;
 	bool isUsing_;
 
-	void send(const std::vector<unsigned char>& buffer, Controller& controller, Listener &listener);
+	void send(const std::vector<unsigned char>& buffer, Listener &listener);
 
 public:
-	SPI() : isUsing_(false) {}
+	SPI(Controller *controller) : controller_(controller), isUsing_(false) {}
 
-	void setup(Controller& controller);
+	void setup();
 
-	void startSPI(Controller& controller, Listener& listener);
+	void startSPI(Listener& listener);
 	void stopSPI();
 
 	bool isUsing();
 };
 
-void SPI::setup(Controller& controller)
+void SPI::setup()
 {
-	controller.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
+	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
-void SPI::startSPI(Controller& controller, Listener& listener)
+void SPI::startSPI(Listener& listener)
 {
 	if (isUsing_)
 		return ;
@@ -261,7 +262,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
-			send(buffer, controller, listener);
+			send(buffer, listener);
 		}
 	});
 
@@ -286,10 +287,10 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 			switch (data)
 			{
 				case Constants::Commands::Actions::RESET:
-					controller.reset();
+					controller_->reset();
 					break;
 				case Constants::Commands::Actions::MOTORS_SWAP:
-					controller.switchMotors();
+					controller_->switchMotors();
 					break;
 				default:
 					sendToSPI = true;
@@ -303,7 +304,7 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 				data
 			};
 
-			send(buffer, controller, listener);
+			send(buffer, listener);
 		}
 	});
 }
@@ -317,13 +318,13 @@ void SPI::stopSPI()
 	SPIAxesThread_->join(); SPIButtonThread_->join();
 }
 
-void SPI::send(const std::vector<unsigned char>& buffer, Controller& controller, Listener& listener)
+void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = controller.SPIDataRW(*it);
+		unsigned char data = controller_->SPIDataRW(*it);
 
 		if (data == 0xFF)
 		{
@@ -394,7 +395,6 @@ int main(int argc, const char *argv[])
 	{
 		controller.setup();
 		controller.setupMotors();
-		controller.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 	} catch (Politocean::controllerException &e)
 	{
 		std::cerr << "Error on controller setup : " << e.what() << std::endl;
@@ -402,19 +402,19 @@ int main(int argc, const char *argv[])
 		std::exit(EXIT_FAILURE);
 	}
 
-	SPI spi;
+	SPI spi(&controller);
 
 	// Try to setup @spi
 	try
 	{
-		spi.setup(controller);
+		spi.setup();
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
 	}	
 	
-	spi.startSPI(controller, listener);
+	spi.startSPI(listener);
 
 	Talker talker;
 	talker.startTalking(publisher, listener);
