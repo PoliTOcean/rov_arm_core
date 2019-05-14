@@ -20,11 +20,13 @@ void Controller::setup()
 
 void Controller::pinMode(int pin, PinMode mode)
 {
+    std::cout << pin << " " << static_cast<int>(mode) << std::endl;
     WiringPi::pinMode(pin, static_cast<int>(mode));
 }
 
 void Controller::digitalWrite(int pin, PinLevel level)
 {
+    std::cout << pin << " " << static_cast<int>(mode) << std::endl;
     WiringPi::digitalWrite(pin, static_cast<int>(level));
 }
 
@@ -76,8 +78,6 @@ void Controller::setupMotors()
 void Controller::switchMotors()
 {
     motors_ = !motors_;
-
-    std::cout << "MOTORS" << std::endl;
 
     (motors_) ? digitalWrite(Pinout::MOTORS, PinLevel::PIN_HIGH) : digitalWrite(Pinout::MOTORS, PinLevel::PIN_LOW);
 }

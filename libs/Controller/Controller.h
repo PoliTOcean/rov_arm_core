@@ -44,7 +44,7 @@ namespace Politocean
             static const int DEFAULT_SPI_CHANNEL    = 0;
             static const int DEFAULT_SPI_SPEED      = 1000000;
             
-            Controller() : motors_(false) {}
+            Controller() : spiDevice_(DEFAULT_SPI_CHANNEL), motors_(false) {}
             
             void setup();
 
@@ -58,16 +58,10 @@ namespace Politocean
             void setupSPI(int device, int frequency);
             void setupMotors();
             
-            /**
-             * It returns the value read from SPI
-             * 
-             * @data : value to send via SPI
-             */
             unsigned char SPIDataRW(unsigned char data);
             
             void switchMotors();
             
-            // It resets the controller
             void reset();
         };
     }
