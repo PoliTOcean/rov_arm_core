@@ -99,6 +99,7 @@ void Listener::listenForAxes(const std::string& payload)
 
 void Listener::listenForButton(const std::string& payload)
 {
+	std::cout << payload << std::endl;
 	button_ = payload;
 
 	buttonUpdated_ = true;
