@@ -7,6 +7,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <exception>
 
 #include "Publisher.h"
 #include "Subscriber.h"
@@ -39,7 +40,7 @@ class Listener
 						(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	unsigned char button_;
+	string button_;
 
 	std::vector<Sensor<unsigned char>> sensors_;
 	sensor_t currentSensor_;
@@ -62,7 +63,7 @@ public:
 	// Returns the @axes_ vector
 	std::vector<int> axes();
 	// Returns the @button_ variable
-	unsigned char button();
+	string button();
 	// Returns the @sensor_ vector
 	std::vector<int> sensors();
 
@@ -98,7 +99,7 @@ void Listener::listenForAxes(const std::string& payload)
 
 void Listener::listenForButton(const std::string& payload)
 {
-	button_ = static_cast<unsigned char>(std::stoi(payload));
+	button_ = payload;
 
 	buttonUpdated_ = true;
 }
@@ -124,7 +125,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-unsigned char Listener::button()
+string Listener::button()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -269,7 +270,15 @@ void SPI::startSPI(Controller& controller, Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data = listener.button();
+			unsigned char data;
+			try
+			{
+				data = static_cast<unsigned char>(std::stoi(listener.button()));
+			}
+			catch (const std::exception& e)
+			{
+				continue ;
+			}
 
 			std::cout << "Received: " << (int)data << std::endl;
 
