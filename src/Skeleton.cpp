@@ -2,6 +2,7 @@
 #include "Controller.h"
 #include "PwmMotor.h"
 #include "Stepper.h"
+#include "Commands.h"
 
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
@@ -40,13 +41,13 @@ void Listener::listenForShoulder(const std::string& payload)
 {
     std::cout << payload << std::endl;
 
-    if (payload == Constants::Commands::Actions::SHOULDER_ON)
-        action_ = Constants::Commands::Actions::SHOULDER_ON;
-    else if (payload == Constants::Commands::Actions::SHOULDER_OFF)
-        action_ = Constants::Commands::Actions::SHOULDER_OFF;
-    else if (payload == Constants::Commands::Actions::SHOULDER_UP)
+    if (payload == Constants::Commands::Actions::ON)
+        action_ = Commands::Actions::SHOULDER_ON;
+    else if (payload == Constants::Commands::Actions::OFF)
+        action_ = Commands::Actions::SHOULDER_OFF;
+    else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
         shoulderDirection_ = Direction::CCW;
-    else if (payload == Constants::Commands::Actions::SHOULDER_DOWN)
+    else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
         shoulderDirection_ = Direction::CW;
     else
     {
@@ -57,14 +58,14 @@ void Listener::listenForShoulder(const std::string& payload)
 
 void Listener::listenForWrist(const std::string& payload)
 {
-    if (payload == Constants::Commands::Actions::WRIST_ON)
-        action_ = Constants::Commands::Actions::WRIST_ON;
-    else if (payload == Constants::Commands::Actions::WRIST_OFF)
-        action_ = Constants::Commands::Actions::WRIST_OFF;
-    else if (payload == Constants::Commands::Actions::WRIST_START)
-        action_ = Constants::Commands::Actions::WRIST_START;
-    else if (payload == Constants::Commands::Actions::WRIST_STOP)
-        action_ = Constants::Commands::Actions::WRIST_STOP;
+    if (payload == Constants::Commands::Actions::ON)
+        action_ = Commands::Actions::WRIST_ON;
+    else if (payload == Constants::Commands::Actions::OFF)
+        action_ = Commands::Actions::WRIST_OFF;
+    else if (payload == Constants::Commands::Actions::START)
+        action_ = Commands::Actions::WRIST_START;
+    else if (payload == Constants::Commands::Actions::STOP)
+        action_ = Commands::Actions::WRIST_STOP;
     else
         action_ = Constants::Commands::Actions::NONE;
 }
@@ -92,10 +93,10 @@ void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
 
 void Listener::listenForHand(const std::string& payload)
 {
-    if (payload == Constants::Commands::Actions::HAND_START)
-        action_ = Constants::Commands::Actions::HAND_START;
-    else if (payload == Constants::Commands::Actions::HAND_STOP)
-        action_ = Constants::Commands::Actions::HAND_STOP;
+    if (payload == Constants::Commands::Actions::START)
+        action_ = Commands::Actions::HAND_START;
+    else if (payload == Constants::Commands::Actions::STOP)
+        action_ = Commands::Actions::HAND_STOP;
     else
         action_ = Constants::Commands::Actions::NONE;
 }
@@ -187,45 +188,45 @@ int main(int argc, const char *argv[])
     {
         string action = listener.action();
 
-        if (action == Constants::Commands::Actions::SHOULDER_ON)
+        if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
-        else if (action == Constants::Commands::Actions::SHOULDER_OFF)
+        else if (action == Commands::Actions::SHOULDER_OFF)
             shoulder.disable();
-        else if (action == Constants::Commands::Actions::SHOULDER_UP)
+        else if (action == Commands::Actions::SHOULDER_UP)
         {
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(listener.shoulderVelocity());
             shoulder.startStepping();
         }
-        else if (action == Constants::Commands::Actions::SHOULDER_DOWN)
+        else if (action == Commands::Actions::SHOULDER_DOWN)
         {
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(listener.shoulderVelocity());
             shoulder.step();
         }
-        else if (action == Constants::Commands::Actions::WRIST_ON)
+        else if (action == Commands::Actions::WRIST_ON)
             wrist.enable();
-        else if (action == Constants::Commands::Actions::WRIST_OFF)
+        else if (action == Commands::Actions::WRIST_OFF)
             wrist.disable();
-        else if (action == Constants::Commands::Actions::WRIST_START)
+        else if (action == Commands::Actions::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
             wrist.setVelocity(listener.wristVelocity());
             wrist.startStepping();
         }
-        else if (action == Constants::Commands::Actions::WRIST_STOP)
+        else if (action == Commands::Actions::WRIST_STOP)
         {
             wrist.setDirection(listener.wristDirection());
             wrist.setVelocity(listener.wristVelocity());
             wrist.startStepping();
         }
-        else if (action == Constants::Commands::Actions::HAND_START)
+        else if (action == Commands::Actions::HAND_START)
         {
             hand.setDirection(listener.handDirection());
             hand.setVelocity(listener.handVelocity());
             hand.startPwm();
         }
-        else if (action == Constants::Commands::Actions::HAND_STOP)
+        else if (action == Commands::Actions::HAND_STOP)
             hand.stopPwm();
         else continue;
     }
