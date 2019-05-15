@@ -60,7 +60,8 @@ namespace Politocean
             
             unsigned char SPIDataRW(unsigned char data);
             
-            void switchMotors();
+            void startMotors();
+            void stopMotors();
             
             void reset();
         };
