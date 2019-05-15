@@ -10,12 +10,40 @@
 using namespace Politocean;
 using namespace Politocean::RPi;
 
+class Listener2
+{
+    Direction shoulderDirection_, wristDirection_, handDirection_;
+    int shoulderVelocity_, wristVelocity_, handVelocity_;
+
+    std::string action_;
+
+public:
+    void listenForShoulder(const std::string& payload, const std::string& topic);
+    void listenForWrist(const std::string& payload, const std::string& topic);
+    void listenForHand(const std::string& payload, const std::string& topic);
+    
+    Direction shoulderDirection();
+    Direction wristDirection();
+    Direction handDirection();
+
+    int shoulderVelocity();
+    int wristVelocity();
+    int handVelocity();
+
+    std::string action();
+};
+
+void Listener2::listenForShoulder(const std::string& payload, const std::string& topic)
+{
+    if 
+}
+
 class Listener
 {
     Direction shoulderDirection_, wristDirection_, handDirection_;
     int shoulderVelocity_, wristVelocity_, handVelocity_;
 
-    string action_;
+    std::string action_;
 
 public:
     void listenForShoulder(const std::string& payload);
@@ -34,7 +62,7 @@ public:
     int wristVelocity();
     int handVelocity();
 
-    string action();
+    std::string action();
 };
 
 void Listener::listenForShoulder(const std::string& payload)
@@ -180,13 +208,17 @@ int main(int argc, const char *argv[])
     Controller controller;
     controller.setup();
     
-    PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
+    PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+
+    shoulder.setup();
+    wrist.setup();
+    hand.setup();
 
     while (subscriber.is_connected())
     {
-        string action = listener.action();
+        std::string action = listener.action();
 
         if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
@@ -202,7 +234,7 @@ int main(int argc, const char *argv[])
         {
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(listener.shoulderVelocity());
-            shoulder.step();
+            shoulder.startStepping();
         }
         else if (action == Commands::Actions::WRIST_ON)
             wrist.enable();
