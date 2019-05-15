@@ -10,34 +10,6 @@
 using namespace Politocean;
 using namespace Politocean::RPi;
 
-class Listener2
-{
-    Direction shoulderDirection_, wristDirection_, handDirection_;
-    int shoulderVelocity_, wristVelocity_, handVelocity_;
-
-    std::string action_;
-
-public:
-    void listenForShoulder(const std::string& payload, const std::string& topic);
-    void listenForWrist(const std::string& payload, const std::string& topic);
-    void listenForHand(const std::string& payload, const std::string& topic);
-    
-    Direction shoulderDirection();
-    Direction wristDirection();
-    Direction handDirection();
-
-    int shoulderVelocity();
-    int wristVelocity();
-    int handVelocity();
-
-    std::string action();
-};
-
-void Listener2::listenForShoulder(const std::string& payload, const std::string& topic)
-{
-    if 
-}
-
 class Listener
 {
     Direction shoulderDirection_, wristDirection_, handDirection_;
