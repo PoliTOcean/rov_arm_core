@@ -8,6 +8,7 @@
 #include <chrono>
 #include <mutex>
 #include <exception>
+#include <Commands.h>
 
 #include "Publisher.h"
 #include "Subscriber.h"
@@ -63,7 +64,7 @@ public:
 	// Returns the @axes_ vector
 	std::vector<int> axes();
 	// Returns the @button_ variable
-	std::string button();
+	std::string action();
 	// Returns the @sensor_ vector
 	std::vector<int> sensors();
 
@@ -126,7 +127,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-std::string Listener::button()
+std::string Listener::action()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -242,6 +243,28 @@ void SPI::setup()
 	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
+unsigned char setAction(std::string action)
+{
+    if(action == Constants::Commands::Actions::AtMega::VDOWN_ON)
+        return Commands::SPI::VDOWN_ON;
+    else if(action == Constants::Commands::Actions::AtMega::VDOWN_OFF)
+        return Commands::SPI::VDOWN_OFF;
+    else if(action == Constants::Commands::Actions::AtMega::VUP_ON)
+        return Commands::SPI::VUP_ON;
+    else if(action == Constants::Commands::Actions::AtMega::VUP_OFF)
+        return Commands::SPI::VUP_OFF;
+    else if(action == Constants::Commands::Actions::AtMega::FAST)
+        return Commands::SPI::FAST;
+    else if(action == Constants::Commands::Actions::AtMega::SLOW)
+        return Commands::SPI::SLOW;
+    else if(action == Constants::Commands::Actions::AtMega::MEDIUM)
+        return Commands::SPI::MEDIUM;
+    else if(action == Constants::Commands::Actions::AtMega::START_AND_STOP)
+        return Commands::SPI::START_AND_STOP;
+    else
+        return 0;
+}
+
 void SPI::startSPI(Listener& listener)
 {
 	if (isUsing_)
@@ -272,33 +295,28 @@ void SPI::startSPI(Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data;
-
-			try
-			{
-				data = static_cast<unsigned char>(std::stoi(listener.button()));
-			}
-			catch (const std::exception& e)
-			{
-				continue ;
-			}
+			std::string action = listener.action();
 
 			bool sendToSPI = false;
-			switch (data)
-			{
-				case Constants::Commands::Actions::RESET:
-					controller_->reset();
-					break;
-				case Constants::Commands::Actions::MOTORS_SWAP:
-					std::cout << "SWITCH" << std::endl;
-					controller_->switchMotors();
-					break;
-				default:
-					sendToSPI = true;
-			}
 
-			if (!sendToSPI)
-				continue;
+			if (action == Constants::Commands::Actions::RESET)
+			    controller_->reset();
+			else if (action == Constants::Commands::Actions::ON)
+            {
+                std::cout << "START" << std::endl;
+                controller_->startMotors();
+            }
+            else if (action == Constants::Commands::Actions::OFF)
+            {
+                std::cout << "STOP" << std::endl;
+                controller_->stopMotors();
+            } else
+                sendToSPI = true;
+
+            if (!sendToSPI)
+                    continue;
+
+            unsigned char data = setAction(action);
 
 			std::vector<unsigned char> buffer = {
 				0x00,
@@ -372,7 +390,7 @@ int main(int argc, const char *argv[])
 
 	// Subscribe @subscriber to joystick publisher topics
 	subscriber.subscribeTo(Constants::Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Constants::Topics::BUTTONS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Constants::Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try
