@@ -295,18 +295,18 @@ void SPI::startSPI(Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			std::string action = listener.action();
+			std::string data = listener.action();
 
 			bool sendToSPI = false;
 
-			if (action == Constants::Commands::Actions::RESET)
+			if (data == Constants::Commands::Actions::RESET)
 			    controller_->reset();
-			else if (action == Constants::Commands::Actions::ON)
+			else if (data == Constants::Commands::Actions::ON)
             {
                 std::cout << "START" << std::endl;
                 controller_->startMotors();
             }
-            else if (action == Constants::Commands::Actions::OFF)
+            else if (data == Constants::Commands::Actions::OFF)
             {
                 std::cout << "STOP" << std::endl;
                 controller_->stopMotors();
@@ -316,11 +316,11 @@ void SPI::startSPI(Listener& listener)
             if (!sendToSPI)
                     continue;
 
-            unsigned char data = setAction(action);
+            unsigned char action = setAction(data);
 
 			std::vector<unsigned char> buffer = {
 				0x00,
-				data
+				action
 			};
 
 			send(buffer, listener);
