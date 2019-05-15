@@ -296,7 +296,7 @@ void SPI::startSPI(Listener& listener)
 			if(!listener.isButtonUpdated()) continue;
 
 			std::string data = listener.action();
-
+			std::cout << data << std::endl;
 			bool sendToSPI = false;
 
 			if (data == Constants::Commands::Actions::RESET)
@@ -310,8 +310,10 @@ void SPI::startSPI(Listener& listener)
             {
                 std::cout << "STOP" << std::endl;
                 controller_->stopMotors();
-            } else
+            } else {
+				std::cout << "NIENTE" << std::endl;
                 sendToSPI = true;
+			}
 
             if (!sendToSPI)
                     continue;
