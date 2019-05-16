@@ -60,6 +60,7 @@ void Stepper::startStepping()
 void Stepper::stopStepping()
 {
     isStepping_ = false;
+    std::cout << "STOP STEP" << std::endl;
 }
 
 bool Stepper::isStepping()
