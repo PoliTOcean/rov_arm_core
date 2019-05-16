@@ -233,6 +233,7 @@ int main(int argc, const char *argv[])
     {
         std::string action = listener.action();
 
+        if (!listener.isUpdated()) continue ;
 
         if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
