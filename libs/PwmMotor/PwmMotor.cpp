@@ -11,6 +11,12 @@ void PwmMotor::setup()
 void PwmMotor::setDirection(Direction direction)
 {
     direction_ = direction;
+
+    if (direction == Direction::CW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_LOW);
+    else if (direction_ == Direction::CCW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_HIGH);
+    else return ;
 }
 
 void PwmMotor::setVelocity(int velocity)
@@ -35,7 +41,7 @@ void PwmMotor::startPwm()
 void PwmMotor::stopPwm()
 {
     isPwming_ = false;
-
+    controller_->softPwmStop(pwmPin_);
 }
 
 bool PwmMotor::isPwming()
