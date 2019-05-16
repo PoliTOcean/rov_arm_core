@@ -46,5 +46,5 @@ void PwmMotor::stopPwm()
 
 bool PwmMotor::isPwming()
 {
-    isPwming_ = false;
+    return isPwming_;
 }
