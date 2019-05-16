@@ -4,8 +4,11 @@
 #include "Stepper.h"
 #include "Commands.h"
 
+#include <climits>
+
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
+#include "PolitoceanUtils.hpp"
 
 using namespace Politocean;
 using namespace Politocean::RPi;
@@ -126,20 +129,16 @@ void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
     int velocity = std::stoi(payload);
 
     if (velocity > 0)
-    {
         handDirection_ = Direction::CCW;
-        handVelocity_ = velocity;
-    }
     else if (velocity < 0)
     {
         handDirection_ = Direction::CW;
-        handVelocity_ = -velocity;
+        velocity = -velocity;
     }
     else
-    {
         handDirection_ = Direction::NONE;
-        handVelocity_ = 0;
-    }
+    
+    handVelocity_ = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
 
     updated_ = true;
 }
