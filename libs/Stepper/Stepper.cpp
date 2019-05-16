@@ -32,10 +32,7 @@ void Stepper::setVelocity(int velocity)
 }
 
 void Stepper::step()
-{
-    if (isStepping_)
-        return ;
-    
+{   
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_LOW);
     std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 
