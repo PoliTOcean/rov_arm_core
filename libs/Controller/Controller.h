@@ -5,6 +5,10 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include "Publisher.h"
+
+#include "PolitoceanConstants.h"
+
 namespace Politocean
 {
     namespace RPi
@@ -33,8 +37,9 @@ namespace Politocean
         
         class Controller
         {
+            Publisher publisher;
+
             int spiDevice_;
-            
             bool motors_;
         
         public:
@@ -44,7 +49,7 @@ namespace Politocean
             static const int DEFAULT_SPI_CHANNEL    = 0;
             static const int DEFAULT_SPI_SPEED      = 1000000;
             
-            Controller() : spiDevice_(DEFAULT_SPI_CHANNEL), motors_(false) {}
+            Controller() : publisher(Constants::Rov::IP_ADDRESS, Constants::Rov::CONTROLLER_ID), spiDevice_(DEFAULT_SPI_CHANNEL), motors_(false) {}
             
             void setup();
 
