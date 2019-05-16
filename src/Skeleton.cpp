@@ -10,12 +10,14 @@
 using namespace Politocean;
 using namespace Politocean::RPi;
 
-class Listener2
+class Listener
 {
     Direction shoulderDirection_, wristDirection_, handDirection_;
     int shoulderVelocity_, wristVelocity_, handVelocity_;
 
     std::string action_;
+
+    void calculateFromAxes(int axes, Direction *direction, int *velocity);
 
 public:
     void listenForShoulder(const std::string& payload, const std::string& topic);
@@ -33,121 +35,61 @@ public:
     std::string action();
 };
 
-void Listener2::listenForShoulder(const std::string& payload, const std::string& topic)
+void Listener::listenForShoulder(const std::string& payload, const std::string& topic)
 {
-    if 
+    if (topic == Constants::Topics::SHOULDER)
+    {
+        if (payload == Commands::Actions::SHOULDER_ON)
+            action_ = Commands::Actions::SHOULDER_ON;
+        else if (payload == Commands::Actions::SHOULDER_OFF)
+            action_ = Commands::Actions::SHOULDER_OFF;
+        else if (payload == Commands::Actions::SHOULDER_UP)
+            action_ = Commands::Actions::SHOULDER_UP;
+        else if (payload == Commands::Actions::SHOULDER_DOWN)
+            action_ = Commands::Actions::SHOULDER_DOWN;
+        else
+            action_ = Commands::Actions::NONE;
+    }
+    else if (topic == Constants::Topics::SHOULDER_VELOCITY)
+        calculateFromAxes(std::stoi(payload), &shoulderDirection_, &shoulderVelocity_);
+    else return ;
 }
 
-class Listener
+void Listener::listenForWrist(const std::string& payload, const std::string& topic)
 {
-    Direction shoulderDirection_, wristDirection_, handDirection_;
-    int shoulderVelocity_, wristVelocity_, handVelocity_;
-
-    std::string action_;
-
-public:
-    void listenForShoulder(const std::string& payload);
-
-    void listenForWrist(const std::string& payload);
-    void listenForWristDirectionAndVelocity(const std::string& payload);
-
-    void listenForHand(const std::string& payload);
-    void listenForHandDirectionAndVelocity(const std::string& payload);
-
-    Direction shoulderDirection();
-    Direction wristDirection();
-    Direction handDirection();
-
-    int shoulderVelocity();
-    int wristVelocity();
-    int handVelocity();
-
-    std::string action();
-};
-
-void Listener::listenForShoulder(const std::string& payload)
-{
-    std::cout << payload << std::endl;
-
-    if (payload == Constants::Commands::Actions::ON)
-        action_ = Commands::Actions::SHOULDER_ON;
-    else if (payload == Constants::Commands::Actions::OFF)
-        action_ = Commands::Actions::SHOULDER_OFF;
-    else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
-        shoulderDirection_ = Direction::CCW;
-    else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
-        shoulderDirection_ = Direction::CW;
-    else
+    if (topic == Constants::Topics::WRIST)
     {
-        action_ = Constants::Commands::Actions::NONE;
-        shoulderDirection_ = Direction::NONE;
+        if (payload == Commands::Actions::WRIST_ON)
+            action_ = Commands::Actions::WRIST_ON;
+        else if (payload == Commands::Actions::WRIST_OFF)
+            action_ = Commands::Actions::WRIST_OFF;
+        else if (payload == Commands::Actions::WRIST_START)
+            action_ = Commands::Actions::WRIST_START;
+        else if (payload == Commands::Actions::WRIST_STOP)
+            action_ = Commands::Actions::WRIST_STOP;
+        else
+            action_ = Commands::Actions::NONE;
     }
+    else if (topic == Constants::Topics::WRIST_VELOCITY)
+        calculateFromAxes(std::stoi(payload), &wristDirection_, &wristVelocity_);
+    else return ;
 }
 
-void Listener::listenForWrist(const std::string& payload)
+void Listener::listenForHand(const std::string& payload, const std::string& topic)
 {
-    if (payload == Constants::Commands::Actions::ON)
-        action_ = Commands::Actions::WRIST_ON;
-    else if (payload == Constants::Commands::Actions::OFF)
-        action_ = Commands::Actions::WRIST_OFF;
-    else if (payload == Constants::Commands::Actions::START)
-        action_ = Commands::Actions::WRIST_START;
-    else if (payload == Constants::Commands::Actions::STOP)
-        action_ = Commands::Actions::WRIST_STOP;
-    else
-        action_ = Constants::Commands::Actions::NONE;
-}
-
-void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
-{
-    int velocity = std::stoi(payload);
-
-    if (velocity > 0)
+    if (topic == Constants::Topics::HAND)
     {
-        wristDirection_ = Direction::CCW;
-        wristVelocity_ = velocity;
+        if (payload == Commands::Actions::HAND_START)
+            action_ = Commands::Actions::HAND_START;
+        else if (payload == Commands::Actions::HAND_STOP)
+            action_ = Commands::Actions::HAND_STOP;
+        else
+            action_ = Commands::Actions::NONE;
     }
-    else if (velocity < 0)
-    {
-        wristDirection_ = Direction::CW;
-        wristVelocity_ = -velocity;
-    }
-    else
-    {
-        wristDirection_ = Direction::NONE;
-        wristVelocity_ = 0;
-    }
-}
-
-void Listener::listenForHand(const std::string& payload)
-{
-    if (payload == Constants::Commands::Actions::START)
-        action_ = Commands::Actions::HAND_START;
-    else if (payload == Constants::Commands::Actions::STOP)
-        action_ = Commands::Actions::HAND_STOP;
-    else
-        action_ = Constants::Commands::Actions::NONE;
-}
-
-void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
-{
-    int velocity = std::stoi(payload);
-
-    if (velocity > 0)
-    {
-        handDirection_ = Direction::CCW;
-        handVelocity_ = velocity;
-    }
-    else if (velocity < 0)
-    {
-        handDirection_ = Direction::CW;
-        handVelocity_ = -velocity;
-    }
-    else
-    {
-        handDirection_ = Direction::NONE;
-        handVelocity_ = 0;
-    }
+    else if (topic == Constants::Topics::HAND_VELOCITY)
+        calculateFromAxes(std::stoi(payload), &handDirection_, &handVelocity_);
+    else return ;
+    
 }
 
 Direction Listener::shoulderDirection()
@@ -180,10 +122,30 @@ int Listener::handVelocity()
     return handVelocity_;
 }
 
-string Listener::action()
+std::string Listener::action()
 {
     return action_;
 }
+
+void Listener::calculateFromAxes(int axes, Direction *direction, int *velocity)
+{
+    if (axes > 0)
+    {
+        *direction = Direction::CCW;
+        *velocity = axes;
+    }
+    else if (axes < 0)
+    {
+        *direction = Direction::CW;
+        *velocity = -axes;
+    }
+    else
+    {
+        *direction = Direction::NONE;
+        *velocity = 0;
+    }
+}
+
 
 int main(int argc, const char *argv[])
 {
@@ -192,9 +154,7 @@ int main(int argc, const char *argv[])
 
     subscriber.subscribeTo(Constants::Topics::SHOULDER,         &Listener::listenForShoulder,                   &listener);
     subscriber.subscribeTo(Constants::Topics::WRIST,            &Listener::listenForWrist,                      &listener);
-    subscriber.subscribeTo(Constants::Topics::WRIST_VELOCITY,   &Listener::listenForWristDirectionAndVelocity,  &listener);
     subscriber.subscribeTo(Constants::Topics::HAND,             &Listener::listenForHand,                       &listener);
-    subscriber.subscribeTo(Constants::Topics::HAND_VELOCITY,    &Listener::listenForHandDirectionAndVelocity,   &listener);
 
     try
     {
