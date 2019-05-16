@@ -92,20 +92,16 @@ void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
     int velocity = std::stoi(payload);
 
     if (velocity > 0)
-    {
         wristDirection_ = Direction::CCW;
-        wristVelocity_ = velocity;
-    }
     else if (velocity < 0)
     {
         wristDirection_ = Direction::CW;
-        wristVelocity_ = -velocity;
+        velocity = -velocity;
     }
     else
-    {
         wristDirection_ = Direction::NONE;
-        wristVelocity_ = 0;
-    }
+
+    wristVelocity_ = velocity;
 
     updated_ = true;
 }
@@ -256,14 +252,14 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Actions::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(listener.wristVelocity());
+            wrist.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
             wrist.startStepping();
         }
         else if (action == Commands::Actions::WRIST_STOP)
         {
             wrist.setDirection(listener.wristDirection());
             wrist.setVelocity(listener.wristVelocity());
-            wrist.startStepping();
+            wrist.stopStepping();
         }
         else if (action == Commands::Actions::HAND_START)
         {
