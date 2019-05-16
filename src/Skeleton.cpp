@@ -17,6 +17,8 @@ class Listener
 
     std::string action_;
 
+    bool updated_;
+
 public:
     void listenForShoulder(const std::string& payload);
 
@@ -35,6 +37,8 @@ public:
     int handVelocity();
 
     std::string action();
+
+    bool isUpdated();
 };
 
 void Listener::listenForShoulder(const std::string& payload)
@@ -54,6 +58,8 @@ void Listener::listenForShoulder(const std::string& payload)
         action_ = Constants::Commands::Actions::NONE;
         shoulderDirection_ = Direction::NONE;
     }
+
+    updated_ = true;
 }
 
 void Listener::listenForWrist(const std::string& payload)
@@ -68,6 +74,8 @@ void Listener::listenForWrist(const std::string& payload)
         action_ = Commands::Actions::WRIST_STOP;
     else
         action_ = Constants::Commands::Actions::NONE;
+
+    updated_ = true;
 }
 
 void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
@@ -89,6 +97,8 @@ void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
         wristDirection_ = Direction::NONE;
         wristVelocity_ = 0;
     }
+
+    updated_ = true;
 }
 
 void Listener::listenForHand(const std::string& payload)
@@ -99,6 +109,8 @@ void Listener::listenForHand(const std::string& payload)
         action_ = Commands::Actions::HAND_STOP;
     else
         action_ = Constants::Commands::Actions::NONE;
+
+    updated_ = true;
 }
 
 void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
@@ -120,42 +132,64 @@ void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
         handDirection_ = Direction::NONE;
         handVelocity_ = 0;
     }
+
+    updated_ = true;
 }
 
 Direction Listener::shoulderDirection()
 {
+    updated_ = false;
+
     return shoulderDirection_;
 }
 
 Direction Listener::wristDirection()
 {
+    updated_ = false;
+
     return wristDirection_;
 }
 
 Direction Listener::handDirection()
 {
+    updated_ = false;
+
     return handDirection_;
 }
 
 int Listener::shoulderVelocity()
 {
+    updated_ = false;
+
     return shoulderVelocity_;
 }
 
 int Listener::wristVelocity()
 {
+    updated_ = false;
+
     return wristVelocity_;
 }
 
 int Listener::handVelocity()
 {
+    updated_ = false;
+
     return handVelocity_;
 }
 
 string Listener::action()
 {
+    updated_ = false;
+    
     return action_;
 }
+
+bool Listener::isUpdated()
+{
+    return updated_;
+}
+
 
 int main(int argc, const char *argv[])
 {
