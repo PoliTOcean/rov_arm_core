@@ -51,8 +51,8 @@ void Listener::listenForShoulder(const std::string& payload)
         action_ = Commands::Actions::SHOULDER_OFF;
     else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
     {
-        action_ = Commands::Actions::SHOULDER_STEP;
         shoulderDirection_ = Direction::CCW;
+        action_ = Commands::Actions::SHOULDER_STEP;
     }
     else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
     {
@@ -233,6 +233,7 @@ int main(int argc, const char *argv[])
     while (subscriber.is_connected())
     {
         std::string action = listener.action();
+
 
         if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
