@@ -50,9 +50,15 @@ void Listener::listenForShoulder(const std::string& payload)
     else if (payload == Constants::Commands::Actions::OFF)
         action_ = Commands::Actions::SHOULDER_OFF;
     else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
+    {
+        action_ = Commands::Actions::SHOULDER_STEP;
         shoulderDirection_ = Direction::CCW;
+    }
     else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
+    {
         shoulderDirection_ = Direction::CW;
+        action_ = Commands::Actions::SHOULDER_STEP;
+    }
     else
     {
         action_ = Constants::Commands::Actions::NONE;
