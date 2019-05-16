@@ -63,8 +63,8 @@ void Listener::listenForShoulder(const std::string& payload)
         action_ = Commands::Actions::SHOULDER_STOP;
     else
     {
-        action_ = Constants::Commands::Actions::NONE;
         shoulderDirection_ = Direction::NONE;
+        action_ = Constants::Commands::Actions::NONE;
     }
 
     updated_ = true;

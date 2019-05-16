@@ -25,6 +25,12 @@ void Stepper::disable()
 void Stepper::setDirection(Direction direction)
 {
     direction_ = direction;
+
+    if (direction_ == Direction::CW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_LOW);
+    else if (direction_ == Direction::CCW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_HIGH);
+    else return ;
 }
 
 void Stepper::setVelocity(int velocity)
