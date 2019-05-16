@@ -236,16 +236,10 @@ int main(int argc, const char *argv[])
             shoulder.enable();
         else if (action == Commands::Actions::SHOULDER_OFF)
             shoulder.disable();
-        else if (action == Commands::Actions::SHOULDER_UP)
+        else if (action == Commands::Actions::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
-            shoulder.startStepping();
-        }
-        else if (action == Commands::Actions::SHOULDER_DOWN)
-        {
-            shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(listener.shoulderVelocity());
             shoulder.startStepping();
         }
         else if (action == Commands::Actions::WRIST_ON)
