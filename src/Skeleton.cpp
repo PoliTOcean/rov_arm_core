@@ -101,6 +101,9 @@ void Listener::listenForWristDirectionAndVelocity(const std::string& payload)
     else
         wristDirection_ = Direction::NONE;
 
+    if (wristVelocity_ == velocity)
+        return ;
+
     wristVelocity_ = velocity;
 
     updated_ = true;
@@ -132,7 +135,12 @@ void Listener::listenForHandDirectionAndVelocity(const std::string& payload)
     else
         handDirection_ = Direction::NONE;
     
-    handVelocity_ = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+
+    if (handVelocity_ == velocity)
+        return ;
+    
+    handVelocity_ = velocity;
 
     updated_ = true;
 }
@@ -228,8 +236,6 @@ int main(int argc, const char *argv[])
         if (!listener.isUpdated()) continue ;
 
         std::string action = listener.action();
-        
-        std::cout << action << std::endl;
 
         if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
@@ -242,9 +248,7 @@ int main(int argc, const char *argv[])
             shoulder.startStepping();
         }
         else if (action == Commands::Actions::SHOULDER_STOP)
-        {
             shoulder.stopStepping();
-        }
         else if (action == Commands::Actions::WRIST_ON)
             wrist.enable();
         else if (action == Commands::Actions::WRIST_OFF)
