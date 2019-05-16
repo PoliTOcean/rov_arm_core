@@ -59,6 +59,8 @@ void Listener::listenForShoulder(const std::string& payload)
         shoulderDirection_ = Direction::CW;
         action_ = Commands::Actions::SHOULDER_STEP;
     }
+    else if (payload == Constants::Commands::Actions::STOP)
+        action_ = Commands::Actions::SHOULDER_STOP;
     else
     {
         action_ = Constants::Commands::Actions::NONE;
@@ -241,6 +243,10 @@ int main(int argc, const char *argv[])
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
             shoulder.startStepping();
+        }
+        else if (action == Commands::Actions::SHOULDER_STOP)
+        {
+            shoulder.stopStepping();
         }
         else if (action == Commands::Actions::WRIST_ON)
             wrist.enable();

@@ -16,6 +16,7 @@ namespace Commands {
         const string SHOULDER_UP    = "SHOULDER_UP";
         const string SHOULDER_DOWN  = "SHOULDER_DOWN";
         const string SHOULDER_STEP  = "SHOULDER_STEP";
+        const string SHOULDER_STOP  = "SHOULDER_STOP";
 
         const string WRIST_ON       = "WRIST_ON";
         const string WRIST_OFF      = "WRIST_OFF";
