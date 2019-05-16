@@ -181,7 +181,7 @@ int Listener::handVelocity()
 string Listener::action()
 {
     updated_ = false;
-    
+
     return action_;
 }
 
@@ -233,7 +233,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Actions::SHOULDER_UP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(listener.shoulderVelocity());
+            shoulder.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
         else if (action == Commands::Actions::SHOULDER_DOWN)

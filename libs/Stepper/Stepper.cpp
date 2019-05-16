@@ -1,4 +1,5 @@
 #include "Stepper.h"
+#include <iostream>
 
 using namespace Politocean::RPi;
 
@@ -48,7 +49,10 @@ void Stepper::startStepping()
     isStepping_ = true;
     th_ = new std::thread([&] {
         while (isStepping_)
+        {
             step();
+            std::cout << "STEP" << std::endl;
+        }
     });
 
 }
