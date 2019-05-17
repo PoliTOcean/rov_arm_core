@@ -16,16 +16,6 @@ using namespace Politocean::RPi;
 void Controller::setup()
 {
     WiringPi::wiringPiSetupPhys();
-
-    try
-    {
-        publisher.connect();
-    }
-    catch(const mqttException& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
 }
 
 void Controller::pinMode(int pin, PinMode mode)
