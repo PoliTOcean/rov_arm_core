@@ -28,5 +28,6 @@ target_link_libraries(Skeleton -lpthread
     PolitoceanRovArmCore::Stepper
     PolitoceanRovArmCore::PwmMotor
     
-    PolitoceanCommon::Subscriber)
+    PolitoceanCommon::Subscriber
+    PolitoceanCommon::Publisher)
 
