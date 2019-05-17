@@ -1,9 +1,14 @@
 /**
  * @author: pettinz
+ * 
+ * This class provides an interface with the Raspberry Pi GPIO and features
+ * using the WiringPi libraries
  */
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
+
+#include "PolitoceanConstants.h"
 
 namespace Politocean
 {
@@ -34,33 +39,36 @@ namespace Politocean
         class Controller
         {
             int spiDevice_;
-            
             bool motors_;
         
         public:
             enum class PinLevel { PIN_LOW, PIN_HIGH };
-            enum class PinMode { PIN_INPUT, PIN_OUTPUT };
+            enum class PinMode  { PIN_INPUT, PIN_OUTPUT };
             
             static const int DEFAULT_SPI_CHANNEL    = 0;
             static const int DEFAULT_SPI_SPEED      = 1000000;
             
             Controller() : spiDevice_(DEFAULT_SPI_CHANNEL), motors_(false) {}
             
+            // Setup GPIO using physical pins
             void setup();
 
             void pinMode(int pin, PinMode mode);
             void digitalWrite(int pin, PinLevel level);
             
+            // Software PWM based on softPwm.h
             void softPwmCreate(int pwmPin, int start, int stop);
             void softPwmWrite(int pwmPin, int value);
             void softPwmStop(int pwmPin);
             
             void setupSPI(int device, int frequency);
+
             void setupMotors();
             
             unsigned char SPIDataRW(unsigned char data);
             
-            void switchMotors();
+            void startMotors();
+            void stopMotors();
             
             void reset();
         };

@@ -8,6 +8,7 @@
 #include <chrono>
 #include <mutex>
 #include <exception>
+#include <Commands.h>
 
 #include "Publisher.h"
 #include "Subscriber.h"
@@ -28,6 +29,7 @@
 
 using namespace Politocean;
 using namespace Politocean::RPi;
+using namespace Politocean::Constants;
 
 class Listener
 {
@@ -63,7 +65,7 @@ public:
 	// Returns the @axes_ vector
 	std::vector<int> axes();
 	// Returns the @button_ variable
-	std::string button();
+	std::string action();
 	// Returns the @sensor_ vector
 	std::vector<int> sensors();
 
@@ -126,7 +128,7 @@ std::vector<int> Listener::axes()
 	return axes_;
 }
 
-std::string Listener::button()
+std::string Listener::action()
 {
 	buttonUpdated_ = false;
 	return button_;
@@ -190,9 +192,9 @@ void Talker::startTalking(Publisher& publisher, Listener& listener)
 				continue ;
 
 			nlohmann::json j_map = listener.sensors();
-			publisher.publish(Constants::Topics::SENSORS, j_map.dump());
+			publisher.publish(Topics::SENSORS, j_map.dump());
 
-			std::this_thread::sleep_for(std::chrono::seconds(Constants::Timing::Seconds::SENSORS));
+			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
 }
@@ -242,6 +244,28 @@ void SPI::setup()
 	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
+unsigned char setAction(std::string action)
+{
+    if(action == Commands::Actions::ATMega::VDOWN_ON)
+        return Commands::ATMega::SPI::VDOWN_ON;
+    else if(action == Commands::Actions::ATMega::VDOWN_OFF)
+        return Commands::ATMega::SPI::VDOWN_OFF;
+    else if(action == Commands::Actions::ATMega::VUP_ON)
+        return Commands::ATMega::SPI::VUP_ON;
+    else if(action == Commands::Actions::ATMega::VUP_OFF)
+        return Commands::ATMega::SPI::VUP_OFF;
+    else if(action == Commands::Actions::ATMega::FAST)
+        return Commands::ATMega::SPI::FAST;
+    else if(action == Commands::Actions::ATMega::SLOW)
+        return Commands::ATMega::SPI::SLOW;
+    else if(action == Commands::Actions::ATMega::MEDIUM)
+        return Commands::ATMega::SPI::MEDIUM;
+    else if(action == Commands::Actions::ATMega::START_AND_STOP)
+        return Commands::ATMega::SPI::START_AND_STOP;
+    else
+        return 0;
+}
+
 void SPI::startSPI(Listener& listener)
 {
 	if (isUsing_)
@@ -272,37 +296,34 @@ void SPI::startSPI(Listener& listener)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
-			unsigned char data;
-
-			try
-			{
-				data = static_cast<unsigned char>(std::stoi(listener.button()));
-			}
-			catch (const std::exception& e)
-			{
-				continue ;
-			}
-
+			std::string data = listener.action();
+			std::cout << data << std::endl;
 			bool sendToSPI = false;
-			switch (data)
-			{
-				case Constants::Commands::Actions::RESET:
-					controller_->reset();
-					break;
-				case Constants::Commands::Actions::MOTORS_SWAP:
-					std::cout << "SWITCH" << std::endl;
-					controller_->switchMotors();
-					break;
-				default:
-					sendToSPI = true;
+
+			if (data == Commands::Actions::RESET)
+			    controller_->reset();
+			else if (data == Commands::Actions::ON)
+            {
+                std::cout << "START" << std::endl;
+                controller_->startMotors();
+            }
+            else if (data == Commands::Actions::OFF)
+            {
+                std::cout << "STOP" << std::endl;
+                controller_->stopMotors();
+            } else {
+				std::cout << "NIENTE" << std::endl;
+                sendToSPI = true;
 			}
 
-			if (!sendToSPI)
-				continue;
+            if (!sendToSPI)
+                    continue;
+
+            unsigned char action = setAction(data);
 
 			std::vector<unsigned char> buffer = {
 				0x00,
-				data
+				action
 			};
 
 			send(buffer, listener);
@@ -349,7 +370,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher publisher(Constants::Hmi::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	Publisher publisher(Hmi::IP_ADDRESS, Rov::ATMEGA_ID);
 	mqttLogger ptoLogger(&publisher);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -367,12 +388,12 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	Subscriber subscriber(Rov::IP_ADDRESS, Rov::ATMEGA_ID);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Constants::Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Constants::Topics::BUTTONS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try

@@ -1,4 +1,5 @@
 #include "Stepper.h"
+#include <iostream>
 
 using namespace Politocean::RPi;
 
@@ -24,6 +25,12 @@ void Stepper::disable()
 void Stepper::setDirection(Direction direction)
 {
     direction_ = direction;
+
+    if (direction_ == Direction::CW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_LOW);
+    else if (direction_ == Direction::CCW)
+        controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_HIGH);
+    else return ;
 }
 
 void Stepper::setVelocity(int velocity)
@@ -32,10 +39,7 @@ void Stepper::setVelocity(int velocity)
 }
 
 void Stepper::step()
-{
-    if (isStepping_)
-        return ;
-    
+{   
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_LOW);
     std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
 

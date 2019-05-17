@@ -1,3 +1,7 @@
+/**
+ * @author pettinz
+ */
+
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -73,9 +77,17 @@ void Controller::setupMotors()
     pinMode(Pinout::MOTORS, PinMode::PIN_OUTPUT);
 }
 
-void Controller::switchMotors()
+void Controller::stopMotors()
 {
-    motors_ = !motors_;
+    motors_ = false;
 
-    (motors_) ? digitalWrite(Pinout::MOTORS, PinLevel::PIN_HIGH) : digitalWrite(Pinout::MOTORS, PinLevel::PIN_LOW);
+    digitalWrite(Pinout::MOTORS, PinLevel::PIN_LOW);
 }
+
+void Controller::startMotors()
+{
+    motors_ = true;
+
+    digitalWrite(Pinout::MOTORS, PinLevel::PIN_HIGH);
+}
+
