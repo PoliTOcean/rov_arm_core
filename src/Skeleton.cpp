@@ -241,6 +241,13 @@ Direction Listener::handDirection()
     return handDirection_;
 }
 
+Direction Listener::headDirection()
+{
+    updated_ = false;
+    
+    return headDirection_;
+}
+
 int Listener::shoulderVelocity()
 {
     updated_ = false;
@@ -260,6 +267,13 @@ int Listener::handVelocity()
     updated_ = false;
 
     return handVelocity_;
+}
+
+int Listener::headVelocity()
+{
+    updated_ = false;
+
+    return headVelocity_;
 }
 
 std::string Listener::action()
