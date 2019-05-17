@@ -248,9 +248,9 @@ int main(int argc, const char *argv[])
     Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
-    subscriber.subscribeTo(Topics::SHOULDER,         &Listener::listenForShoulder,                   &listener);
-    subscriber.subscribeTo(Topics::WRIST,            &Listener::listenForWrist,                      &listener);
-    subscriber.subscribeTo(Topics::HAND,             &Listener::listenForHand,                       &listener);
+    subscriber.subscribeTo(Topics::SHOULDER+"#",         &Listener::listenForShoulder,                   &listener);
+    subscriber.subscribeTo(Topics::WRIST+"#",            &Listener::listenForWrist,                      &listener);
+    subscriber.subscribeTo(Topics::HAND+"#",             &Listener::listenForHand,                       &listener);
 
     try
     {
@@ -305,7 +305,6 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_START)
         {
             hand.setDirection(listener.handDirection());
-            std::cout << static_cast<int>(listener.handDirection()) << std::endl;
             hand.setVelocity(listener.handVelocity());
             hand.startPwm();
         }
