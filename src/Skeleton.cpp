@@ -1,3 +1,7 @@
+/**
+ * @author pettinz
+ */
+
 #include "Subscriber.h"
 #include "Controller.h"
 #include "PwmMotor.h"
