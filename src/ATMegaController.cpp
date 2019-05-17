@@ -308,11 +308,12 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			    controller_->reset();
 			else if (data == Commands::Actions::ON)
             {
-                Politocean::publish(publisher,Constants::Topics::POWER, Constants::Commands::Actions::ON);
+                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::ON);
                 controller_->startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
+                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::OFF);
                 controller_->stopMotors();
             } else {
                 sendToSPI = true;
