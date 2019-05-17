@@ -148,6 +148,8 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
 {
     if (topic == Topics::HEAD)
     {
+        std::cout << payload << std::endl;
+        
         if (payload == Commands::Actions::ON)
             action_ = Commands::Skeleton::HEAD_ON;
         else if (payload == Commands::Actions::OFF)
