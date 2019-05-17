@@ -4,8 +4,11 @@
 #include "Stepper.h"
 #include "Commands.h"
 
+#include <climits>
+
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
+#include "PolitoceanUtils.hpp"
 
 using namespace Politocean;
 using namespace Politocean::RPi;
@@ -17,13 +20,16 @@ class Listener
 
     std::string action_;
 
-    void calculateFromAxes(int axes, Direction *direction, int *velocity);
+    bool updated_;
+
+    void wristAxis(int axes);
+    void handAxis(int axes);
 
 public:
     void listenForShoulder(const std::string& payload, const std::string& topic);
     void listenForWrist(const std::string& payload, const std::string& topic);
     void listenForHand(const std::string& payload, const std::string& topic);
-    
+
     Direction shoulderDirection();
     Direction wristDirection();
     Direction handDirection();
@@ -33,25 +39,42 @@ public:
     int handVelocity();
 
     std::string action();
+
+    bool isUpdated();
 };
 
 void Listener::listenForShoulder(const std::string& payload, const std::string& topic)
 {
     if (topic == Constants::Topics::SHOULDER)
     {
-        if (payload == Commands::Actions::SHOULDER_ON)
+        if (payload == Constants::Commands::Actions::ON)
             action_ = Commands::Actions::SHOULDER_ON;
-        else if (payload == Commands::Actions::SHOULDER_OFF)
+        else if (payload == Constants::Commands::Actions::OFF)
             action_ = Commands::Actions::SHOULDER_OFF;
-        else if (payload == Commands::Actions::SHOULDER_UP)
-            action_ = Commands::Actions::SHOULDER_UP;
-        else if (payload == Commands::Actions::SHOULDER_DOWN)
-            action_ = Commands::Actions::SHOULDER_DOWN;
+        else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
+        {
+            shoulderDirection_ = Direction::CCW;
+            action_ = Commands::Actions::SHOULDER_STEP;
+        }
+        else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
+        {
+            shoulderDirection_ = Direction::CW;
+            action_ = Commands::Actions::SHOULDER_STEP;
+        }
+        else if (payload == Constants::Commands::Actions::STOP)
+            action_ = Commands::Actions::SHOULDER_STOP;
         else
-            action_ = Commands::Actions::NONE;
+        {
+            shoulderDirection_ = Direction::NONE;
+            action_ = Constants::Commands::Actions::NONE;
+        }
+
+        updated_ = true;
     }
     else if (topic == Constants::Topics::SHOULDER_VELOCITY)
-        calculateFromAxes(std::stoi(payload), &shoulderDirection_, &shoulderVelocity_);
+    {
+
+    }
     else return ;
 }
 
@@ -59,19 +82,29 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
 {
     if (topic == Constants::Topics::WRIST)
     {
-        if (payload == Commands::Actions::WRIST_ON)
+        if (payload == Constants::Commands::Actions::ON)
             action_ = Commands::Actions::WRIST_ON;
-        else if (payload == Commands::Actions::WRIST_OFF)
+        else if (payload == Constants::Commands::Actions::OFF)
             action_ = Commands::Actions::WRIST_OFF;
-        else if (payload == Commands::Actions::WRIST_START)
+        else if (payload == Constants::Commands::Actions::START)
             action_ = Commands::Actions::WRIST_START;
-        else if (payload == Commands::Actions::WRIST_STOP)
+        else if (payload == Constants::Commands::Actions::STOP)
             action_ = Commands::Actions::WRIST_STOP;
         else
-            action_ = Commands::Actions::NONE;
+            action_ = Constants::Commands::Actions::NONE;
+
+        updated_ = true;
     }
     else if (topic == Constants::Topics::WRIST_VELOCITY)
-        calculateFromAxes(std::stoi(payload), &wristDirection_, &wristVelocity_);
+        try
+        {
+            int axis = std::stoi(payload);
+            wristAxis(axis);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
     else return ;
 }
 
@@ -79,73 +112,131 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
 {
     if (topic == Constants::Topics::HAND)
     {
-        if (payload == Commands::Actions::HAND_START)
+        if (payload == Constants::Commands::Actions::START)
             action_ = Commands::Actions::HAND_START;
-        else if (payload == Commands::Actions::HAND_STOP)
+        else if (payload == Constants::Commands::Actions::STOP)
             action_ = Commands::Actions::HAND_STOP;
         else
-            action_ = Commands::Actions::NONE;
+            action_ = Constants::Commands::Actions::NONE;
+
+        updated_ = true;
     }
     else if (topic == Constants::Topics::HAND_VELOCITY)
-        calculateFromAxes(std::stoi(payload), &handDirection_, &handVelocity_);
+    {
+        try
+        {
+            int axis = std::stoi(payload);
+            handAxis(axis);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
     else return ;
-    
+}
+
+void Listener::wristAxis(int axis)
+{
+    int velocity        = axis;
+    Direction direction = Direction::NONE;
+
+    if (velocity > 0)
+        direction = Direction::CCW;
+    else if (velocity < 0)
+    {
+        direction = Direction::CW;
+        velocity = -axis;
+    }
+    else {}
+
+    if (wristVelocity_ == velocity && wristDirection_ == direction)
+        return ;
+
+    wristVelocity_  = velocity;
+    wristDirection_ = direction;
+
+    updated_ = true;
+}
+
+void Listener::handAxis(int axis)
+{
+    int velocity        = axis;
+    Direction direction = Direction::NONE;
+
+    if (velocity > 0)
+        direction = Direction::CCW;
+    else if (velocity < 0)
+    {
+        direction = Direction::CW;
+        velocity = -axis;
+    }
+    else {}
+
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+
+    if (handVelocity_ == velocity && handDirection_ == direction)
+        return ;
+
+    handVelocity_  = velocity;
+    handDirection_ = direction;
+
+    updated_ = true;
 }
 
 Direction Listener::shoulderDirection()
 {
+    updated_ = false;
+
     return shoulderDirection_;
 }
 
 Direction Listener::wristDirection()
 {
+    updated_ = false;
+
     return wristDirection_;
 }
 
 Direction Listener::handDirection()
 {
+    updated_ = false;
+
     return handDirection_;
 }
 
 int Listener::shoulderVelocity()
 {
+    updated_ = false;
+
     return shoulderVelocity_;
 }
 
 int Listener::wristVelocity()
 {
+    updated_ = false;
+
     return wristVelocity_;
 }
 
 int Listener::handVelocity()
 {
+    updated_ = false;
+
     return handVelocity_;
 }
 
 std::string Listener::action()
 {
+    updated_ = false;
+
     return action_;
 }
 
-void Listener::calculateFromAxes(int axes, Direction *direction, int *velocity)
+bool Listener::isUpdated()
 {
-    if (axes > 0)
-    {
-        *direction = Direction::CCW;
-        *velocity = axes;
-    }
-    else if (axes < 0)
-    {
-        *direction = Direction::CW;
-        *velocity = -axes;
-    }
-    else
-    {
-        *direction = Direction::NONE;
-        *velocity = 0;
-    }
+    return updated_;
 }
-
 
 int main(int argc, const char *argv[])
 {
@@ -178,24 +269,22 @@ int main(int argc, const char *argv[])
 
     while (subscriber.is_connected())
     {
+        if (!listener.isUpdated()) continue ;
+
         std::string action = listener.action();
 
         if (action == Commands::Actions::SHOULDER_ON)
             shoulder.enable();
         else if (action == Commands::Actions::SHOULDER_OFF)
             shoulder.disable();
-        else if (action == Commands::Actions::SHOULDER_UP)
+        else if (action == Commands::Actions::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(listener.shoulderVelocity());
+            shoulder.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
-        else if (action == Commands::Actions::SHOULDER_DOWN)
-        {
-            shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(listener.shoulderVelocity());
-            shoulder.startStepping();
-        }
+        else if (action == Commands::Actions::SHOULDER_STOP)
+            shoulder.stopStepping();
         else if (action == Commands::Actions::WRIST_ON)
             wrist.enable();
         else if (action == Commands::Actions::WRIST_OFF)
@@ -203,14 +292,14 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Actions::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(listener.wristVelocity());
+            wrist.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
             wrist.startStepping();
         }
         else if (action == Commands::Actions::WRIST_STOP)
         {
             wrist.setDirection(listener.wristDirection());
             wrist.setVelocity(listener.wristVelocity());
-            wrist.startStepping();
+            wrist.stopStepping();
         }
         else if (action == Commands::Actions::HAND_START)
         {
