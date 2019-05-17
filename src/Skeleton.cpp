@@ -164,8 +164,11 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
         }
         else if (payload == Commands::Actions::STOP)
             action_ = Commands::Skeleton::HEAD_STOP;
-        else 
+        else
+        {
             action_ = Commands::Actions::NONE;
+            headDirection_ = Direction::NONE;
+        }
         
         updated_ = true;
     }
