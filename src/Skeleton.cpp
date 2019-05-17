@@ -260,11 +260,7 @@ int main(int argc, const char *argv[])
             wrist.startStepping();
         }
         else if (action == Commands::Actions::WRIST_STOP)
-        {
-            wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(listener.wristVelocity());
             wrist.stopStepping();
-        }
         else if (action == Commands::Actions::HAND_START)
         {
             hand.setDirection(listener.handDirection());
