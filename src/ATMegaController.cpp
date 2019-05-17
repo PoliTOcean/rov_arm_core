@@ -395,8 +395,8 @@ int main(int argc, const char *argv[])
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try

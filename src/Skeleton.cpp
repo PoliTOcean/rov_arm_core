@@ -305,6 +305,7 @@ int main(int argc, const char *argv[])
     try
     {
         subscriber.connect();
+        publisher.connect();
     }
     catch (const mqttException& e)
     {
