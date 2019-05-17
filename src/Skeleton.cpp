@@ -293,7 +293,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
+    // Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
     Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
@@ -305,7 +305,7 @@ int main(int argc, const char *argv[])
     try
     {
         subscriber.connect();
-        publisher.connect();
+        // publisher.connect();
     }
     catch (const mqttException& e)
     {
@@ -335,12 +335,12 @@ int main(int argc, const char *argv[])
 
         if (action == Commands::Skeleton::SHOULDER_ON)
         {
-            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
+            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
             shoulder.enable();
         }
         else if (action == Commands::Skeleton::SHOULDER_OFF)
         {
-            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
+            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
             shoulder.disable();
         }
         else if (action == Commands::Skeleton::SHOULDER_STEP)
@@ -353,12 +353,12 @@ int main(int argc, const char *argv[])
             shoulder.stopStepping();
         else if (action == Commands::Skeleton::WRIST_ON)
         {
-            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
+            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
             wrist.enable();
         }
         else if (action == Commands::Skeleton::WRIST_OFF)
         {
-            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
+            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
             wrist.disable();
         }
         else if (action == Commands::Skeleton::WRIST_START)
