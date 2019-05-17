@@ -53,21 +53,21 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
     if (topic == Topics::SHOULDER)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::SkeletonCommands::SHOULDER_ON;
+            action_ = Commands::Skeleton::SHOULDER_ON;
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::SkeletonCommands::SHOULDER_OFF;
+            action_ = Commands::Skeleton::SHOULDER_OFF;
         else if (payload == Commands::Actions::Arm::SHOULDER_UP)
         {
             shoulderDirection_ = Direction::CCW;
-            action_ = Commands::SkeletonCommands::SHOULDER_STEP;
+            action_ = Commands::Skeleton::SHOULDER_STEP;
         }
         else if (payload == Commands::Actions::Arm::SHOULDER_DOWN)
         {
             shoulderDirection_ = Direction::CW;
-            action_ = Commands::SkeletonCommands::SHOULDER_STEP;
+            action_ = Commands::Skeleton::SHOULDER_STEP;
         }
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::SkeletonCommands::SHOULDER_STOP;
+            action_ = Commands::Skeleton::SHOULDER_STOP;
         else
         {
             shoulderDirection_ = Direction::NONE;
@@ -88,13 +88,13 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
     if (topic == Topics::WRIST)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::SkeletonCommands::WRIST_ON;
+            action_ = Commands::Skeleton::WRIST_ON;
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::SkeletonCommands::WRIST_OFF;
+            action_ = Commands::Skeleton::WRIST_OFF;
         else if (payload == Commands::Actions::START)
-            action_ = Commands::SkeletonCommands::WRIST_START;
+            action_ = Commands::Skeleton::WRIST_START;
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::SkeletonCommands::WRIST_STOP;
+            action_ = Commands::Skeleton::WRIST_STOP;
         else
             action_ = Commands::Actions::NONE;
 
@@ -118,9 +118,9 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     if (topic == Topics::HAND)
     {
         if (payload == Commands::Actions::START)
-            action_ = Commands::SkeletonCommands::HAND_START;
+            action_ = Commands::Skeleton::HAND_START;
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::SkeletonCommands::HAND_STOP;
+            action_ = Commands::Skeleton::HAND_STOP;
         else
             action_ = Commands::Actions::NONE;
 
@@ -278,37 +278,37 @@ int main(int argc, const char *argv[])
 
         std::string action = listener.action();
 
-        if (action == Commands::SkeletonCommands::SHOULDER_ON)
+        if (action == Commands::Skeleton::SHOULDER_ON)
             shoulder.enable();
-        else if (action == Commands::SkeletonCommands::SHOULDER_OFF)
+        else if (action == Commands::Skeleton::SHOULDER_OFF)
             shoulder.disable();
-        else if (action == Commands::SkeletonCommands::SHOULDER_STEP)
+        else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
             shoulder.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
-        else if (action == Commands::SkeletonCommands::SHOULDER_STOP)
+        else if (action == Commands::Skeleton::SHOULDER_STOP)
             shoulder.stopStepping();
-        else if (action == Commands::SkeletonCommands::WRIST_ON)
+        else if (action == Commands::Skeleton::WRIST_ON)
             wrist.enable();
-        else if (action == Commands::SkeletonCommands::WRIST_OFF)
+        else if (action == Commands::Skeleton::WRIST_OFF)
             wrist.disable();
-        else if (action == Commands::SkeletonCommands::WRIST_START)
+        else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
             wrist.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
             wrist.startStepping();
         }
-        else if (action == Commands::SkeletonCommands::WRIST_STOP)
+        else if (action == Commands::Skeleton::WRIST_STOP)
             wrist.stopStepping();
-        else if (action == Commands::SkeletonCommands::HAND_START)
+        else if (action == Commands::Skeleton::HAND_START)
         {
             hand.setDirection(listener.handDirection());
             hand.setVelocity(listener.handVelocity());
             hand.startPwm();
         }
-        else if (action == Commands::SkeletonCommands::HAND_STOP)
+        else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
         else continue;
     }

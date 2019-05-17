@@ -20,7 +20,7 @@ namespace Commands {
             const short RZ_AXES = 0;
         }
 
-        namespace SPICommands
+        namespace SPI
         {
             const unsigned char VDOWN_ON           = 0x04;
             const unsigned char VDOWN_OFF          = 0x05;
@@ -35,7 +35,7 @@ namespace Commands {
         }
     }
 
-    namespace SkeletonCommands
+    namespace Skeleton
     {
         const string SHOULDER_ON    = "SHOULDER_ON";
         const string SHOULDER_OFF   = "SHOULDER_OFF";
