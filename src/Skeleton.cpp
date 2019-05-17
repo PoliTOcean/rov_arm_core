@@ -20,8 +20,8 @@ using namespace Politocean::Constants;
 
 class Listener
 {
-    Direction shoulderDirection_, wristDirection_, handDirection_;
-    int shoulderVelocity_, wristVelocity_, handVelocity_;
+    Direction shoulderDirection_, wristDirection_, handDirection_, headDirection_;
+    int shoulderVelocity_, wristVelocity_, handVelocity_, headVelocity_;
 
     std::string action_;
 
@@ -34,14 +34,17 @@ public:
     void listenForShoulder(const std::string& payload, const std::string& topic);
     void listenForWrist(const std::string& payload, const std::string& topic);
     void listenForHand(const std::string& payload, const std::string& topic);
+    void listenForHead(const std::string& payload, const std::string& topic);
 
     Direction shoulderDirection();
     Direction wristDirection();
     Direction handDirection();
+    Direction headDirection();
 
     int shoulderVelocity();
     int wristVelocity();
     int handVelocity();
+    int headVelocity();
 
     std::string action();
 
@@ -56,12 +59,12 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
             action_ = Commands::Skeleton::SHOULDER_ON;
         else if (payload == Commands::Actions::OFF)
             action_ = Commands::Skeleton::SHOULDER_OFF;
-        else if (payload == Commands::Actions::Arm::SHOULDER_UP)
+        else if (payload == Commands::Actions::Stepper::UP)
         {
             shoulderDirection_ = Direction::CCW;
             action_ = Commands::Skeleton::SHOULDER_STEP;
         }
-        else if (payload == Commands::Actions::Arm::SHOULDER_DOWN)
+        else if (payload == Commands::Actions::Stepper::DOWN)
         {
             shoulderDirection_ = Direction::CW;
             action_ = Commands::Skeleton::SHOULDER_STEP;
@@ -137,6 +140,34 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
         {
             std::cerr << e.what() << '\n';
         }
+    }
+    else return ;
+}
+
+void Listener::listenForHead(const std::string& payload, const std::string& topic)
+{
+    if (topic == Topics::HEAD)
+    {
+        if (payload == Commands::Actions::ON)
+            action_ = Commands::Skeleton::HEAD_ON;
+        else if (payload == Commands::Actions::OFF)
+            action_ = Commands::Skeleton::HEAD_OFF;
+        else if (payload == Commands::Actions::Stepper::UP)
+        {
+            headDirection_ = Direction::CCW;
+            action_ = Commands::Skeleton::HEAD_STEP;
+        }
+        else if (payload == Commands::Actions::Stepper::DOWN)
+        {
+            headDirection_ = Direction::CW;
+            action_ = Commands::Skeleton::HEAD_STEP;
+        }
+        else if (payload == Commands::Actions::STOP)
+            action_ = Commands::Skeleton::HEAD_STOP;
+        else 
+            action_ = Commands::Actions::NONE;
+        
+        updated_ = true;
     }
     else return ;
 }
@@ -248,9 +279,10 @@ int main(int argc, const char *argv[])
     Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
-    subscriber.subscribeTo(Topics::SHOULDER+"#",         &Listener::listenForShoulder,                   &listener);
-    subscriber.subscribeTo(Topics::WRIST+"#",            &Listener::listenForWrist,                      &listener);
-    subscriber.subscribeTo(Topics::HAND+"#",             &Listener::listenForHand,                       &listener);
+    subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
+    subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
+    subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
+    subscriber.subscribeTo(Topics::HEAD+"#",        &Listener::listenForHead,       &listener);
 
     try
     {
@@ -268,9 +300,13 @@ int main(int argc, const char *argv[])
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
     PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
 
+    Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
+
     shoulder.setup();
     wrist.setup();
     hand.setup();
+
+    head.setup();
 
     while (subscriber.is_connected())
     {
@@ -310,6 +346,14 @@ int main(int argc, const char *argv[])
         }
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
+        else if (action == Commands::Skeleton::HEAD_STEP)
+        {
+            head.setDirection(listener.headDirection());
+            head.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            head.startStepping();
+        }
+        else if (action == Commands::Skeleton::HEAD_STOP)
+            head.stopStepping();
         else continue;
     }
 }
