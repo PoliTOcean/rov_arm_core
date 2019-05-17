@@ -278,9 +278,19 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 	isUsing_ = true;
 
 	SPIAxesThread_ = new std::thread([&]() {
+
+		auto start = std::chrono::high_resolution_clock::now();
+
 		while (isUsing_)
 		{
-			if(!listener.isAxesUpdated()) continue;
+
+			auto elapsed = std::chrono::high_resolution_clock::now() - start;
+			long long elapsed_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count(); // 10^-6
+
+			//if(!listener.isAxesUpdated() && !TIMER) continue;
+			// TIMER must be 1 second / # sensors
+			long long threshold = 10^6 / static_cast<int>(sensor_t::Last) + 1 ;
+			if(!listener.isAxesUpdated() && elapsed_microseconds < threshold ) continue;
 
 			std::vector<int> axes = listener.axes();
 
@@ -292,6 +302,8 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			};
 
 			send(buffer, listener);
+
+			start = std::chrono::high_resolution_clock::now();
 		}
 	});
 
