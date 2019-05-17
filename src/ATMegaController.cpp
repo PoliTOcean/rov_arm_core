@@ -29,6 +29,7 @@
 
 using namespace Politocean;
 using namespace Politocean::RPi;
+using namespace Politocean::Constants;
 
 class Listener
 {
@@ -191,9 +192,9 @@ void Talker::startTalking(Publisher& publisher, Listener& listener)
 				continue ;
 
 			nlohmann::json j_map = listener.sensors();
-			publisher.publish(Constants::Topics::SENSORS, j_map.dump());
+			publisher.publish(Topics::SENSORS, j_map.dump());
 
-			std::this_thread::sleep_for(std::chrono::seconds(Constants::Timing::Seconds::SENSORS));
+			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
 }
@@ -245,22 +246,22 @@ void SPI::setup()
 
 unsigned char setAction(std::string action)
 {
-    if(action == Constants::Commands::Actions::ATMega::VDOWN_ON)
-        return Commands::SPI::VDOWN_ON;
-    else if(action == Constants::Commands::Actions::ATMega::VDOWN_OFF)
-        return Commands::SPI::VDOWN_OFF;
-    else if(action == Constants::Commands::Actions::ATMega::VUP_ON)
-        return Commands::SPI::VUP_ON;
-    else if(action == Constants::Commands::Actions::ATMega::VUP_OFF)
-        return Commands::SPI::VUP_OFF;
-    else if(action == Constants::Commands::Actions::ATMega::FAST)
-        return Commands::SPI::FAST;
-    else if(action == Constants::Commands::Actions::ATMega::SLOW)
-        return Commands::SPI::SLOW;
-    else if(action == Constants::Commands::Actions::ATMega::MEDIUM)
-        return Commands::SPI::MEDIUM;
-    else if(action == Constants::Commands::Actions::ATMega::START_AND_STOP)
-        return Commands::SPI::START_AND_STOP;
+    if(action == Commands::Actions::ATMega::VDOWN_ON)
+        return Commands::ATMega::SPI::VDOWN_ON;
+    else if(action == Commands::Actions::ATMega::VDOWN_OFF)
+        return Commands::ATMega::SPI::VDOWN_OFF;
+    else if(action == Commands::Actions::ATMega::VUP_ON)
+        return Commands::ATMega::SPI::VUP_ON;
+    else if(action == Commands::Actions::ATMega::VUP_OFF)
+        return Commands::ATMega::SPI::VUP_OFF;
+    else if(action == Commands::Actions::ATMega::FAST)
+        return Commands::ATMega::SPI::FAST;
+    else if(action == Commands::Actions::ATMega::SLOW)
+        return Commands::ATMega::SPI::SLOW;
+    else if(action == Commands::Actions::ATMega::MEDIUM)
+        return Commands::ATMega::SPI::MEDIUM;
+    else if(action == Commands::Actions::ATMega::START_AND_STOP)
+        return Commands::ATMega::SPI::START_AND_STOP;
     else
         return 0;
 }
@@ -299,15 +300,15 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			std::cout << data << std::endl;
 			bool sendToSPI = false;
 
-			if (data == Constants::Commands::Actions::RESET)
+			if (data == Commands::Actions::RESET)
 			    controller_->reset();
-			else if (data == Constants::Commands::Actions::ON)
+			else if (data == Commands::Actions::ON)
             {
                 std::cout << "START" << std::endl;
                 Politocean::publish(publisher,Constants::Topics::POWER, Constants::Commands::Actions::ON);
                 controller_->startMotors();
             }
-            else if (data == Constants::Commands::Actions::OFF)
+            else if (data == Commands::Actions::OFF)
             {
                 std::cout << "STOP" << std::endl;
                 controller_->stopMotors();
@@ -370,7 +371,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher publisher(Constants::Hmi::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	Publisher publisher(Hmi::IP_ADDRESS, Rov::ATMEGA_ID);
 	mqttLogger ptoLogger(&publisher);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -388,12 +389,12 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickPublisher topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::ATMEGA_ID);
+	Subscriber subscriber(Rov::IP_ADDRESS, Rov::ATMEGA_ID);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Constants::Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Constants::Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try

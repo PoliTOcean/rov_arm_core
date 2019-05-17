@@ -7,14 +7,42 @@
 
 using namespace std;
 
+namespace Politocean {
+namespace Constants {
 namespace Commands {
 
-    namespace Actions
+    namespace ATMega
+    {
+        namespace Axis
+        {
+            const short X_AXES  = 0;
+            const short Y_AXES  = 0;
+            const short RZ_AXES = 0;
+        }
+
+        namespace SPI
+        {
+            const unsigned char VDOWN_ON           = 0x04;
+            const unsigned char VDOWN_OFF          = 0x05;
+            const unsigned char VUP_ON             = 0x06;
+            const unsigned char VUP_OFF            = 0x07;
+            const unsigned char FAST               = 0x0D;
+            const unsigned char SLOW               = 0x0E;
+            const unsigned char MEDIUM             = 0x0C;
+            const unsigned char AUTONOMOUS_ON      = 0x10;
+            const unsigned char AUTONOMOUS_OFF     = 0x11;
+            const unsigned char START_AND_STOP     = 0x12;
+        }
+    }
+
+    namespace Skeleton
     {
         const string SHOULDER_ON    = "SHOULDER_ON";
         const string SHOULDER_OFF   = "SHOULDER_OFF";
         const string SHOULDER_UP    = "SHOULDER_UP";
         const string SHOULDER_DOWN  = "SHOULDER_DOWN";
+        const string SHOULDER_STEP  = "SHOULDER_STEP";
+        const string SHOULDER_STOP  = "SHOULDER_STOP";
 
         const string WRIST_ON       = "WRIST_ON";
         const string WRIST_OFF      = "WRIST_OFF";
@@ -27,21 +55,8 @@ namespace Commands {
         const string NONE           = "NONE";
     }
 
-    namespace SPI
-    {
-        const unsigned char VDOWN_ON           = 0x04;
-        const unsigned char VDOWN_OFF          = 0x05;
-        const unsigned char VUP_ON             = 0x06;
-        const unsigned char VUP_OFF            = 0x07;
-        const unsigned char FAST               = 0x0D;
-        const unsigned char SLOW               = 0x0E;
-        const unsigned char MEDIUM             = 0x0C;
-        const unsigned char AUTONOMOUS_ON      = 0x10;
-        const unsigned char AUTONOMOUS_OFF     = 0x11;
-        const unsigned char START_AND_STOP     = 0x12;
-    }
-
 }
-
+}
+}
 
 #endif //COMMANDS_H
