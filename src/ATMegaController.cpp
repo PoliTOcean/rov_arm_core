@@ -232,7 +232,7 @@ public:
 
 	void setup();
 
-	void startSPI(Listener& listener);
+	void startSPI(Listener& listener, Publisher& publisher);
 	void stopSPI();
 
 	bool isUsing();
@@ -245,27 +245,27 @@ void SPI::setup()
 
 unsigned char setAction(std::string action)
 {
-    if(action == Constants::Commands::Actions::AtMega::VDOWN_ON)
+    if(action == Constants::Commands::Actions::ATMega::VDOWN_ON)
         return Commands::SPI::VDOWN_ON;
-    else if(action == Constants::Commands::Actions::AtMega::VDOWN_OFF)
+    else if(action == Constants::Commands::Actions::ATMega::VDOWN_OFF)
         return Commands::SPI::VDOWN_OFF;
-    else if(action == Constants::Commands::Actions::AtMega::VUP_ON)
+    else if(action == Constants::Commands::Actions::ATMega::VUP_ON)
         return Commands::SPI::VUP_ON;
-    else if(action == Constants::Commands::Actions::AtMega::VUP_OFF)
+    else if(action == Constants::Commands::Actions::ATMega::VUP_OFF)
         return Commands::SPI::VUP_OFF;
-    else if(action == Constants::Commands::Actions::AtMega::FAST)
+    else if(action == Constants::Commands::Actions::ATMega::FAST)
         return Commands::SPI::FAST;
-    else if(action == Constants::Commands::Actions::AtMega::SLOW)
+    else if(action == Constants::Commands::Actions::ATMega::SLOW)
         return Commands::SPI::SLOW;
-    else if(action == Constants::Commands::Actions::AtMega::MEDIUM)
+    else if(action == Constants::Commands::Actions::ATMega::MEDIUM)
         return Commands::SPI::MEDIUM;
-    else if(action == Constants::Commands::Actions::AtMega::START_AND_STOP)
+    else if(action == Constants::Commands::Actions::ATMega::START_AND_STOP)
         return Commands::SPI::START_AND_STOP;
     else
         return 0;
 }
 
-void SPI::startSPI(Listener& listener)
+void SPI::startSPI(Listener& listener, Publisher& publisher)
 {
 	if (isUsing_)
 		return ;
@@ -304,6 +304,7 @@ void SPI::startSPI(Listener& listener)
 			else if (data == Constants::Commands::Actions::ON)
             {
                 std::cout << "START" << std::endl;
+                Politocean::publish(publisher,Constants::Topics::POWER, Constants::Commands::Actions::ON);
                 controller_->startMotors();
             }
             else if (data == Constants::Commands::Actions::OFF)
@@ -435,7 +436,7 @@ int main(int argc, const char *argv[])
 		std::cerr << e.what() << '\n';
 	}	
 	
-	spi.startSPI(listener);
+	spi.startSPI(listener, publisher);
 
 	Talker talker;
 	talker.startTalking(publisher, listener);
