@@ -380,7 +380,10 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
         else if (action == Commands::Skeleton::HEAD_ON)
+        {
+            std::cout << "HEAD ENABLE" << std::endl;
             head.enable();
+        }
         else if (action == Commands::Skeleton::HEAD_OFF)
             head.disable();
         else if (action == Commands::Skeleton::HEAD_STEP)
