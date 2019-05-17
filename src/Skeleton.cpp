@@ -305,6 +305,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_START)
         {
             hand.setDirection(listener.handDirection());
+            std::cout << static_cast<int>(listener.handDirection()) << std::endl;
             hand.setVelocity(listener.handVelocity());
             hand.startPwm();
         }
