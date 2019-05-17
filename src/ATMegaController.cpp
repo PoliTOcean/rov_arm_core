@@ -254,6 +254,10 @@ unsigned char setAction(std::string action)
         return Commands::ATMega::SPI::VUP_ON;
     else if(action == Commands::Actions::ATMega::VUP_OFF)
         return Commands::ATMega::SPI::VUP_OFF;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_ON)
+		return Commands::ATMega::SPI::VUP_FAST_ON;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_OFF)
+		return Commands::ATMega::SPI::VUP_FAST_OFF;
     else if(action == Commands::Actions::ATMega::FAST)
         return Commands::ATMega::SPI::FAST;
     else if(action == Commands::Actions::ATMega::SLOW)
@@ -281,10 +285,10 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) 0xff,
-				(unsigned char) Politocean::map(axes[0],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[1],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::X_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::Y_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::RZ_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			send(buffer, listener);
@@ -304,16 +308,13 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			    controller_->reset();
 			else if (data == Commands::Actions::ON)
             {
-                std::cout << "START" << std::endl;
                 Politocean::publish(publisher,Constants::Topics::POWER, Constants::Commands::Actions::ON);
                 controller_->startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
-                std::cout << "STOP" << std::endl;
                 controller_->stopMotors();
             } else {
-				std::cout << "NIENTE" << std::endl;
                 sendToSPI = true;
 			}
 
@@ -323,7 +324,7 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
             unsigned char action = setAction(data);
 
 			std::vector<unsigned char> buffer = {
-				0x00,
+				Commands::ATMega::SPI::Delims::COMMAND,
 				action
 			};
 
@@ -349,7 +350,7 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 	{
 		unsigned char data = controller_->SPIDataRW(*it);
 
-		if (data == 0xFF)
+		if (data == Commands::ATMega::SPI::Delims::SENSORS)
 		{
 			listener.resetCurrentSensor();
 			continue;
