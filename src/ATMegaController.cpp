@@ -286,10 +286,8 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 
 			auto elapsed = std::chrono::high_resolution_clock::now() - start;
 			long long elapsed_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count(); // 10^-6
-
-			//if(!listener.isAxesUpdated() && !TIMER) continue;
-			// TIMER must be 1 second / # sensors
 			long long threshold = 10^6 / static_cast<int>(sensor_t::Last) + 1 ;
+			
 			if(!listener.isAxesUpdated() && elapsed_microseconds < threshold ) continue;
 
 			std::vector<int> axes = listener.axes();
