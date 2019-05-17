@@ -16,6 +16,7 @@
 
 using namespace Politocean;
 using namespace Politocean::RPi;
+using namespace Politocean::Constants;
 
 class Listener
 {
@@ -49,33 +50,33 @@ public:
 
 void Listener::listenForShoulder(const std::string& payload, const std::string& topic)
 {
-    if (topic == Constants::Topics::SHOULDER)
+    if (topic == Topics::SHOULDER)
     {
-        if (payload == Constants::Commands::Actions::ON)
-            action_ = Commands::Actions::SHOULDER_ON;
-        else if (payload == Constants::Commands::Actions::OFF)
-            action_ = Commands::Actions::SHOULDER_OFF;
-        else if (payload == Constants::Commands::Actions::Arm::SHOULDER_UP)
+        if (payload == Commands::Actions::ON)
+            action_ = Commands::SkeletonCommands::SHOULDER_ON;
+        else if (payload == Commands::Actions::OFF)
+            action_ = Commands::SkeletonCommands::SHOULDER_OFF;
+        else if (payload == Commands::Actions::Arm::SHOULDER_UP)
         {
             shoulderDirection_ = Direction::CCW;
-            action_ = Commands::Actions::SHOULDER_STEP;
+            action_ = Commands::SkeletonCommands::SHOULDER_STEP;
         }
-        else if (payload == Constants::Commands::Actions::Arm::SHOULDER_DOWN)
+        else if (payload == Commands::Actions::Arm::SHOULDER_DOWN)
         {
             shoulderDirection_ = Direction::CW;
-            action_ = Commands::Actions::SHOULDER_STEP;
+            action_ = Commands::SkeletonCommands::SHOULDER_STEP;
         }
-        else if (payload == Constants::Commands::Actions::STOP)
-            action_ = Commands::Actions::SHOULDER_STOP;
+        else if (payload == Commands::Actions::STOP)
+            action_ = Commands::SkeletonCommands::SHOULDER_STOP;
         else
         {
             shoulderDirection_ = Direction::NONE;
-            action_ = Constants::Commands::Actions::NONE;
+            action_ = Commands::Actions::NONE;
         }
 
         updated_ = true;
     }
-    else if (topic == Constants::Topics::SHOULDER_VELOCITY)
+    else if (topic == Topics::SHOULDER_VELOCITY)
     {
 
     }
@@ -84,22 +85,22 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
 
 void Listener::listenForWrist(const std::string& payload, const std::string& topic)
 {
-    if (topic == Constants::Topics::WRIST)
+    if (topic == Topics::WRIST)
     {
-        if (payload == Constants::Commands::Actions::ON)
-            action_ = Commands::Actions::WRIST_ON;
-        else if (payload == Constants::Commands::Actions::OFF)
-            action_ = Commands::Actions::WRIST_OFF;
-        else if (payload == Constants::Commands::Actions::START)
-            action_ = Commands::Actions::WRIST_START;
-        else if (payload == Constants::Commands::Actions::STOP)
-            action_ = Commands::Actions::WRIST_STOP;
+        if (payload == Commands::Actions::ON)
+            action_ = Commands::SkeletonCommands::WRIST_ON;
+        else if (payload == Commands::Actions::OFF)
+            action_ = Commands::SkeletonCommands::WRIST_OFF;
+        else if (payload == Commands::Actions::START)
+            action_ = Commands::SkeletonCommands::WRIST_START;
+        else if (payload == Commands::Actions::STOP)
+            action_ = Commands::SkeletonCommands::WRIST_STOP;
         else
-            action_ = Constants::Commands::Actions::NONE;
+            action_ = Commands::Actions::NONE;
 
         updated_ = true;
     }
-    else if (topic == Constants::Topics::WRIST_VELOCITY)
+    else if (topic == Topics::WRIST_VELOCITY)
         try
         {
             int axis = std::stoi(payload);
@@ -114,18 +115,18 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
 
 void Listener::listenForHand(const std::string& payload, const std::string& topic)
 {
-    if (topic == Constants::Topics::HAND)
+    if (topic == Topics::HAND)
     {
-        if (payload == Constants::Commands::Actions::START)
-            action_ = Commands::Actions::HAND_START;
-        else if (payload == Constants::Commands::Actions::STOP)
-            action_ = Commands::Actions::HAND_STOP;
+        if (payload == Commands::Actions::START)
+            action_ = Commands::SkeletonCommands::HAND_START;
+        else if (payload == Commands::Actions::STOP)
+            action_ = Commands::SkeletonCommands::HAND_STOP;
         else
-            action_ = Constants::Commands::Actions::NONE;
+            action_ = Commands::Actions::NONE;
 
         updated_ = true;
     }
-    else if (topic == Constants::Topics::HAND_VELOCITY)
+    else if (topic == Topics::HAND_VELOCITY)
     {
         try
         {
@@ -244,12 +245,12 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    Subscriber subscriber(Constants::Rov::IP_ADDRESS, Constants::Rov::SKELETON_ID);
+    Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
-    subscriber.subscribeTo(Constants::Topics::SHOULDER,         &Listener::listenForShoulder,                   &listener);
-    subscriber.subscribeTo(Constants::Topics::WRIST,            &Listener::listenForWrist,                      &listener);
-    subscriber.subscribeTo(Constants::Topics::HAND,             &Listener::listenForHand,                       &listener);
+    subscriber.subscribeTo(Topics::SHOULDER,         &Listener::listenForShoulder,                   &listener);
+    subscriber.subscribeTo(Topics::WRIST,            &Listener::listenForWrist,                      &listener);
+    subscriber.subscribeTo(Topics::HAND,             &Listener::listenForHand,                       &listener);
 
     try
     {
@@ -277,37 +278,37 @@ int main(int argc, const char *argv[])
 
         std::string action = listener.action();
 
-        if (action == Commands::Actions::SHOULDER_ON)
+        if (action == Commands::SkeletonCommands::SHOULDER_ON)
             shoulder.enable();
-        else if (action == Commands::Actions::SHOULDER_OFF)
+        else if (action == Commands::SkeletonCommands::SHOULDER_OFF)
             shoulder.disable();
-        else if (action == Commands::Actions::SHOULDER_STEP)
+        else if (action == Commands::SkeletonCommands::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
+            shoulder.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
-        else if (action == Commands::Actions::SHOULDER_STOP)
+        else if (action == Commands::SkeletonCommands::SHOULDER_STOP)
             shoulder.stopStepping();
-        else if (action == Commands::Actions::WRIST_ON)
+        else if (action == Commands::SkeletonCommands::WRIST_ON)
             wrist.enable();
-        else if (action == Commands::Actions::WRIST_OFF)
+        else if (action == Commands::SkeletonCommands::WRIST_OFF)
             wrist.disable();
-        else if (action == Commands::Actions::WRIST_START)
+        else if (action == Commands::SkeletonCommands::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(Constants::Timing::Millisenconds::DFLT_STEPPER);
+            wrist.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
             wrist.startStepping();
         }
-        else if (action == Commands::Actions::WRIST_STOP)
+        else if (action == Commands::SkeletonCommands::WRIST_STOP)
             wrist.stopStepping();
-        else if (action == Commands::Actions::HAND_START)
+        else if (action == Commands::SkeletonCommands::HAND_START)
         {
             hand.setDirection(listener.handDirection());
             hand.setVelocity(listener.handVelocity());
             hand.startPwm();
         }
-        else if (action == Commands::Actions::HAND_STOP)
+        else if (action == Commands::SkeletonCommands::HAND_STOP)
             hand.stopPwm();
         else continue;
     }
