@@ -148,8 +148,6 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
 {
     if (topic == Topics::HEAD)
     {
-        std::cout << payload << std::endl;
-        
         if (payload == Commands::Actions::ON)
             action_ = Commands::Skeleton::HEAD_ON;
         else if (payload == Commands::Actions::OFF)
@@ -380,10 +378,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
         else if (action == Commands::Skeleton::HEAD_ON)
-        {
-            std::cout << "HEAD ENABLE" << std::endl;
             head.enable();
-        }
         else if (action == Commands::Skeleton::HEAD_OFF)
             head.disable();
         else if (action == Commands::Skeleton::HEAD_STEP)
