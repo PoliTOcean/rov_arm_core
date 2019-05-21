@@ -10,6 +10,8 @@ include_directories(politocean_common/include)
 add_subdirectory(rov_common)
 include_directories(rov_common/include)
 
+add_subdirectory(libs)
+
 include_directories(include)
 
 # Add executable
@@ -30,8 +32,8 @@ target_link_libraries(ATMegaController -lpthread
 
 target_link_libraries(Skeleton -lpthread
     RovCommon::Controller
-    RovCommon::Stepper
-    RovCommon::PwmMotor
+    PolitoceanRovArmCore::Stepper
+    PolitoceanRovArmCore::DCMotor
     
     PolitoceanCommon::Subscriber
     PolitoceanCommon::Publisher

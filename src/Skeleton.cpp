@@ -4,7 +4,7 @@
 
 #include "Subscriber.h"
 #include "Controller.h"
-#include "PwmMotor.h"
+#include "DCMotor.h"
 #include "Stepper.h"
 #include "Commands.h"
 
@@ -216,7 +216,7 @@ void Listener::handAxis(int axis)
     }
     else {}
 
-    velocity = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
     if (handVelocity_ == velocity && handDirection_ == direction)
         return ;
@@ -321,7 +321,7 @@ int main(int argc, const char *argv[])
     
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
-    PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+    DCMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
     Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
 
