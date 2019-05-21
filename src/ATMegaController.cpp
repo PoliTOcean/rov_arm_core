@@ -279,13 +279,13 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 
 	SPIAxesThread_ = new std::thread([&]() {
 
-		long long threshold = (Timing::Millisenconds::SENSORS_UPDATE_DELAY / Timing::Millisenconds::AXES_DELAY) 
+		long long threshold = (Timing::Milliseconds::SENSORS_UPDATE_DELAY / Timing::Milliseconds::AXES_DELAY) 
 								/ ( static_cast<int>(sensor_t::Last) + 1 );
 		int counter = 0;
 
 		while (isUsing_)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Millisenconds::AXES_DELAY));
+			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::AXES_DELAY));
 
 			counter++;
 			

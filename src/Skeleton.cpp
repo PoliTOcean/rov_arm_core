@@ -350,7 +350,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            shoulder.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
         else if (action == Commands::Skeleton::SHOULDER_STOP)
@@ -368,7 +368,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            wrist.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
             wrist.startStepping();
         }
         else if (action == Commands::Skeleton::WRIST_STOP)
