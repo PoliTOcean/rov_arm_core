@@ -56,7 +56,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
+	Listener() : axes_(3, 0), axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for (auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
@@ -233,7 +233,7 @@ public:
 
 	void setup();
 
-	void startSPI(Listener& listener);
+	void startSPI(Listener& listener, Publisher& publisher);
 	void stopSPI();
 
 	bool isUsing();
@@ -254,6 +254,10 @@ unsigned char setAction(std::string action)
         return Commands::ATMega::SPI::VUP_ON;
     else if(action == Commands::Actions::ATMega::VUP_OFF)
         return Commands::ATMega::SPI::VUP_OFF;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_ON)
+		return Commands::ATMega::SPI::VUP_FAST_ON;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_OFF)
+		return Commands::ATMega::SPI::VUP_FAST_OFF;
     else if(action == Commands::Actions::ATMega::FAST)
         return Commands::ATMega::SPI::FAST;
     else if(action == Commands::Actions::ATMega::SLOW)
@@ -266,7 +270,7 @@ unsigned char setAction(std::string action)
         return 0;
 }
 
-void SPI::startSPI(Listener& listener)
+void SPI::startSPI(Listener& listener, Publisher& publisher)
 {
 	if (isUsing_)
 		return ;
@@ -274,20 +278,31 @@ void SPI::startSPI(Listener& listener)
 	isUsing_ = true;
 
 	SPIAxesThread_ = new std::thread([&]() {
+
+		long long threshold = (Timing::Millisenconds::SENSORS_UPDATE_DELAY / Timing::Millisenconds::AXES_DELAY) 
+								/ ( static_cast<int>(sensor_t::Last) + 1 );
+		int counter = 0;
+
 		while (isUsing_)
 		{
-			if(!listener.isAxesUpdated()) continue;
+			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Millisenconds::AXES_DELAY));
+
+			counter++;
+			
+			if(!listener.isAxesUpdated() && counter < threshold) continue;
 
 			std::vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) 0xff,
-				(unsigned char) Politocean::map(axes[0],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[1],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[2],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::X_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::Y_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::RZ_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
 			};
 
 			send(buffer, listener);
+
+			counter = 0;
 		}
 	});
 
@@ -304,15 +319,14 @@ void SPI::startSPI(Listener& listener)
 			    controller_->reset();
 			else if (data == Commands::Actions::ON)
             {
-                std::cout << "START" << std::endl;
+                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::ON);
                 controller_->startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
-                std::cout << "STOP" << std::endl;
+                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::OFF);
                 controller_->stopMotors();
             } else {
-				std::cout << "NIENTE" << std::endl;
                 sendToSPI = true;
 			}
 
@@ -322,7 +336,7 @@ void SPI::startSPI(Listener& listener)
             unsigned char action = setAction(data);
 
 			std::vector<unsigned char> buffer = {
-				0x00,
+				Commands::ATMega::SPI::Delims::COMMAND,
 				action
 			};
 
@@ -348,7 +362,7 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 	{
 		unsigned char data = controller_->SPIDataRW(*it);
 
-		if (data == 0xFF)
+		if (data == Commands::ATMega::SPI::Delims::SENSORS)
 		{
 			listener.resetCurrentSensor();
 			continue;
@@ -392,8 +406,8 @@ int main(int argc, const char *argv[])
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Topics::JOYSTICK_AXES, 	&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::COMMANDS,			&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try
@@ -436,7 +450,7 @@ int main(int argc, const char *argv[])
 		std::cerr << e.what() << '\n';
 	}	
 	
-	spi.startSPI(listener);
+	spi.startSPI(listener, publisher);
 
 	Talker talker;
 	talker.startTalking(publisher, listener);

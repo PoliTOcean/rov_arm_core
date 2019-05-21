@@ -164,8 +164,11 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
         }
         else if (payload == Commands::Actions::STOP)
             action_ = Commands::Skeleton::HEAD_STOP;
-        else 
+        else
+        {
             action_ = Commands::Actions::NONE;
+            headDirection_ = Direction::NONE;
+        }
         
         updated_ = true;
     }
@@ -290,6 +293,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
+    Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
     Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
@@ -301,6 +305,7 @@ int main(int argc, const char *argv[])
     try
     {
         subscriber.connect();
+        publisher.connect();
     }
     catch (const mqttException& e)
     {
@@ -329,9 +334,15 @@ int main(int argc, const char *argv[])
         std::string action = listener.action();
 
         if (action == Commands::Skeleton::SHOULDER_ON)
+        {
+            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
             shoulder.enable();
+        }
         else if (action == Commands::Skeleton::SHOULDER_OFF)
+        {
+            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
             shoulder.disable();
+        }
         else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
@@ -341,9 +352,15 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::SHOULDER_STOP)
             shoulder.stopStepping();
         else if (action == Commands::Skeleton::WRIST_ON)
+        {
+            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
             wrist.enable();
+        }
         else if (action == Commands::Skeleton::WRIST_OFF)
+        {
+            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
             wrist.disable();
+        }
         else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
@@ -360,6 +377,10 @@ int main(int argc, const char *argv[])
         }
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
+        else if (action == Commands::Skeleton::HEAD_ON)
+            head.enable();
+        else if (action == Commands::Skeleton::HEAD_OFF)
+            head.disable();
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
