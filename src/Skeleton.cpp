@@ -31,6 +31,10 @@ class Listener
     void handAxis(int axes);
 
 public:
+    Listener() :    shoulderDirection_(Direction::NONE), wristDirection_(Direction::NONE), handDirection_(Direction::NONE),
+                    headDirection_(Direction::NONE), shoulderVelocity_(0), wristVelocity_(0), handVelocity_(0), headVelocity_(0),
+                    updated_(false) {}
+
     void listenForShoulder(const std::string& payload, const std::string& topic);
     void listenForWrist(const std::string& payload, const std::string& topic);
     void listenForHand(const std::string& payload, const std::string& topic);
