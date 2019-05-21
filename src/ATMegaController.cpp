@@ -279,7 +279,6 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 
 	SPIAxesThread_ = new std::thread([&]() {
 
-		auto start = std::chrono::high_resolution_clock::now();
 		long long threshold = 20 / ( static_cast<int>(sensor_t::Last) + 1 );
 		int counter = 0;
 
