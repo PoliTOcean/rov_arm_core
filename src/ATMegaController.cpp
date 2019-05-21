@@ -56,7 +56,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
+	Listener() : axes_(3, 0), axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for (auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
@@ -278,9 +278,18 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 	isUsing_ = true;
 
 	SPIAxesThread_ = new std::thread([&]() {
+
+		long long threshold = (Timing::Millisenconds::SENSORS_UPDATE_DELAY / Timing::Millisenconds::AXES_DELAY) 
+								/ ( static_cast<int>(sensor_t::Last) + 1 );
+		int counter = 0;
+
 		while (isUsing_)
 		{
-			if(!listener.isAxesUpdated()) continue;
+			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Millisenconds::AXES_DELAY));
+
+			counter++;
+			
+			if(!listener.isAxesUpdated() && counter < threshold) continue;
 
 			std::vector<int> axes = listener.axes();
 
@@ -292,6 +301,8 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			};
 
 			send(buffer, listener);
+
+			counter = 0;
 		}
 	});
 

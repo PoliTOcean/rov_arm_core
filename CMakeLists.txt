@@ -20,7 +20,8 @@ add_executable(Skeleton src/Skeleton.cpp)
 target_link_libraries(ATMegaController
     -lpthread
     PolitoceanCommon::Sensor PolitoceanRovArmCore::Controller
-    PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher)
+    PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher
+    -g)
 
 
 target_link_libraries(Skeleton -lpthread
