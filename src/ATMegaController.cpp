@@ -280,13 +280,13 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 	SPIAxesThread_ = new std::thread([&]() {
 
 		auto start = std::chrono::high_resolution_clock::now();
+		long long threshold = 10^6 / ( static_cast<int>(sensor_t::Last) + 1 );
 
 		while (isUsing_)
 		{
 
 			auto elapsed = std::chrono::high_resolution_clock::now() - start;
 			long long elapsed_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count(); // 10^-6
-			long long threshold = 10^6 / static_cast<int>(sensor_t::Last) + 1 ;
 			
 			if(!listener.isAxesUpdated() && elapsed_microseconds < threshold ) continue;
 
