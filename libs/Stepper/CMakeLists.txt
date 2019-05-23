@@ -6,7 +6,7 @@ add_library(Stepper
 
 add_library(PolitoceanRovArmCore::Stepper ALIAS Stepper)
 
-target_link_libraries(Stepper -lpthread PolitoceanRovArmCore::Controller)
+target_link_libraries(Stepper -lpthread RovCommon::Controller)
 
 target_include_directories(Stepper
         PUBLIC

@@ -1,14 +1,14 @@
-#include "PwmMotor.h"
+#include "DCMotor.h"
 
 using namespace Politocean::RPi;
 
-void PwmMotor::setup()
+void DCMotor::setup()
 {
     controller_->pinMode(dirPin_, Controller::PinMode::PIN_OUTPUT);
     controller_->pinMode(pwmPin_, Controller::PinMode::PIN_OUTPUT);
 }
 
-void PwmMotor::setDirection(Direction direction)
+void DCMotor::setDirection(Direction direction)
 {
     direction_ = direction;
 
@@ -19,12 +19,12 @@ void PwmMotor::setDirection(Direction direction)
     else return ;
 }
 
-void PwmMotor::setVelocity(int velocity)
+void DCMotor::setVelocity(int velocity)
 {
     velocity_ = velocity;
 }
 
-void PwmMotor::startPwm()
+void DCMotor::startPwm()
 {
     if (isPwming_)
         return ;
@@ -38,13 +38,13 @@ void PwmMotor::startPwm()
     });
 }
 
-void PwmMotor::stopPwm()
+void DCMotor::stopPwm()
 {
     isPwming_ = false;
     controller_->softPwmStop(pwmPin_);
 }
 
-bool PwmMotor::isPwming()
+bool DCMotor::isPwming()
 {
     return isPwming_;
 }

@@ -5,9 +5,9 @@ include_directories(../include)
 
 # Add here all libraries' directories
 #add_subdirectory(name_of_directory)
-add_subdirectory(Controller)
+
 add_subdirectory(Stepper)
-add_subdirectory(PwmMotor)
+add_subdirectory(DCMotor)
 
 # Install and export (do not touch this part)
 install(

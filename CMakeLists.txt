@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD 11)
 add_subdirectory(politocean_common)
 include_directories(politocean_common/include)
 
-# Add project internal libs
+add_subdirectory(rov_common)
+include_directories(rov_common/include)
+
 add_subdirectory(libs)
 
 include_directories(include)
@@ -17,18 +19,23 @@ add_executable(ATMegaController src/ATMegaController.cpp)
 add_executable(Skeleton src/Skeleton.cpp)
 
 # Linking the libraries
-target_link_libraries(ATMegaController
-    -lpthread
-    PolitoceanCommon::Sensor PolitoceanRovArmCore::Controller
-    PolitoceanCommon::Subscriber PolitoceanCommon::mqttLogger PolitoceanCommon::logger PolitoceanCommon::Publisher
-    -g)
+target_link_libraries(ATMegaController -lpthread
+    RovCommon::Controller
+
+    PolitoceanCommon::Sensor
+    PolitoceanCommon::Subscriber
+    PolitoceanCommon::mqttLogger
+    PolitoceanCommon::logger
+    PolitoceanCommon::Publisher
+)
 
 
 target_link_libraries(Skeleton -lpthread
-    PolitoceanRovArmCore::Controller
+    RovCommon::Controller
     PolitoceanRovArmCore::Stepper
-    PolitoceanRovArmCore::PwmMotor
+    PolitoceanRovArmCore::DCMotor
     
     PolitoceanCommon::Subscriber
-    PolitoceanCommon::Publisher)
+    PolitoceanCommon::Publisher
+)
 

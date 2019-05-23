@@ -4,7 +4,7 @@
 
 #include "Subscriber.h"
 #include "Controller.h"
-#include "PwmMotor.h"
+#include "DCMotor.h"
 #include "Stepper.h"
 #include "Commands.h"
 
@@ -31,6 +31,10 @@ class Listener
     void handAxis(int axes);
 
 public:
+    Listener() :    shoulderDirection_(Direction::NONE), wristDirection_(Direction::NONE), handDirection_(Direction::NONE),
+                    headDirection_(Direction::NONE), shoulderVelocity_(0), wristVelocity_(0), handVelocity_(0), headVelocity_(0),
+                    updated_(false) {}
+
     void listenForShoulder(const std::string& payload, const std::string& topic);
     void listenForWrist(const std::string& payload, const std::string& topic);
     void listenForHand(const std::string& payload, const std::string& topic);
@@ -212,7 +216,7 @@ void Listener::handAxis(int axis)
     }
     else {}
 
-    velocity = Politocean::map(velocity, 0, SHRT_MAX, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
     if (handVelocity_ == velocity && handDirection_ == direction)
         return ;
@@ -293,7 +297,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
+    // Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
     Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
 
@@ -305,7 +309,7 @@ int main(int argc, const char *argv[])
     try
     {
         subscriber.connect();
-        publisher.connect();
+        // publisher.connect();
     }
     catch (const mqttException& e)
     {
@@ -317,7 +321,7 @@ int main(int argc, const char *argv[])
     
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
-    PwmMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, PwmMotor::PWM_MIN, PwmMotor::PWM_MAX);
+    DCMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
     Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
 
@@ -335,36 +339,36 @@ int main(int argc, const char *argv[])
 
         if (action == Commands::Skeleton::SHOULDER_ON)
         {
-            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
+            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
             shoulder.enable();
         }
         else if (action == Commands::Skeleton::SHOULDER_OFF)
         {
-            Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
+            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
             shoulder.disable();
         }
         else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            shoulder.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
         else if (action == Commands::Skeleton::SHOULDER_STOP)
             shoulder.stopStepping();
         else if (action == Commands::Skeleton::WRIST_ON)
         {
-            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
+            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
             wrist.enable();
         }
         else if (action == Commands::Skeleton::WRIST_OFF)
         {
-            Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
+            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
             wrist.disable();
         }
         else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            wrist.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
             wrist.startStepping();
         }
         else if (action == Commands::Skeleton::WRIST_STOP)
@@ -384,7 +388,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
-            head.setVelocity(Timing::Millisenconds::DFLT_STEPPER);
+            head.setVelocity(5);
             head.startStepping();
         }
         else if (action == Commands::Skeleton::HEAD_STOP)

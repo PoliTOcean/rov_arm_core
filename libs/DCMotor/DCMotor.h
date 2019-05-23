@@ -1,5 +1,5 @@
-#ifndef PWM_MOTOR_H
-#define PWM_MOTOR_H
+#ifndef DC_MOTOR_H
+#define DC_MOTOR_H
 
 #include <thread>
 
@@ -10,7 +10,7 @@ namespace Politocean
 {
     namespace RPi
     {
-        class PwmMotor
+        class DCMotor
         {
             Controller *controller_;
 
@@ -26,7 +26,7 @@ namespace Politocean
             static const int PWM_MIN = 20;
             static const int PWM_MAX = 200;
 
-            PwmMotor(Controller *controller, int dirPin, int pwmPin, int minPwm, int maxPwm) :
+            DCMotor(Controller *controller, int dirPin, int pwmPin, int minPwm, int maxPwm) :
                 controller_(controller), dirPin_(dirPin), pwmPin_(pwmPin), minPwm_(minPwm), maxPwm_(maxPwm), isPwming_(false) {}
             
             void setup();
@@ -42,4 +42,4 @@ namespace Politocean
     }
 }
 
-#endif // PWM_MOTOR_H
+#endif // DC_MOTOR_H
