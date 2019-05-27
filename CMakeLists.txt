@@ -21,6 +21,7 @@ add_executable(Skeleton src/Skeleton.cpp)
 # Linking the libraries
 target_link_libraries(ATMegaController -lpthread
     RovCommon::Controller
+    RovCommon::SPI
 
     PolitoceanCommon::Sensor
     PolitoceanCommon::Subscriber

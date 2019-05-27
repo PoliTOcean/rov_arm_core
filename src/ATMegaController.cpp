@@ -14,6 +14,8 @@
 #include "Subscriber.h"
 #include "Sensor.h"
 #include "Controller.h"
+#include "SPI.h"
+
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
 #include "PolitoceanUtils.hpp"
@@ -167,17 +169,33 @@ bool Listener::isSensorsUpdated()
 
 class Talker
 {
-	std::thread *sensorThread_;
+	std::thread *sensorThread_, *SPIAxesThread_, *SPIButtonThread_;
+	std::mutex mutex_;
+
+	Controller& controller_;
+	Listener& listener_;
 	bool isTalking_;
 
+	SPI spi_;
+
+	void send(const std::vector<unsigned char>& buffer, Listener& listener);
+	unsigned char setAction(std::string action);
+
 public:
-	Talker() : isTalking_(false) {}
+	Talker(Controller& controller, Listener& listener) : controller_(controller), listener_(listener), isTalking_(false), spi_(controller) {}
+
+	void setup();
 
 	void startTalking(Publisher& publisher, Listener& listener);
 	void stopTalking();
 
 	bool isTalking();
 };
+
+void Talker::setup()
+{
+	spi_.setup(SPI::DFLT_CHANNEL, SPI::DFLT_SPEED);
+}
 
 void Talker::startTalking(Publisher& publisher, Listener& listener)
 {
@@ -197,93 +215,12 @@ void Talker::startTalking(Publisher& publisher, Listener& listener)
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
-}
-
-void Talker::stopTalking()
-{
-	if (!isTalking_)
-		return ;
-	
-	isTalking_ = false;
-	sensorThread_->join();
-}
-
-bool Talker::isTalking()
-{
-	return isTalking_;
-}
-
-
-/***************************************************
- * SPI Class
- **************************************************/
-
-class SPI
-{
-	Controller *controller_;
-	std::mutex mutex_;
-
-	std::thread *SPIAxesThread_, *SPIButtonThread_;
-	bool isUsing_;
-
-	void send(const std::vector<unsigned char>& buffer, Listener &listener);
-
-public:
-	SPI(Controller *controller) : controller_(controller), isUsing_(false) {}
-
-	void setup();
-
-	void startSPI(Listener& listener, Publisher& publisher);
-	void stopSPI();
-
-	bool isUsing();
-};
-
-void SPI::setup()
-{
-	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
-}
-
-unsigned char setAction(std::string action)
-{
-    if(action == Commands::Actions::ATMega::VDOWN_ON)
-        return Commands::ATMega::SPI::VDOWN_ON;
-    else if(action == Commands::Actions::ATMega::VDOWN_OFF)
-        return Commands::ATMega::SPI::VDOWN_OFF;
-    else if(action == Commands::Actions::ATMega::VUP_ON)
-        return Commands::ATMega::SPI::VUP_ON;
-    else if(action == Commands::Actions::ATMega::VUP_OFF)
-        return Commands::ATMega::SPI::VUP_OFF;
-	else if(action == Commands::Actions::ATMega::VUP_FAST_ON)
-		return Commands::ATMega::SPI::VUP_FAST_ON;
-	else if(action == Commands::Actions::ATMega::VUP_FAST_OFF)
-		return Commands::ATMega::SPI::VUP_FAST_OFF;
-    else if(action == Commands::Actions::ATMega::FAST)
-        return Commands::ATMega::SPI::FAST;
-    else if(action == Commands::Actions::ATMega::SLOW)
-        return Commands::ATMega::SPI::SLOW;
-    else if(action == Commands::Actions::ATMega::MEDIUM)
-        return Commands::ATMega::SPI::MEDIUM;
-    else if(action == Commands::Actions::ATMega::START_AND_STOP)
-        return Commands::ATMega::SPI::START_AND_STOP;
-    else
-        return 0;
-}
-
-void SPI::startSPI(Listener& listener, Publisher& publisher)
-{
-	if (isUsing_)
-		return ;
-
-	isUsing_ = true;
 
 	SPIAxesThread_ = new std::thread([&]() {
-
-		long long threshold = (Timing::Milliseconds::SENSORS_UPDATE_DELAY / Timing::Milliseconds::AXES_DELAY) 
-								/ ( static_cast<int>(sensor_t::Last) + 1 );
+		long long threshold = (Timing::Milliseconds::SENSORS_UPDATE_DELAY / Timing::Milliseconds::AXES_DELAY) / (static_cast<int>(sensor_t::Last) + 1);
 		int counter = 0;
 
-		while (isUsing_)
+		while (isTalking_)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::AXES_DELAY));
 
@@ -307,7 +244,7 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 	});
 
 	SPIButtonThread_ = new std::thread([&]() {
-		while (isUsing_)
+		while (isTalking_)
 		{
 			if(!listener.isButtonUpdated()) continue;
 
@@ -316,16 +253,16 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 			bool sendToSPI = false;
 
 			if (data == Commands::Actions::RESET)
-			    controller_->reset();
+			    controller_.reset();
 			else if (data == Commands::Actions::ON)
             {
                 Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::ON);
-                controller_->startMotors();
+                controller_.startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
                 Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::OFF);
-                controller_->stopMotors();
+                controller_.stopMotors();
             } else {
                 sendToSPI = true;
 			}
@@ -345,22 +282,27 @@ void SPI::startSPI(Listener& listener, Publisher& publisher)
 	});
 }
 
-void SPI::stopSPI()
+void Talker::stopTalking()
 {
-	if (!isUsing_)
+	if (!isTalking_)
 		return ;
-
-	isUsing_ = false;
-	SPIAxesThread_->join(); SPIButtonThread_->join();
+	
+	isTalking_ = false;
+	sensorThread_->join(); SPIAxesThread_->join(); SPIButtonThread_->join();
 }
 
-void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
+bool Talker::isTalking()
+{
+	return isTalking_;
+}
+
+void Talker::send(const std::vector<unsigned char>& buffer, Listener& listener)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = controller_->SPIDataRW(*it);
+		unsigned char data = spi_.transfer(*it);
 
 		if (data == Commands::ATMega::SPI::Delims::SENSORS)
 		{
@@ -372,9 +314,30 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 	}
 }
 
-bool SPI::isUsing()
+unsigned char Talker::setAction(std::string action)
 {
-	return isUsing_;
+    if(action == Commands::Actions::ATMega::VDOWN_ON)
+        return Commands::ATMega::SPI::VDOWN_ON;
+    else if(action == Commands::Actions::ATMega::VDOWN_OFF)
+        return Commands::ATMega::SPI::VDOWN_OFF;
+    else if(action == Commands::Actions::ATMega::VUP_ON)
+        return Commands::ATMega::SPI::VUP_ON;
+    else if(action == Commands::Actions::ATMega::VUP_OFF)
+        return Commands::ATMega::SPI::VUP_OFF;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_ON)
+		return Commands::ATMega::SPI::VUP_FAST_ON;
+	else if(action == Commands::Actions::ATMega::VUP_FAST_OFF)
+		return Commands::ATMega::SPI::VUP_FAST_OFF;
+    else if(action == Commands::Actions::ATMega::FAST)
+        return Commands::ATMega::SPI::FAST;
+    else if(action == Commands::Actions::ATMega::SLOW)
+        return Commands::ATMega::SPI::SLOW;
+    else if(action == Commands::Actions::ATMega::MEDIUM)
+        return Commands::ATMega::SPI::MEDIUM;
+    else if(action == Commands::Actions::ATMega::START_AND_STOP)
+        return Commands::ATMega::SPI::START_AND_STOP;
+    else
+        return 0;
 }
 
 /***************************************************
@@ -438,21 +401,15 @@ int main(int argc, const char *argv[])
 		std::exit(EXIT_FAILURE);
 	}
 
-	SPI spi(&controller);
+	std::thread SPIAxesThread([&] {
 
-	// Try to setup @spi
-	try
-	{
-		spi.setup();
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}	
-	
-	spi.startSPI(listener, publisher);
+	});
 
-	Talker talker;
+	std::thread SPIButtonThread([&] {
+
+	});
+
+	Talker talker(controller, listener);
 	talker.startTalking(publisher, listener);
 
 	// wait until subscriber is is_connected
@@ -460,7 +417,6 @@ int main(int argc, const char *argv[])
 
 	// Stop sensors talker and SPI
 	talker.stopTalking();
-	spi.stopSPI();
 
 	//safe reset at the end
 	controller.reset();

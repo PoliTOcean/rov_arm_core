@@ -12,7 +12,7 @@ namespace Politocean
     {
         class DCMotor
         {
-            Controller *controller_;
+            Controller& controller_;
 
             int dirPin_, pwmPin_, minPwm_, maxPwm_;
             
@@ -26,7 +26,7 @@ namespace Politocean
             static const int PWM_MIN = 20;
             static const int PWM_MAX = 200;
 
-            DCMotor(Controller *controller, int dirPin, int pwmPin, int minPwm, int maxPwm) :
+            DCMotor(Controller& controller, int dirPin, int pwmPin, int minPwm, int maxPwm) :
                 controller_(controller), dirPin_(dirPin), pwmPin_(pwmPin), minPwm_(minPwm), maxPwm_(maxPwm), isPwming_(false) {}
             
             void setup();
