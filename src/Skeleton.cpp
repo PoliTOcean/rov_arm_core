@@ -216,7 +216,7 @@ void Listener::handAxis(int axis)
     }
     else {}
 
-    velocity = Politocean::map(velocity, 0, SHRT_MAX, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, 0, UCHAR_MAX);
 
     if (handVelocity_ == velocity && handDirection_ == direction)
         return ;
