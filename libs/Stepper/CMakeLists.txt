@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(Stepper VERSION 1.0.0 LANGUAGES CXX)
 
-add_library(Stepper
+add_library(Stepper SHARED
         Stepper.cpp)
 
 add_library(PolitoceanRovArmCore::Stepper ALIAS Stepper)
