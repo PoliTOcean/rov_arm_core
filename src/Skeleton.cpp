@@ -298,7 +298,7 @@ bool Listener::isUpdated()
 int main(int argc, const char *argv[])
 {
     // Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
-    MqttClient subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
+    MqttClient subscriber(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
 
     try
@@ -310,7 +310,7 @@ int main(int argc, const char *argv[])
     {
         std::cerr << e.what() << '\n';
     }
-    
+
     subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
     subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
     subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
