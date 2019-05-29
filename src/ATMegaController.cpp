@@ -383,7 +383,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	MqttClient publisher(Hmi::IP_ADDRESS, Rov::ATMEGA_ID);
+	MqttClient publisher(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
 	mqttLogger ptoLogger(&publisher);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -401,7 +401,7 @@ int main(int argc, const char *argv[])
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	MqttClient subscriber(Rov::IP_ADDRESS, Rov::ATMEGA_ID);
+	MqttClient subscriber(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
 	Listener listener;
 
 	// Try to connect @subscriber
@@ -409,7 +409,7 @@ int main(int argc, const char *argv[])
 	{	
 		subscriber.connect();
 	}
-	catch (Politocean::mqttException& e)
+	catch (std::exception& e)
 	{
 		std::cerr << "Error on subscriber connection : " << e.what() << std::endl;
 		std::exit(EXIT_FAILURE);
