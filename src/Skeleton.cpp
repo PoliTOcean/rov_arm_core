@@ -196,6 +196,8 @@ void Listener::wristAxis(int axis)
     if (wristVelocity_ == velocity && wristDirection_ == direction)
         return ;
 
+    velocity = Politocean::map(velocity, 0, SHRT_MAX, 0, UCHAR_MAX);
+
     wristVelocity_  = velocity;
     wristDirection_ = direction;
 
