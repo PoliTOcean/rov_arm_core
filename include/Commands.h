@@ -59,12 +59,12 @@ namespace Commands {
         const string HAND_START     = "HAND_START";
         const string HAND_STOP      = "HAND_STOP";
 
-        const string HEAD_ON    = "HEAD_ON";
-        const string HEAD_OFF   = "HEAD_OFF";
-        const string HEAD_UP    = "HEAD_UP";
-        const string HEAD_DOWN  = "HEAD_DOWN";
-        const string HEAD_STEP  = "HEAD_STEP";
-        const string HEAD_STOP  = "HEAD_STOP";
+        const string HEAD_ON        = "HEAD_ON";
+        const string HEAD_OFF       = "HEAD_OFF";
+        const string HEAD_UP        = "HEAD_UP";
+        const string HEAD_DOWN      = "HEAD_DOWN";
+        const string HEAD_STEP      = "HEAD_STEP";
+        const string HEAD_STOP      = "HEAD_STOP";
 
         const string NONE           = "NONE";
     }

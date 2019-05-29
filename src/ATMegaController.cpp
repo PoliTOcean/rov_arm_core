@@ -10,8 +10,7 @@
 #include <exception>
 #include <Commands.h>
 
-#include "Publisher.h"
-#include "Subscriber.h"
+#include "MqttClient.h"
 #include "Sensor.h"
 #include "Controller.h"
 #include "PolitoceanConstants.h"
@@ -71,9 +70,9 @@ public:
 
 	/**
 	 * Callback functions.
-	 * They read the joystick data (@payload) from JoystickPublisher
+	 * They read the joystick data (@payload) from JoystickMqttClient
 	 * 
-	 * @payload: the string that recives from the JoystickPublisher
+	 * @payload: the string that recives from the JoystickMqttClient
 	 * 
 	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
@@ -173,13 +172,13 @@ class Talker
 public:
 	Talker() : isTalking_(false) {}
 
-	void startTalking(Publisher& publisher, Listener& listener);
+	void startTalking(MqttClient& publisher, Listener& listener);
 	void stopTalking();
 
 	bool isTalking();
 };
 
-void Talker::startTalking(Publisher& publisher, Listener& listener)
+void Talker::startTalking(MqttClient& publisher, Listener& listener)
 {
 	if (isTalking_)
 		return ;
@@ -233,7 +232,7 @@ public:
 
 	void setup();
 
-	void startSPI(Listener& listener, Publisher& publisher);
+	void startSPI(Listener& listener, MqttClient& publisher);
 	void stopSPI();
 
 	bool isUsing();
@@ -270,7 +269,7 @@ unsigned char setAction(std::string action)
         return 0;
 }
 
-void SPI::startSPI(Listener& listener, Publisher& publisher)
+void SPI::startSPI(Listener& listener, MqttClient& publisher)
 {
 	if (isUsing_)
 		return ;
@@ -384,7 +383,7 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	Publisher publisher(Hmi::IP_ADDRESS, Rov::ATMEGA_ID);
+	MqttClient publisher(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
 	mqttLogger ptoLogger(&publisher);
 	logger::enableLevel(logger::DEBUG, true);
 
@@ -393,32 +392,33 @@ int main(int argc, const char *argv[])
 	{
 		publisher.connect();
 	}
-	catch (const mqtt::exception& e)
+	catch (const std::exception& e)
 	{
 		ptoLogger.logError(e);
 	}
 
 	/**
-	 * @subscriber	: the subscriber listening to JoystickPublisher topics
+	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	Subscriber subscriber(Rov::IP_ADDRESS, Rov::ATMEGA_ID);
+	MqttClient subscriber(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
 	Listener listener;
-
-	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForButton, 	&listener);
 
 	// Try to connect @subscriber
 	try
 	{	
 		subscriber.connect();
 	}
-	catch (Politocean::mqttException& e)
+	catch (std::exception& e)
 	{
 		std::cerr << "Error on subscriber connection : " << e.what() << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
+
+	// Subscribe @subscriber to joystick publisher topics
+	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForButton, 	&listener);
+
 
 	/**
 	 * @controller : to access to Raspberry Pi features

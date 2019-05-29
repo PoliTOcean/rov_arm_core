@@ -23,10 +23,9 @@ target_link_libraries(ATMegaController -lpthread
     RovCommon::Controller
 
     PolitoceanCommon::Sensor
-    PolitoceanCommon::Subscriber
     PolitoceanCommon::mqttLogger
     PolitoceanCommon::logger
-    PolitoceanCommon::Publisher
+    PolitoceanCommon::MqttClient
 )
 
 
@@ -35,7 +34,6 @@ target_link_libraries(Skeleton -lpthread
     PolitoceanRovArmCore::Stepper
     PolitoceanRovArmCore::DCMotor
     
-    PolitoceanCommon::Subscriber
-    PolitoceanCommon::Publisher
+    PolitoceanCommon::MqttClient
 )
 
