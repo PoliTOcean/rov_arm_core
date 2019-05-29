@@ -36,7 +36,6 @@ target_link_libraries(Skeleton -lpthread
     PolitoceanRovArmCore::Stepper
     PolitoceanRovArmCore::DCMotor
     
-    PolitoceanCommon::Subscriber
-    PolitoceanCommon::Publisher
+    PolitoceanCommon::MqttClient
 )
 
