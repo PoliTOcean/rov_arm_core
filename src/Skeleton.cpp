@@ -2,7 +2,7 @@
  * @author pettinz
  */
 
-#include "Subscriber.h"
+#include "MqttClient.h"
 #include "Controller.h"
 #include "DCMotor.h"
 #include "Stepper.h"
@@ -298,13 +298,8 @@ bool Listener::isUpdated()
 int main(int argc, const char *argv[])
 {
     // Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
-    Subscriber subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
+    MqttClient subscriber(Rov::IP_ADDRESS, Rov::SKELETON_ID);
     Listener listener;
-
-    subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
-    subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
-    subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
-    subscriber.subscribeTo(Topics::HEAD+"#",        &Listener::listenForHead,       &listener);
 
     try
     {
@@ -315,6 +310,12 @@ int main(int argc, const char *argv[])
     {
         std::cerr << e.what() << '\n';
     }
+    
+    subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
+    subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
+    subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
+    subscriber.subscribeTo(Topics::HEAD+"#",        &Listener::listenForHead,       &listener);
+
 
     Controller controller;
     controller.setup();
