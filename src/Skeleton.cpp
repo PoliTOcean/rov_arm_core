@@ -390,7 +390,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
-            head.setVelocity(20);
+            head.setVelocity(Timing::Milliseconds::DFLT_HEAD);
             head.startStepping();
         }
         else if (action == Commands::Skeleton::HEAD_STOP)
