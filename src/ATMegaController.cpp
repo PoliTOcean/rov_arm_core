@@ -8,6 +8,7 @@
 #include <chrono>
 #include <mutex>
 #include <exception>
+#include <queue>
 #include <Commands.h>
 
 #include "MqttClient.h"
@@ -43,7 +44,7 @@ class Listener
 						(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	string button_;
+	std::queue<std::string> action_;
 
 	std::vector<Sensor<unsigned char>> sensors_;
 	sensor_t currentSensor_;
@@ -97,13 +98,12 @@ void Listener::listenForAxes(const std::string& payload)
 	auto c_map = nlohmann::json::parse(payload);
 	axes_ = c_map.get<std::vector<int>>();
 	
-	axesUpdated_ = true;
+	axesUpdated_ = true;	
 }
 
 void Listener::listenForButton(const std::string& payload)
 {
-	std::cout << payload << std::endl;
-	button_ = payload;
+	action_.push(payload);
 
 	buttonUpdated_ = true;
 }
@@ -131,8 +131,11 @@ std::vector<int> Listener::axes()
 
 std::string Listener::action()
 {
+	std::string tmp = action_.front();
+	action_.pop();
 	buttonUpdated_ = false;
-	return button_;
+
+	return tmp;
 }
 
 std::vector<int> Listener::sensors()
