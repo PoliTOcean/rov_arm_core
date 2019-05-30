@@ -181,7 +181,10 @@ class Talker
 	unsigned char setAction(std::string action);
 
 public:
-	Talker(Controller& controller, Listener& listener) : controller_(controller), listener_(listener), isTalking_(false), spi_(controller) {}
+	Talker(Controller& controller, Listener& listener) : controller_(controller), listener_(listener), isTalking_(false), spi_(controller)
+	{
+		spi_.setup(SPI::DFLT_CHANNEL, SPI::DFLT_SPEED);
+	}
 
 	void setup();
 
@@ -190,11 +193,6 @@ public:
 
 	bool isTalking();
 };
-
-void Talker::setup()
-{
-	spi_.setup(SPI::DFLT_CHANNEL, SPI::DFLT_SPEED);
-}
 
 void Talker::startTalking(MqttClient& publisher, Listener& listener)
 {
@@ -401,6 +399,7 @@ int main(int argc, const char *argv[])
 	}
 
 	Talker talker(controller, listener);
+	talker.setup();
 	talker.startTalking(publisher, listener);
 
 	// wait until subscriber is is_connected
