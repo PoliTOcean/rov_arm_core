@@ -178,16 +178,11 @@ class Talker
 	Listener& listener_;
 	bool isTalking_;
 
-	SPI spi_;
-
 	void send(const std::vector<unsigned char>& buffer, Listener& listener);
 	unsigned char setAction(std::string action);
 
 public:
-	Talker(Controller& controller, Listener& listener) : controller_(controller), listener_(listener), isTalking_(false), spi_(controller)
-	{
-		spi_.setup(SPI::DFLT_CHANNEL, SPI::DFLT_SPEED);
-	}
+	Talker(Controller& controller, Listener& listener) : controller_(controller), listener_(listener), isTalking_(false) {}
 
 	void startTalking(MqttClient& publisher, Listener& listener);
 	void stopTalking();
@@ -199,6 +194,8 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 {
 	if (isTalking_)
 		return ;
+
+	controller_.spiOpen(0, 1000000);
 
 	isTalking_ = true;
 	sensorThread_ = new std::thread([&]() {
@@ -285,6 +282,8 @@ void Talker::stopTalking()
 	if (!isTalking_)
 		return ;
 	
+	controller_.spiClose();
+
 	isTalking_ = false;
 	sensorThread_->join(); SPIAxesThread_->join(); SPIButtonThread_->join();
 }
@@ -298,17 +297,18 @@ void Talker::send(const std::vector<unsigned char>& buffer, Listener& listener)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
+	char tx, rx;
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = spi_.transfer(*it);
-
-		if (data == Commands::ATMega::SPI::Delims::SENSORS)
+		tx = *it;
+		controller_.spiXfer(&tx, &rx, 1);
+		if (rx == Commands::ATMega::SPI::Delims::SENSORS)
 		{
 			listener.resetCurrentSensor();
 			continue;
 		}
 		
-		listener.listenForSensor(data);
+		listener.listenForSensor(rx);
 	}
 }
 
