@@ -20,3 +20,4 @@ JoystickSubscriber
 ImuCalibration
 Skeleton
 ATMegaController
+*.so
