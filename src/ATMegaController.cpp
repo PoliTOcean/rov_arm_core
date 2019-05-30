@@ -186,8 +186,6 @@ public:
 		spi_.setup(SPI::DFLT_CHANNEL, SPI::DFLT_SPEED);
 	}
 
-	void setup();
-
 	void startTalking(MqttClient& publisher, Listener& listener);
 	void stopTalking();
 
@@ -399,7 +397,6 @@ int main(int argc, const char *argv[])
 	}
 
 	Talker talker(controller, listener);
-	talker.setup();
 	talker.startTalking(publisher, listener);
 
 	// wait until subscriber is is_connected
