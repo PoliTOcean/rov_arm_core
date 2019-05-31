@@ -385,7 +385,7 @@ int main(int argc, const char *argv[])
 	// Enable logging
 	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
 	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
-	logger::enableLevel(logger::DEBUG);
+	logger::enableLevel(logger::INFO);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
