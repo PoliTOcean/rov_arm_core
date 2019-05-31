@@ -70,9 +70,9 @@ public:
 
 	/**
 	 * Callback functions.
-	 * They read the joystick data (@payload) from JoystickMqttClient
+	 * They read the joystick data (@payload) from CommandParser
 	 * 
-	 * @payload: the string that recives from the JoystickMqttClient
+	 * @payload: the string that recives from the CommandParser
 	 * 
 	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
@@ -318,12 +318,12 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			    controller_->reset();
 			else if (data == Commands::Actions::ON)
             {
-                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::ON);
+                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Commands::Actions::ON);
                 controller_->startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
-                Politocean::publishComponents(publisher,Components::POWER, Commands::Actions::OFF);
+                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Commands::Actions::OFF);
                 controller_->stopMotors();
             } else {
                 sendToSPI = true;
@@ -383,37 +383,16 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
-	MqttClient publisher(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
-	mqttLogger ptoLogger(&publisher);
-	logger::enableLevel(logger::DEBUG, true);
-
-	// Try to connect to publisher logger
-	try
-	{
-		publisher.connect();
-	}
-	catch (const std::exception& e)
-	{
-		ptoLogger.logError(e);
-	}
+	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
+	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
+	logger::enableLevel(logger::INFO);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	MqttClient subscriber(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
+	MqttClient& subscriber = MqttClient::getInstance(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
 	Listener listener;
-
-	// Try to connect @subscriber
-	try
-	{	
-		subscriber.connect();
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << "Error on subscriber connection : " << e.what() << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
 
 	// Subscribe @subscriber to joystick publisher topics
 	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
@@ -433,9 +412,7 @@ int main(int argc, const char *argv[])
 		controller.setupMotors();
 	} catch (Politocean::controllerException &e)
 	{
-		std::cerr << "Error on controller setup : " << e.what() << std::endl;
-		ptoLogger.logError(e);
-		std::exit(EXIT_FAILURE);
+		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
 	}
 
 	SPI spi(&controller);
