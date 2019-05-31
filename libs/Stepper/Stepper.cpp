@@ -9,7 +9,7 @@ void Stepper::setup()
     controller_->pinMode(dirPin_, Controller::PinMode::PIN_OUTPUT);
     controller_->pinMode(stepPin_, Controller::PinMode::PIN_OUTPUT);
             
-    controller_->digitalWrite(enPin_, Controller::PinLevel::PIN_HIGH);
+    disable();
 }
 
 void Stepper::enable()

@@ -318,12 +318,12 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			    controller_->reset();
 			else if (data == Commands::Actions::ON)
             {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Commands::Actions::ON);
+                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::ENABLED);
                 controller_->startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Commands::Actions::OFF);
+                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::DISABLED);
                 controller_->stopMotors();
             } else {
                 sendToSPI = true;
@@ -404,11 +404,13 @@ int main(int argc, const char *argv[])
 	 */
 
 	Controller controller;
-
+	
+//	Components::Status motorsStatus = Components::Status::ERROR;
 	// Try to setup @controller
 	try
 	{
 		controller.setup();
+//		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_HIGH ? Components::Status::DISABLED : Components::Status::ENABLED;
 		controller.setupMotors();
 	} catch (Politocean::controllerException &e)
 	{

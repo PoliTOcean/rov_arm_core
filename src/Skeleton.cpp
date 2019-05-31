@@ -311,17 +311,21 @@ int main(int argc, const char *argv[])
     Controller controller;
     controller.setup();
     
+    Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
     DCMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
-    Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
+    head.setup();
+    Politocean::publishComponents(Rov::SKELETON_ID, Components::HEAD, Components::Status::DISABLED);
 
     shoulder.setup();
-    wrist.setup();
-    hand.setup();
+    Politocean::publishComponents(Rov::SKELETON_ID, Components::SHOULDER, Components::Status::DISABLED);
 
-    head.setup();
+    wrist.setup();
+    Politocean::publishComponents(Rov::SKELETON_ID, Components::WRIST, Components::Status::DISABLED);
+
+    hand.setup();
 
     while (subscriber.is_connected())
     {
@@ -331,12 +335,12 @@ int main(int argc, const char *argv[])
 
         if (action == Commands::Skeleton::SHOULDER_ON)
         {
-            Politocean::publishComponents(Rov::SKELETON_ID, Components::SHOULDER, Commands::Actions::ON);
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::SHOULDER, Components::Status::ENABLED);
             shoulder.enable();
         }
         else if (action == Commands::Skeleton::SHOULDER_OFF)
         {
-            Politocean::publishComponents(Rov::SKELETON_ID, Components::SHOULDER, Commands::Actions::OFF);
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::SHOULDER, Components::Status::DISABLED);
             shoulder.disable();
         }
         else if (action == Commands::Skeleton::SHOULDER_STEP)
@@ -349,12 +353,12 @@ int main(int argc, const char *argv[])
             shoulder.stopStepping();
         else if (action == Commands::Skeleton::WRIST_ON)
         {
-            Politocean::publishComponents(Rov::SKELETON_ID, Components::WRIST, Commands::Actions::ON);
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::WRIST, Components::Status::ENABLED);
             wrist.enable();
         }
         else if (action == Commands::Skeleton::WRIST_OFF)
         {
-            Politocean::publishComponents(Rov::SKELETON_ID, Components::WRIST, Commands::Actions::OFF);
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::WRIST, Components::Status::DISABLED);
             wrist.disable();
         }
         else if (action == Commands::Skeleton::WRIST_START)
@@ -374,9 +378,15 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
         else if (action == Commands::Skeleton::HEAD_ON)
+        {
             head.enable();
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::HEAD, Components::Status::ENABLED);
+        }
         else if (action == Commands::Skeleton::HEAD_OFF)
+        {
             head.disable();
+            Politocean::publishComponents(Rov::SKELETON_ID, Components::HEAD, Components::Status::DISABLED);
+        }
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
