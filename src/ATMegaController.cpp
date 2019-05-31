@@ -416,6 +416,7 @@ int main(int argc, const char *argv[])
 		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
 	}
 
+	Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, motorsStatus);
 	SPI spi(&controller);
 
 	// Try to setup @spi
