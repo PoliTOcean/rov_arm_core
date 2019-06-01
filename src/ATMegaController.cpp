@@ -410,7 +410,7 @@ int main(int argc, const char *argv[])
 	try
 	{
 		controller.setup();
-		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_HIGH ? Components::Status::DISABLED : Components::Status::ENABLED;
+		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_LOW ? Components::Status::DISABLED : Components::Status::ENABLED;
 	} catch (Politocean::controllerException &e)
 	{
 		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
