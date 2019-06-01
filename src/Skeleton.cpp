@@ -9,6 +9,7 @@
 #include "Commands.h"
 
 #include <climits>
+#include <queue>
 
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
@@ -23,7 +24,7 @@ class Listener
     Direction shoulderDirection_, wristDirection_, handDirection_, headDirection_;
     int shoulderVelocity_, wristVelocity_, handVelocity_, headVelocity_;
 
-    std::string action_;
+    std::queue<std::string> actions_;
 
     bool updated_;
 
@@ -60,25 +61,24 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
     if (topic == Topics::SHOULDER)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::SHOULDER_ON;
+            actions_.push(Commands::Skeleton::SHOULDER_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::SHOULDER_OFF;
+            actions_.push(Commands::Skeleton::SHOULDER_OFF);
         else if (payload == Commands::Actions::Stepper::UP)
         {
             shoulderDirection_ = Direction::CCW;
-            action_ = Commands::Skeleton::SHOULDER_STEP;
+            actions_.push(Commands::Skeleton::SHOULDER_STEP);
         }
         else if (payload == Commands::Actions::Stepper::DOWN)
         {
             shoulderDirection_ = Direction::CW;
-            action_ = Commands::Skeleton::SHOULDER_STEP;
+            actions_.push(Commands::Skeleton::SHOULDER_STEP);
         }
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::SHOULDER_STOP;
+            actions_.push(Commands::Skeleton::SHOULDER_STOP);
         else
         {
             shoulderDirection_ = Direction::NONE;
-            action_ = Commands::Actions::NONE;
         }
 
         updated_ = true;
@@ -95,16 +95,14 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
     if (topic == Topics::WRIST)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::WRIST_ON;
+            actions_.push(Commands::Skeleton::WRIST_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::WRIST_OFF;
+            actions_.push(Commands::Skeleton::WRIST_OFF);
         else if (payload == Commands::Actions::START)
-            action_ = Commands::Skeleton::WRIST_START;
+            actions_.push(Commands::Skeleton::WRIST_START);
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::WRIST_STOP;
-        else
-            action_ = Commands::Actions::NONE;
-
+            actions_.push(Commands::Skeleton::WRIST_STOP);
+        
         updated_ = true;
     }
     else if (topic == Topics::WRIST_VELOCITY)
@@ -125,11 +123,9 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     if (topic == Topics::HAND)
     {
         if (payload == Commands::Actions::START)
-            action_ = Commands::Skeleton::HAND_START;
+            actions_.push(Commands::Skeleton::HAND_START);
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::HAND_STOP;
-        else
-            action_ = Commands::Actions::NONE;
+            actions_.push(Commands::Skeleton::HAND_STOP);
 
         updated_ = true;
     }
@@ -153,24 +149,23 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
     if (topic == Topics::HEAD)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::HEAD_ON;
+            actions_.push(Commands::Skeleton::HEAD_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::HEAD_OFF;
+            actions_.push(Commands::Skeleton::HEAD_OFF);
         else if (payload == Commands::Actions::Stepper::UP)
         {
             headDirection_ = Direction::CCW;
-            action_ = Commands::Skeleton::HEAD_STEP;
+            actions_.push(Commands::Skeleton::HEAD_STEP);
         }
         else if (payload == Commands::Actions::Stepper::DOWN)
         {
             headDirection_ = Direction::CW;
-            action_ = Commands::Skeleton::HEAD_STEP;
+            actions_.push(Commands::Skeleton::HEAD_STEP);
         }
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::HEAD_STOP;
+            actions_.push(Commands::Skeleton::HEAD_STOP);
         else
         {
-            action_ = Commands::Actions::NONE;
             headDirection_ = Direction::NONE;
         }
         
@@ -229,57 +224,40 @@ void Listener::handAxis(int axis)
 
 Direction Listener::shoulderDirection()
 {
-    updated_ = false;
-
     return shoulderDirection_;
 }
 
 Direction Listener::wristDirection()
-{
-    updated_ = false;
-
-    return wristDirection_;
+{    return wristDirection_;
 }
 
 Direction Listener::handDirection()
 {
-    updated_ = false;
-
     return handDirection_;
 }
 
 Direction Listener::headDirection()
 {
-    updated_ = false;
-    
     return headDirection_;
 }
 
 int Listener::shoulderVelocity()
 {
-    updated_ = false;
-
     return shoulderVelocity_;
 }
 
 int Listener::wristVelocity()
 {
-    updated_ = false;
-
     return wristVelocity_;
 }
 
 int Listener::handVelocity()
 {
-    updated_ = false;
-
     return handVelocity_;
 }
 
 int Listener::headVelocity()
 {
-    updated_ = false;
-
     return headVelocity_;
 }
 
@@ -287,12 +265,15 @@ std::string Listener::action()
 {
     updated_ = false;
 
-    return action_;
+    if (actions_.empty()) return Commands::Actions::NONE;
+    std::string action = actions_.front();
+    actions_.pop();
+    return action;
 }
 
 bool Listener::isUpdated()
 {
-    return updated_;
+    return updated_ && !actions_.empty();
 }
 
 int main(int argc, const char *argv[])
@@ -329,7 +310,11 @@ int main(int argc, const char *argv[])
 
     while (subscriber.is_connected())
     {
-        if (!listener.isUpdated()) continue ;
+        if (!listener.isUpdated())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::JOYSTICK));
+            continue ;
+        }
 
         std::string action = listener.action();
 

@@ -145,7 +145,7 @@ std::string Listener::action()
 	std::lock_guard<std::mutex> lock(mutexCmd_);
 
 	commandsUpdated_ = false;
-	if (commands_.empty()) return "";
+	if (commands_.empty()) return Commands::Actions::NONE;
 
 	string action = commands_.front();
 	commands_.pop();
