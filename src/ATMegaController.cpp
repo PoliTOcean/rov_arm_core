@@ -172,7 +172,7 @@ bool Listener::isAxesUpdated()
 
 bool Listener::isCommandsUpdated()
 {
-	return commandsUpdated_ && !commands_.empty();
+	return !commands_.empty();
 }
 
 bool Listener::isSensorsUpdated()

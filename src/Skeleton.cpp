@@ -273,7 +273,7 @@ std::string Listener::action()
 
 bool Listener::isUpdated()
 {
-    return updated_ && !actions_.empty();
+    return !actions_.empty();
 }
 
 int main(int argc, const char *argv[])
