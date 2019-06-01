@@ -405,18 +405,18 @@ int main(int argc, const char *argv[])
 
 	Controller controller;
 	
-//	Components::Status motorsStatus = Components::Status::ERROR;
+	Components::Status motorsStatus = Components::Status::ERROR;
 	// Try to setup @controller
 	try
 	{
 		controller.setup();
-//		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_HIGH ? Components::Status::DISABLED : Components::Status::ENABLED;
-		controller.setupMotors();
+		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_LOW ? Components::Status::DISABLED : Components::Status::ENABLED;
 	} catch (Politocean::controllerException &e)
 	{
 		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
 	}
 
+	Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, motorsStatus);
 	SPI spi(&controller);
 
 	// Try to setup @spi
