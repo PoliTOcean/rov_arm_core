@@ -9,6 +9,7 @@
 #include <mutex>
 #include <exception>
 #include <Commands.h>
+#include <queue>
 
 #include "MqttClient.h"
 #include "Sensor.h"
@@ -36,26 +37,28 @@ class Listener
 	 * @axes_		: it is a vector with the following structure:
 						(*) indices represent the axes identifiers
 						(*) values represent the axes values
-	 * @button_		: contains the value of button on 8 bit with the following structure:
+	 * @commands_	: contains the value of button on 8 bit with the following structure:
 						(*) MSB for the value (0 if released, 1 if pressed)
 						(*) the remeining 7 bit for the identifier
 	 */
 	std::vector<int> axes_;
-	string button_;
+	std::queue<string> commands_;
 
 	std::vector<Sensor<unsigned char>> sensors_;
 	sensor_t currentSensor_;
 
+	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
+
 	/**
-	 * @axesUpdated_	: it is true if @axes_ values has changed
-	 * @buttonUpdated_	: it is true if @button_ value has changed
+	 * @axesUpdated_		: it is true if @axes_ values has changed
+	 * @commandsUpdated_	: it is true if @button_ value has changed
 	 */
-	bool axesUpdated_, buttonUpdated_, sensorsUpdated_;
+	bool axesUpdated_, commandsUpdated_, sensorsUpdated_;
 
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axes_(3, 0), axesUpdated_(false), buttonUpdated_(false), currentSensor_(sensor_t::First)
+	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for (auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
@@ -78,14 +81,14 @@ public:
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
 	void listenForAxes(const std::string& payload);
-	void listenForButton(const std::string& payload);
+	void listenForCommands(const std::string& payload);
 	void listenForSensor(unsigned char data);
 
 	void resetCurrentSensor();
 
-	// To check if @axes_ values or @button_ value has changed
+	// To check if @axes_ values or @commands_ values has changed
 	bool isAxesUpdated();
-	bool isButtonUpdated();
+	bool isCommandsUpdated();
 	bool isSensorsUpdated();
 
 };
@@ -93,21 +96,29 @@ public:
 void Listener::listenForAxes(const std::string& payload)
 {
 	auto c_map = nlohmann::json::parse(payload);
+
+	std::lock_guard<std::mutex> lock(mutexAxs_);
+
 	axes_ = c_map.get<std::vector<int>>();
 	
 	axesUpdated_ = true;
 }
 
-void Listener::listenForButton(const std::string& payload)
+void Listener::listenForCommands(const std::string& payload)
 {
-	std::cout << payload << std::endl;
-	button_ = payload;
+	logger::getInstance().log(logger::DEBUG, "Received: "+payload);
 
-	buttonUpdated_ = true;
+	std::lock_guard<std::mutex> lock(mutexCmd_);
+
+    commands_.push( payload );
+
+	commandsUpdated_ = true;
 }
 
 void Listener::listenForSensor(unsigned char data)
 {
+	std::lock_guard<std::mutex> lock(mutexSnr_);
+
 	sensors_[static_cast<int>(currentSensor_)].setValue(data);
 
 	if (++currentSensor_ > sensor_t::Last)
@@ -118,23 +129,32 @@ void Listener::listenForSensor(unsigned char data)
 
 void Listener::resetCurrentSensor()
 {
+	std::lock_guard<std::mutex> lock(mutexSnr_);
 	currentSensor_ = sensor_t::First;
 }
 
 std::vector<int> Listener::axes()
 {
+	std::lock_guard<std::mutex> lock(mutexAxs_);
 	axesUpdated_ = false;
 	return axes_;
 }
 
 std::string Listener::action()
 {
-	buttonUpdated_ = false;
-	return button_;
+	std::lock_guard<std::mutex> lock(mutexCmd_);
+
+	commandsUpdated_ = false;
+	if (commands_.empty()) return "";
+
+	string action = commands_.front();
+	commands_.pop();
+	return action;
 }
 
 std::vector<int> Listener::sensors()
 {
+	std::lock_guard<std::mutex> lock(mutexSnr_);
 	sensorsUpdated_ = false;
 
 	std::vector<int> sensors;
@@ -150,9 +170,9 @@ bool Listener::isAxesUpdated()
 	return axesUpdated_;
 }
 
-bool Listener::isButtonUpdated()
+bool Listener::isCommandsUpdated()
 {
-	return buttonUpdated_;
+	return commandsUpdated_ && !commands_.empty();
 }
 
 bool Listener::isSensorsUpdated()
@@ -188,7 +208,10 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 		while (publisher.is_connected() && isTalking_)
 		{
 			if (!listener.isSensorsUpdated())
+			{
+				std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 				continue ;
+			}
 
 			nlohmann::json j_map = listener.sensors();
 			publisher.publish(Topics::SENSORS, j_map.dump());
@@ -222,7 +245,7 @@ class SPI
 	Controller *controller_;
 	std::mutex mutex_;
 
-	std::thread *SPIAxesThread_, *SPIButtonThread_;
+	std::thread *SPIAxesThread_, *SPICommandsThread_;
 	bool isUsing_;
 
 	void send(const std::vector<unsigned char>& buffer, Listener &listener);
@@ -305,13 +328,16 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 		}
 	});
 
-	SPIButtonThread_ = new std::thread([&]() {
+	SPICommandsThread_ = new std::thread([&]() {
 		while (isUsing_)
 		{
-			if(!listener.isButtonUpdated()) continue;
+			if(!listener.isCommandsUpdated()){
+            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::JOYSTICK));
+				continue;
+			}
 
 			std::string data = listener.action();
-			std::cout << data << std::endl;
+
 			bool sendToSPI = false;
 
 			if (data == Commands::Actions::RESET)
@@ -330,7 +356,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			}
 
             if (!sendToSPI)
-                    continue;
+                continue;
 
             unsigned char action = setAction(data);
 
@@ -350,7 +376,7 @@ void SPI::stopSPI()
 		return ;
 
 	isUsing_ = false;
-	SPIAxesThread_->join(); SPIButtonThread_->join();
+	SPIAxesThread_->join(); SPICommandsThread_->join();
 }
 
 void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
@@ -396,7 +422,7 @@ int main(int argc, const char *argv[])
 
 	// Subscribe @subscriber to joystick publisher topics
 	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForButton, 	&listener);
+	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForCommands, 	&listener);
 
 
 	/**
