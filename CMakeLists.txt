@@ -3,6 +3,14 @@ project(PolitoceanRovArmCore)
 
 set(CMAKE_CXX_STANDARD 11)
 
+if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
+  message(FATAL_ERROR "
+	In-source builds are not allowed.
+	Please, create a separate directory for build files (e.g. build/).
+	Delete CMakeCache.txt, make a separate dir and try again.
+	")
+endif()
+
 # Add politocean common libs
 add_subdirectory(politocean_common)
 include_directories(politocean_common/include)
