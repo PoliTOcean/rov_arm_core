@@ -288,7 +288,9 @@ unsigned char setAction(std::string action)
         return Commands::ATMega::SPI::MEDIUM;
     else if(action == Commands::Actions::ATMega::START_AND_STOP)
         return Commands::ATMega::SPI::START_AND_STOP;
-    else
+    else if(action == Commands::Actions::ATMega::PITCH_CONTROL)
+		return Commands::ATMega::SPI::PITCH_CONTROL;
+	else
         return 0;
 }
 
@@ -317,9 +319,10 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::X_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::Y_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axis::RZ_AXES],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::X_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 			};
 
 			send(buffer, listener);
