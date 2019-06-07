@@ -193,7 +193,7 @@ void Listener::wristAxis(int axis)
         return;
     }
     
-    wristVelocity_  = Politocean::map(velocity, 0, SHRT_MAX, Timing::Microseconds::STEPPER_MAX, Timing::Microseconds::STEPPER_MIN);
+    wristVelocity_  = Politocean::map(velocity, 0, SHRT_MAX, Timing::Microseconds::WRIST_MAX, Timing::Microseconds::WRIST_MIN);
     wristDirection_ = direction;
 }
 
