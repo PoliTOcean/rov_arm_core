@@ -181,10 +181,10 @@ void Listener::wristAxis(int axis)
 
     updated_ = true;
     if (velocity > 0)
-        direction = Direction::CCW;
+        direction = Direction::CW;
     else if (velocity < 0)
     {
-        direction = Direction::CW;
+        direction = Direction::CCW;
         velocity = -axis;
     }
     else {
@@ -375,7 +375,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
-            head.setVelocity(Timing::Milliseconds::DFLT_HEAD);
+            head.setVelocity(Timing::Microseconds::DFLT_HEAD);
             head.startStepping();
         }
         else if (action == Commands::Skeleton::HEAD_STOP)
