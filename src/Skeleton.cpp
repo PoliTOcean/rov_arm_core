@@ -179,6 +179,7 @@ void Listener::wristAxis(int axis)
     int velocity        = axis;
     Direction direction = Direction::NONE;
 
+    updated_ = true;
     if (velocity > 0)
         direction = Direction::CCW;
     else if (velocity < 0)
@@ -186,15 +187,14 @@ void Listener::wristAxis(int axis)
         direction = Direction::CW;
         velocity = -axis;
     }
-    else {}
-
-    if (wristVelocity_ == velocity && wristDirection_ == direction)
-        return ;
-
-    wristVelocity_  = velocity;
+    else {
+        wristVelocity_  = 0;
+        wristDirection_ = Direction::NONE;
+        return;
+    }
+    
+    wristVelocity_  = Politocean::map(velocity, 0, SHRT_MAX, Timing::Microseconds::STEPPER_MAX, Timing::Microseconds::STEPPER_MIN);
     wristDirection_ = direction;
-
-    updated_ = true;
 }
 
 void Listener::handAxis(int axis)
@@ -331,7 +331,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
+            shoulder.setVelocity(Timing::Microseconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
         else if (action == Commands::Skeleton::SHOULDER_STOP)
@@ -349,7 +349,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
+            wrist.setVelocity(listener.wristVelocity());
             wrist.startStepping();
         }
         else if (action == Commands::Skeleton::WRIST_STOP)
@@ -375,7 +375,7 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
-            head.setVelocity(10);
+            head.setVelocity(Timing::Milliseconds::DFLT_HEAD);
             head.startStepping();
         }
         else if (action == Commands::Skeleton::HEAD_STOP)

@@ -41,10 +41,10 @@ void Stepper::setVelocity(int velocity)
 void Stepper::step()
 {   
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
+    std::this_thread::sleep_for(std::chrono::microseconds(velocity_));
 
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
+    std::this_thread::sleep_for(std::chrono::microseconds(velocity_));
 }
 
 void Stepper::startStepping()
