@@ -4,9 +4,9 @@ project(DCMotor VERSION 1.0.0 LANGUAGES CXX)
 add_library(DCMotor SHARED
         DCMotor.cpp)
 
-add_library(PolitoceanRovArmCore::DCMotor ALIAS DCMotor)
+add_library(PolitoceanRov::DCMotor ALIAS DCMotor)
 
-target_link_libraries(DCMotor -lpthread RovCommon::Controller)
+target_link_libraries(DCMotor -lpthread PolitoceanRovCommon::Controller)
 
 target_include_directories(DCMotor
         PUBLIC
@@ -21,7 +21,7 @@ target_compile_options(DCMotor PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)
 
 include(GNUInstallDirs)
 install(TARGETS DCMotor
-        EXPORT PolitoceanRovArmCoreTargets
+        EXPORT PolitoceanRovTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

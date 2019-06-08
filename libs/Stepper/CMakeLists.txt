@@ -4,9 +4,9 @@ project(Stepper VERSION 1.0.0 LANGUAGES CXX)
 add_library(Stepper SHARED
         Stepper.cpp)
 
-add_library(PolitoceanRovArmCore::Stepper ALIAS Stepper)
+add_library(PolitoceanRov::Stepper ALIAS Stepper)
 
-target_link_libraries(Stepper -lpthread RovCommon::Controller)
+target_link_libraries(Stepper -lpthread PolitoceanRovCommon::Controller)
 
 target_include_directories(Stepper
         PUBLIC
@@ -21,7 +21,7 @@ target_compile_options(Stepper PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)
 
 include(GNUInstallDirs)
 install(TARGETS Stepper
-        EXPORT PolitoceanRovArmCoreTargets
+        EXPORT PolitoceanRovTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
