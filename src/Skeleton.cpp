@@ -290,7 +290,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    logger::enableLevel(logger::INFO);
+    logger::enableLevel(logger::DEBUG);
 
     MqttClient& subscriber = MqttClient::getInstance(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
