@@ -44,7 +44,7 @@ class Listener
 	std::vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<unsigned char>> sensors_;
+	std::vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -60,8 +60,9 @@ public:
 	// It setup class variables and sensors
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
 	{
-		for (auto sensor_type : Politocean::sensor_t())
-			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
+		for(auto sensor_type : Politocean::sensor_t())
+			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
+
 	}
 
 	// Returns the @axes_ vector
@@ -119,7 +120,15 @@ void Listener::listenForSensor(unsigned char data)
 {
 	std::lock_guard<std::mutex> lock(mutexSnr_);
 
-	sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	if(currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH){
+		float f=(float)data;
+		f /= 10;
+		sensors_[static_cast<int>(currentSensor_)].setValue(f);
+	}else if(currentSensor_ == sensor_t::PRESSURE)
+		sensors_[static_cast<int>(currentSensor_)].setValue(data + 990);
+	else
+		sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	
 
 	if (++currentSensor_ > sensor_t::Last)
 		currentSensor_ = sensor_t::First;
