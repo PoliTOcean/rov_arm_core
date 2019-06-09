@@ -26,6 +26,8 @@
 
 #include "json.hpp"
 
+#include <Reflectables/Vector.hpp>
+
 /***************************************************
  * Listener class for subscriber
  **************************************************/
@@ -44,10 +46,10 @@ class Listener
 						(*) MSB for the value (0 if released, 1 if pressed)
 						(*) the remeining 7 bit for the identifier
 	 */
-	std::vector<int> axes_;
+	Types::Vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<float>> sensors_;
+	Types::Vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -61,7 +63,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
+	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First), sensorsUpdated_(false)
 	{
 		for(auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
@@ -69,11 +71,11 @@ public:
 	}
 
 	// Returns the @axes_ vector
-	std::vector<int> axes();
+	Types::Vector<int> axes();
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	std::vector<int> sensors();
+	Types::Vector<Sensor<float>>& sensors();
 
 	/**
 	 * Callback functions.
@@ -84,7 +86,7 @@ public:
 	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
-	void listenForAxes(const std::string& payload);
+	void listenForAxes(Types::Vector<int> payload);
 	void listenForCommands(const std::string& payload);
 	void listenForSensor(unsigned char data);
 
@@ -97,13 +99,9 @@ public:
 
 };
 
-void Listener::listenForAxes(const std::string& payload)
+void Listener::listenForAxes(Types::Vector<int> payload)
 {
-	auto c_map = nlohmann::json::parse(payload);
-
-	std::lock_guard<std::mutex> lock(mutexAxs_);
-
-	axes_ = c_map.get<std::vector<int>>();
+	axes_ = payload;
 	
 	axesUpdated_ = true;
 }
@@ -145,7 +143,7 @@ void Listener::resetCurrentSensor()
 	currentSensor_ = sensor_t::First;
 }
 
-std::vector<int> Listener::axes()
+Types::Vector<int> Listener::axes()
 {
 	std::lock_guard<std::mutex> lock(mutexAxs_);
 	axesUpdated_ = false;
@@ -164,17 +162,9 @@ std::string Listener::action()
 	return action;
 }
 
-std::vector<int> Listener::sensors()
+Types::Vector<Sensor<float>>& Listener::sensors()
 {
-	std::lock_guard<std::mutex> lock(mutexSnr_);
-	sensorsUpdated_ = false;
-
-	std::vector<int> sensors;
-
-	for (auto it = sensors_.begin(); it != sensors_.end(); it++)
-		sensors.emplace_back(it->getValue());
-
-	return sensors;
+	return sensors_;
 }
 
 bool Listener::isAxesUpdated()
@@ -224,9 +214,7 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller&
 				std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 				continue ;
 			}
-
-			nlohmann::json j_map = listener.sensors();
-			publisher.publish(Topics::SENSORS, j_map.dump());
+			publisher.publish(Topics::SENSORS, listener.sensors());
 
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
@@ -352,7 +340,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			
 			if(!listener.isAxesUpdated() && counter < threshold) continue;
 
-			std::vector<int> axes = listener.axes();
+			Types::Vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
