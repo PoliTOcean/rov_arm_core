@@ -60,8 +60,16 @@ public:
 	// It setup class variables and sensors
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
 	{
-		for (auto sensor_type : Politocean::sensor_t())
-			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
+		for (auto sensor_type : Politocean::sensor_t()){
+			if(sensor_type == sensor_t::PITCH || sensor_type == sensor_t::ROLL)
+				sensors_.emplace_back(Politocean::Sensor<float>(sensor_type, 0));
+			else if(sensor_type == sensor_t::TEMPERATURE_INT 
+					||sensor_type == sensor_t::TEMPERATURE_PWR
+					||sensor_type == sensor_t::PRESSURE)
+				sensors_.emplace_back(Politocean::Sensor<int>(sensor_type, 0));
+			else
+				sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
+		}
 	}
 
 	// Returns the @axes_ vector
