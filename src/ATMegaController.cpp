@@ -219,30 +219,6 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller&
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
-
-	actionsThread_ = new std::thread([&]() {
-		while (publisher.is_connected() && isTalking_)
-		{
-			if (!listener.isCommandsUpdated())
-				continue ;
-			
-			std::string data = listener.action();
-			
-			if (data == Commands::Actions::RESET)
-			    controller.reset();
-			else if (data == Commands::Actions::ON)
-            {
-                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
-                controller.startMotors();
-            }
-            else if (data == Commands::Actions::OFF)
-            {
-                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
-                controller.stopMotors();
-            } else
-				continue ;
-		}
-	});
 }
 
 void Talker::stopTalking()
@@ -366,17 +342,30 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 
 			std::string data = listener.action();
 
-			if (data == Commands::Actions::RESET || data == Commands::Actions::ON || data == Commands::Actions::OFF)
-				continue ;
-
-            unsigned char action = setAction(data);
-
-			std::vector<unsigned char> buffer = {
-				Commands::ATMega::SPI::Delims::COMMAND,
-				action
-			};
-
-			send(buffer, listener);
+			
+			if (data == Commands::Actions::RESET)
+			{
+			    controller.reset();
+			}
+			else if (data == Commands::Actions::ON)
+            {
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+                controller.startMotors();
+            }
+            else if (data == Commands::Actions::OFF)
+            {
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+                controller.stopMotors();
+            }
+			else
+			{
+				unsigned char action = setAction(data);
+				std::vector<unsigned char> buffer = {
+					Commands::ATMega::SPI::Delims::COMMAND,
+					action
+				};
+				send(buffer, listener);
+			}
 		}
 	});
 }
