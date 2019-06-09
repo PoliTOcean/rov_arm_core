@@ -142,7 +142,7 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
         {
             int axis = 0;
             try {
-                std::stoi(payload);
+                axis = std::stoi(payload);
             } catch(...) {
                 logger::getInstance().log(logger::WARNING, "Error while converting hand velocity");
             }
