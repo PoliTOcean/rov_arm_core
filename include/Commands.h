@@ -22,16 +22,17 @@ namespace Commands {
 
         namespace SPI
         {
-            const unsigned char VDOWN_ON           = 0x04;
-            const unsigned char VDOWN_OFF          = 0x05;
-            const unsigned char VUP_ON             = 0x06;
-            const unsigned char VUP_OFF            = 0x07;
-            const unsigned char FAST               = 0x0D;
-            const unsigned char SLOW               = 0x0E;
-            const unsigned char MEDIUM             = 0x0C;
-            const unsigned char START_AND_STOP     = 0x12;
-            const unsigned char VUP_FAST_ON        = 0x13;
-            const unsigned char VUP_FAST_OFF       = 0x14;
+            const unsigned char NONE                = 0x00;
+            const unsigned char VDOWN_ON            = 0x04;
+            const unsigned char VDOWN_OFF           = 0x05;
+            const unsigned char VUP_ON              = 0x06;
+            const unsigned char VUP_OFF             = 0x07;
+            const unsigned char FAST                = 0x0D;
+            const unsigned char SLOW                = 0x0E;
+            const unsigned char MEDIUM              = 0x0C;
+            const unsigned char START_AND_STOP      = 0x12;
+            const unsigned char VUP_FAST_ON         = 0x13;
+            const unsigned char VUP_FAST_OFF        = 0x14;
 
             namespace Delims
             {
