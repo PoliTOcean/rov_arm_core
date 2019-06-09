@@ -34,6 +34,7 @@ target_link_libraries(PolitoceanATMega -lpthread
     PolitoceanCommon::mqttLogger
     PolitoceanCommon::logger
     PolitoceanCommon::MqttClient
+    PolitoceanCommon::Component
 )
 
 
@@ -43,6 +44,7 @@ target_link_libraries(PolitoceanSkeleton -lpthread
     PolitoceanRov::DCMotor
     
     PolitoceanCommon::MqttClient
+    PolitoceanCommon::Component
 )
 
 # install

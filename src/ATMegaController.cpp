@@ -18,10 +18,15 @@
 #include "PolitoceanExceptions.hpp"
 #include "PolitoceanUtils.hpp"
 
+#include "Component.hpp"
+#include "ComponentsManager.hpp"
+
 #include "logger.h"
 #include "mqttLogger.h"
 
 #include "json.hpp"
+
+#include <Reflectables/Vector.hpp>
 
 /***************************************************
  * Listener class for subscriber
@@ -41,10 +46,10 @@ class Listener
 						(*) MSB for the value (0 if released, 1 if pressed)
 						(*) the remeining 7 bit for the identifier
 	 */
-	std::vector<int> axes_;
+	Types::Vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<float>> sensors_;
+	Types::Vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -58,7 +63,7 @@ class Listener
 public:
 	// Constructor
 	// It setup class variables and sensors
-	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
+	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First), sensorsUpdated_(false)
 	{
 		for(auto sensor_type : Politocean::sensor_t())
 			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
@@ -66,11 +71,11 @@ public:
 	}
 
 	// Returns the @axes_ vector
-	std::vector<int> axes();
+	Types::Vector<int> axes();
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	std::vector<int> sensors();
+	Types::Vector<Sensor<float>>& sensors();
 
 	/**
 	 * Callback functions.
@@ -81,7 +86,7 @@ public:
 	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
-	void listenForAxes(const std::string& payload);
+	void listenForAxes(Types::Vector<int> payload);
 	void listenForCommands(const std::string& payload);
 	void listenForSensor(unsigned char data);
 
@@ -94,13 +99,9 @@ public:
 
 };
 
-void Listener::listenForAxes(const std::string& payload)
+void Listener::listenForAxes(Types::Vector<int> payload)
 {
-	auto c_map = nlohmann::json::parse(payload);
-
-	std::lock_guard<std::mutex> lock(mutexAxs_);
-
-	axes_ = c_map.get<std::vector<int>>();
+	axes_ = payload;
 	
 	axesUpdated_ = true;
 }
@@ -142,7 +143,7 @@ void Listener::resetCurrentSensor()
 	currentSensor_ = sensor_t::First;
 }
 
-std::vector<int> Listener::axes()
+Types::Vector<int> Listener::axes()
 {
 	std::lock_guard<std::mutex> lock(mutexAxs_);
 	axesUpdated_ = false;
@@ -161,17 +162,9 @@ std::string Listener::action()
 	return action;
 }
 
-std::vector<int> Listener::sensors()
+Types::Vector<Sensor<float>>& Listener::sensors()
 {
-	std::lock_guard<std::mutex> lock(mutexSnr_);
-	sensorsUpdated_ = false;
-
-	std::vector<int> sensors;
-
-	for (auto it = sensors_.begin(); it != sensors_.end(); it++)
-		sensors.emplace_back(it->getValue());
-
-	return sensors;
+	return sensors_;
 }
 
 bool Listener::isAxesUpdated()
@@ -195,19 +188,19 @@ bool Listener::isSensorsUpdated()
 
 class Talker
 {
-	std::thread *sensorThread_;
+	std::thread *sensorThread_, *actionsThread_;
 	bool isTalking_;
 
 public:
 	Talker() : isTalking_(false) {}
 
-	void startTalking(MqttClient& publisher, Listener& listener);
+	void startTalking(MqttClient& publisher, Listener& listener, Controller& controller);
 	void stopTalking();
 
 	bool isTalking();
 };
 
-void Talker::startTalking(MqttClient& publisher, Listener& listener)
+void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller& controller)
 {
 	if (isTalking_)
 		return ;
@@ -221,9 +214,7 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 				std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 				continue ;
 			}
-
-			nlohmann::json j_map = listener.sensors();
-			publisher.publish(Topics::SENSORS, j_map.dump());
+			publisher.publish(Topics::SENSORS, listener.sensors());
 
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
@@ -237,6 +228,7 @@ void Talker::stopTalking()
 	
 	isTalking_ = false;
 	sensorThread_->join();
+	actionsThread_->join();
 }
 
 bool Talker::isTalking()
@@ -251,7 +243,7 @@ bool Talker::isTalking()
 
 class SPI
 {
-	Controller *controller_;
+	Controller& controller_;
 	std::mutex mutex_;
 
 	std::thread *SPIAxesThread_, *SPICommandsThread_;
@@ -260,7 +252,7 @@ class SPI
 	void send(const std::vector<unsigned char>& buffer, Listener &listener);
 
 public:
-	SPI(Controller *controller) : controller_(controller), isUsing_(false) {}
+	SPI(Controller& controller) : controller_(controller), isUsing_(false) {}
 
 	void setup();
 
@@ -272,7 +264,7 @@ public:
 
 void SPI::setup()
 {
-	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
+	controller_.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
 unsigned char setAction(std::string action)
@@ -324,7 +316,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			
 			if(!listener.isAxesUpdated() && counter < threshold) continue;
 
-			std::vector<int> axes = listener.axes();
+			Types::Vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
@@ -350,34 +342,30 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 
 			std::string data = listener.action();
 
-			bool sendToSPI = false;
-
+			
 			if (data == Commands::Actions::RESET)
-			    controller_->reset();
+			{
+			    controller_.reset();
+			}
 			else if (data == Commands::Actions::ON)
             {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::ENABLED);
-                controller_->startMotors();
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+                controller_.startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::DISABLED);
-                controller_->stopMotors();
-            } else {
-                sendToSPI = true;
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+                controller_.stopMotors();
+            }
+			else
+			{	// the command is for the spi
+				unsigned char action = setAction(data);
+				std::vector<unsigned char> buffer = {
+					Commands::ATMega::SPI::Delims::COMMAND,
+					action
+				};
+				send(buffer, listener);
 			}
-
-            if (!sendToSPI)
-                continue;
-
-            unsigned char action = setAction(data);
-
-			std::vector<unsigned char> buffer = {
-				Commands::ATMega::SPI::Delims::COMMAND,
-				action
-			};
-
-			send(buffer, listener);
 		}
 	});
 }
@@ -397,7 +385,7 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = controller_->SPIDataRW(*it);
+		unsigned char data = controller_.SPIDataRW(*it);
 
 		if (data == Commands::ATMega::SPI::Delims::SENSORS)
 		{
@@ -442,20 +430,28 @@ int main(int argc, const char *argv[])
 	 */
 
 	Controller controller;
+
+	ComponentsManager::Init(Rov::ATMEGA_ID);
 	
-	Components::Status motorsStatus = Components::Status::ERROR;
 	// Try to setup @controller
 	try
 	{
 		controller.setup();
-		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_LOW ? Components::Status::DISABLED : Components::Status::ENABLED;
-	} catch (Politocean::controllerException &e)
+
+		if (controller.setupMotors() == Controller::PinLevel::PIN_LOW)
+			ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+		else
+			ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+	}
+	catch (Politocean::controllerException &e)
 	{
-		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
+		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
+		ptoLogger.log(logger::ERROR, e);
+		exit(EXIT_FAILURE);
 	}
 
-	Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, motorsStatus);
-	SPI spi(&controller);
+
+	SPI spi(controller);
 
 	// Try to setup @spi
 	try
@@ -470,7 +466,7 @@ int main(int argc, const char *argv[])
 	spi.startSPI(listener, publisher);
 
 	Talker talker;
-	talker.startTalking(publisher, listener);
+	talker.startTalking(publisher, listener, controller);
 
 	// wait until subscriber is is_connected
 	subscriber.wait();
