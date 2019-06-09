@@ -110,7 +110,12 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
     else if (topic == Topics::WRIST_VELOCITY)
         try
         {
-            int axis = std::stoi(payload);
+            int axis = 0;
+            try {
+                axis = std::stoi(payload);
+            } catch(...) {
+                logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity");
+            }
             wristAxis(axis);
         }
         catch(const std::exception& e)
@@ -135,7 +140,12 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     {
         try
         {
-            int axis = std::stoi(payload);
+            int axis = 0;
+            try {
+                std::stoi(payload);
+            } catch(...) {
+                logger::getInstance().log(logger::WARNING, "Error while converting hand velocity");
+            }
             handAxis(axis);
         }
         catch(const std::exception& e)
