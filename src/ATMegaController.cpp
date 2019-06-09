@@ -243,7 +243,7 @@ bool Talker::isTalking()
 
 class SPI
 {
-	Controller *controller_;
+	Controller& controller_;
 	std::mutex mutex_;
 
 	std::thread *SPIAxesThread_, *SPICommandsThread_;
@@ -252,7 +252,7 @@ class SPI
 	void send(const std::vector<unsigned char>& buffer, Listener &listener);
 
 public:
-	SPI(Controller *controller) : controller_(controller), isUsing_(false) {}
+	SPI(Controller& controller) : controller_(controller), isUsing_(false) {}
 
 	void setup();
 
@@ -264,7 +264,7 @@ public:
 
 void SPI::setup()
 {
-	controller_->setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
+	controller_.setupSPI(Controller::DEFAULT_SPI_CHANNEL, Controller::DEFAULT_SPI_SPEED);
 }
 
 unsigned char setAction(std::string action)
@@ -345,17 +345,17 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			
 			if (data == Commands::Actions::RESET)
 			{
-			    controller.reset();
+			    controller_.reset();
 			}
 			else if (data == Commands::Actions::ON)
             {
                 ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
-                controller.startMotors();
+                controller_.startMotors();
             }
             else if (data == Commands::Actions::OFF)
             {
                 ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
-                controller.stopMotors();
+                controller_.stopMotors();
             }
 			else
 			{
@@ -385,7 +385,7 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 
 	for (auto it = buffer.begin(); it != buffer.end(); it++)
 	{
-		unsigned char data = controller_->SPIDataRW(*it);
+		unsigned char data = controller_.SPIDataRW(*it);
 
 		if (data == Commands::ATMega::SPI::Delims::SENSORS)
 		{
@@ -451,7 +451,7 @@ int main(int argc, const char *argv[])
 	}
 
 
-	SPI spi(&controller);
+	SPI spi(controller);
 
 	// Try to setup @spi
 	try
