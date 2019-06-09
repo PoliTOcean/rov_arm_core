@@ -72,7 +72,7 @@ public:
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	Types::Vector<Sensor<float>> sensors();
+	Types::Vector<Sensor<float>>& sensors();
 
 	/**
 	 * Callback functions.
@@ -163,7 +163,7 @@ std::string Listener::action()
 	return action;
 }
 
-Types::Vector<Sensor<float>> Listener::sensors()
+Types::Vector<Sensor<float>>& Listener::sensors()
 {
 	return sensors_;
 }
