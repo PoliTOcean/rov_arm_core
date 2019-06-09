@@ -217,6 +217,14 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 			}
 			publisher.publish(Topics::SENSORS, listener.sensors());
 
+			/** DEBUG **/
+			stringstream ss;
+			for (Sensor<float> el : listener.sensors()) {
+				ss << el << " ";
+			}
+			ss << std::endl;
+			logger::getInstance().log(logger::CONFIG, ss.str());
+
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
