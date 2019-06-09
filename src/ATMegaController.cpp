@@ -23,6 +23,8 @@
 
 #include "json.hpp"
 
+#include <Reflectables/Vector.hpp>
+
 /***************************************************
  * Listener class for subscriber
  **************************************************/
@@ -44,7 +46,7 @@ class Listener
 	std::vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<unsigned char>> sensors_;
+	Types::Vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -60,16 +62,17 @@ public:
 	// It setup class variables and sensors
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
 	{
-		for (auto sensor_type : Politocean::sensor_t())
-			sensors_.emplace_back(Politocean::Sensor<unsigned char>(sensor_type, 0));
+		for(auto sensor_type : Politocean::sensor_t())
+			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
+
 	}
 
 	// Returns the @axes_ vector
-	std::vector<int> axes();
+	Types::Vector<int> axes();
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	std::vector<int> sensors();
+	Types::Vector<Sensor<float>> sensors();
 
 	/**
 	 * Callback functions.
@@ -119,7 +122,15 @@ void Listener::listenForSensor(unsigned char data)
 {
 	std::lock_guard<std::mutex> lock(mutexSnr_);
 
-	sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	if(currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH){
+		float f=(float)data;
+		f /= 10;
+		sensors_[static_cast<int>(currentSensor_)].setValue(f);
+	}else if(currentSensor_ == sensor_t::PRESSURE)
+		sensors_[static_cast<int>(currentSensor_)].setValue(data + 990);
+	else
+		sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	
 
 	if (++currentSensor_ > sensor_t::Last)
 		currentSensor_ = sensor_t::First;
@@ -133,7 +144,7 @@ void Listener::resetCurrentSensor()
 	currentSensor_ = sensor_t::First;
 }
 
-std::vector<int> Listener::axes()
+Types::Vector<int> Listener::axes()
 {
 	std::lock_guard<std::mutex> lock(mutexAxs_);
 	axesUpdated_ = false;
@@ -152,17 +163,9 @@ std::string Listener::action()
 	return action;
 }
 
-std::vector<int> Listener::sensors()
+Types::Vector<Sensor<float>> Listener::sensors()
 {
-	std::lock_guard<std::mutex> lock(mutexSnr_);
-	sensorsUpdated_ = false;
-
-	std::vector<int> sensors;
-
-	for (auto it = sensors_.begin(); it != sensors_.end(); it++)
-		sensors.emplace_back(it->getValue());
-
-	return sensors;
+	return sensors_;
 }
 
 bool Listener::isAxesUpdated()
@@ -212,9 +215,7 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 				std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 				continue ;
 			}
-
-			nlohmann::json j_map = listener.sensors();
-			publisher.publish(Topics::SENSORS, j_map.dump());
+			publisher.publish(Topics::SENSORS, listener.sensors());
 
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
@@ -315,7 +316,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			
 			if(!listener.isAxesUpdated() && counter < threshold) continue;
 
-			std::vector<int> axes = listener.axes();
+			Types::Vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
 				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
