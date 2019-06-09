@@ -44,7 +44,7 @@ class Listener
 	std::vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<unsigned char>> sensors_;
+	std::vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -61,7 +61,7 @@ public:
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First)
 	{
 		for(auto sensor_type : Politocean::sensor_t())
-			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0))
+			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
 
 	}
 
