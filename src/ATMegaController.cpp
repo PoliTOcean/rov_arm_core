@@ -43,7 +43,7 @@ class Listener
 						(*) MSB for the value (0 if released, 1 if pressed)
 						(*) the remeining 7 bit for the identifier
 	 */
-	std::vector<int> axes_;
+	Types::Vector<int> axes_;
 	std::queue<string> commands_;
 
 	Types::Vector<Sensor<float>> sensors_;
@@ -83,7 +83,7 @@ public:
 	 * listenForButtons	: converts the string @payload into an unsigned char value and stores it inside @button_.
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
-	void listenForAxes(const std::string& payload);
+	void listenForAxes(Types::Vector<int> payload);
 	void listenForCommands(const std::string& payload);
 	void listenForSensor(unsigned char data);
 
@@ -96,13 +96,9 @@ public:
 
 };
 
-void Listener::listenForAxes(const std::string& payload)
+void Listener::listenForAxes(Types::Vector<int> payload)
 {
-	auto c_map = nlohmann::json::parse(payload);
-
-	std::lock_guard<std::mutex> lock(mutexAxs_);
-
-	axes_ = c_map.get<std::vector<int>>();
+	axes_ = payload;
 	
 	axesUpdated_ = true;
 }
