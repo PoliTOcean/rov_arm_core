@@ -119,7 +119,15 @@ void Listener::listenForSensor(unsigned char data)
 {
 	std::lock_guard<std::mutex> lock(mutexSnr_);
 
-	sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	if(currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH){
+		float f=(float)data;
+		f /= 10;
+		sensors_[static_cast<int>(currentSensor_)].setValue(f);
+	}else if(currentSensor_ == sensor_t::PRESSURE)
+		sensors_[static_cast<int>(currentSensor_)].setValue(data + 990);
+	else
+		sensors_[static_cast<int>(currentSensor_)].setValue(data);
+	
 
 	if (++currentSensor_ > sensor_t::Last)
 		currentSensor_ = sensor_t::First;
