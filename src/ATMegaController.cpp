@@ -409,9 +409,10 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
+	logger::enableLevel(logger::DEBUG);
+	
 	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
 	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
-	logger::enableLevel(logger::DEBUG);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
