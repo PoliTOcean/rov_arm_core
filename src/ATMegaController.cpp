@@ -18,6 +18,9 @@
 #include "PolitoceanExceptions.hpp"
 #include "PolitoceanUtils.hpp"
 
+#include "Component.hpp"
+#include "ComponentsManager.hpp"
+
 #include "logger.h"
 #include "mqttLogger.h"
 
@@ -195,19 +198,19 @@ bool Listener::isSensorsUpdated()
 
 class Talker
 {
-	std::thread *sensorThread_;
+	std::thread *sensorThread_, *actionsThread_;
 	bool isTalking_;
 
 public:
 	Talker() : isTalking_(false) {}
 
-	void startTalking(MqttClient& publisher, Listener& listener);
+	void startTalking(MqttClient& publisher, Listener& listener, Controller& controller);
 	void stopTalking();
 
 	bool isTalking();
 };
 
-void Talker::startTalking(MqttClient& publisher, Listener& listener)
+void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller& controller)
 {
 	if (isTalking_)
 		return ;
@@ -228,6 +231,30 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener)
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
 	});
+
+	actionsThread_ = new std::thread([&]() {
+		while (publisher.is_connected() && isTalking_)
+		{
+			if (!listener.isCommandsUpdated())
+				continue ;
+			
+			std::string data = listener.action();
+			
+			if (data == Commands::Actions::RESET)
+			    controller.reset();
+			else if (data == Commands::Actions::ON)
+            {
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+                controller.startMotors();
+            }
+            else if (data == Commands::Actions::OFF)
+            {
+                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+                controller.stopMotors();
+            } else
+				continue ;
+		}
+	});
 }
 
 void Talker::stopTalking()
@@ -237,6 +264,7 @@ void Talker::stopTalking()
 	
 	isTalking_ = false;
 	sensorThread_->join();
+	actionsThread_->join();
 }
 
 bool Talker::isTalking()
@@ -350,25 +378,8 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 
 			std::string data = listener.action();
 
-			bool sendToSPI = false;
-
-			if (data == Commands::Actions::RESET)
-			    controller_->reset();
-			else if (data == Commands::Actions::ON)
-            {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::ENABLED);
-                controller_->startMotors();
-            }
-            else if (data == Commands::Actions::OFF)
-            {
-                Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, Components::Status::DISABLED);
-                controller_->stopMotors();
-            } else {
-                sendToSPI = true;
-			}
-
-            if (!sendToSPI)
-                continue;
+			if (data == Commands::Actions::RESET || data == Commands::Actions::ON || data == Commands::Actions::OFF)
+				continue ;
 
             unsigned char action = setAction(data);
 
@@ -442,19 +453,27 @@ int main(int argc, const char *argv[])
 	 */
 
 	Controller controller;
+
+	ComponentsManager::Init(Rov::ATMEGA_ID);
 	
-	Components::Status motorsStatus = Components::Status::ERROR;
 	// Try to setup @controller
 	try
 	{
 		controller.setup();
-		motorsStatus = controller.setupMotors() == Controller::PinLevel::PIN_LOW ? Components::Status::DISABLED : Components::Status::ENABLED;
-	} catch (Politocean::controllerException &e)
+
+		if (controller.setupMotors() == Controller::PinLevel::PIN_LOW)
+			ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+		else
+			ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+	}
+	catch (Politocean::controllerException &e)
 	{
-		ptoLogger.log(logger::ERROR, e); // TODO mettere in ciclo come per Joystick
+		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
+		ptoLogger.log(logger::ERROR, e);
+		exit(EXIT_FAILURE);
 	}
 
-	Politocean::publishComponents(Rov::ATMEGA_ID, Components::POWER, motorsStatus);
+
 	SPI spi(&controller);
 
 	// Try to setup @spi
@@ -470,7 +489,7 @@ int main(int argc, const char *argv[])
 	spi.startSPI(listener, publisher);
 
 	Talker talker;
-	talker.startTalking(publisher, listener);
+	talker.startTalking(publisher, listener, controller);
 
 	// wait until subscriber is is_connected
 	subscriber.wait();
