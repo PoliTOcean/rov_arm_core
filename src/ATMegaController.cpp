@@ -358,7 +358,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
                 controller_.stopMotors();
             }
 			else
-			{
+			{	// the command is for the spi
 				unsigned char action = setAction(data);
 				std::vector<unsigned char> buffer = {
 					Commands::ATMega::SPI::Delims::COMMAND,
