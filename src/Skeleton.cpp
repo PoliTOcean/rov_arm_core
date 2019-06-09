@@ -283,10 +283,10 @@ int main(int argc, const char *argv[])
     MqttClient& subscriber = MqttClient::getInstance(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
 
-    subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
-    subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
-    subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
-    subscriber.subscribeTo(Topics::HEAD+"#",        &Listener::listenForHead,       &listener);
+    subscriber.subscribeToFamily(Topics::SHOULDER,  &Listener::listenForShoulder,  &listener);
+    subscriber.subscribeToFamily(Topics::WRIST,     &Listener::listenForWrist,     &listener);
+    subscriber.subscribeToFamily(Topics::HAND,      &Listener::listenForHand,      &listener);
+    subscriber.subscribeToFamily(Topics::HEAD,      &Listener::listenForHead,      &listener);
 
 
     Controller controller;
