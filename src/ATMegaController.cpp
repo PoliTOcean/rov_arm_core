@@ -336,7 +336,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 		while (isUsing_)
 		{
 			if(!listener.isCommandsUpdated()){
-            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::JOYSTICK));
+            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
 				continue;
 			}
 
