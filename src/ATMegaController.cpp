@@ -336,7 +336,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 		while (isUsing_)
 		{
 			if(!listener.isCommandsUpdated()){
-            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::JOYSTICK));
+            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
 				continue;
 			}
 
@@ -409,9 +409,10 @@ bool SPI::isUsing()
 int main(int argc, const char *argv[])
 {
 	// Enable logging
+	logger::enableLevel(logger::DEBUG);
+	
 	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
 	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
-	logger::enableLevel(logger::INFO);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
@@ -460,8 +461,14 @@ int main(int argc, const char *argv[])
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << e.what() << '\n';
-	}	
+		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.", e);
+		exit(-1);
+	}
+	catch(...)
+	{
+		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.");
+		exit(-1);
+	}
 	
 	spi.startSPI(listener, publisher);
 

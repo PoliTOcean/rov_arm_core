@@ -110,12 +110,15 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
     else if (topic == Topics::WRIST_VELOCITY)
         try
         {
-            int axis = std::stoi(payload);
-            wristAxis(axis);
+            wristAxis(std::stoi(payload));
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.", e);
+        }
+        catch(...)
+        {
+            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.");
         }
     else return ;
 }
@@ -135,12 +138,15 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     {
         try
         {
-            int axis = std::stoi(payload);
-            handAxis(axis);
+            handAxis(std::stoi(payload));
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.", e);
+        }
+        catch(...)
+        {
+            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.");
         }
     }
     else return ;
@@ -280,7 +286,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    logger::enableLevel(logger::INFO);
+    logger::enableLevel(logger::DEBUG);
 
     MqttClient& subscriber = MqttClient::getInstance(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
@@ -315,7 +321,7 @@ int main(int argc, const char *argv[])
     {
         if (!listener.isUpdated())
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::JOYSTICK));
+            std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
             continue ;
         }
 
