@@ -52,8 +52,6 @@ class Listener
 	Types::Vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
-	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
-
 	/**
 	 * @axesUpdated_		: it is true if @axes_ values has changed
 	 * @commandsUpdated_	: it is true if @button_ value has changed
@@ -101,6 +99,8 @@ public:
 
 void Listener::listenForAxes(Types::Vector<int> payload)
 {
+    mqttLogger::getInstance().log(logger::DEBUG, "Received axes: "+payload.stringify());
+
 	axes_ = payload;
 	
 	axesUpdated_ = true;
@@ -108,9 +108,7 @@ void Listener::listenForAxes(Types::Vector<int> payload)
 
 void Listener::listenForCommands(const std::string& payload)
 {
-	logger::getInstance().log(logger::DEBUG, "Received: "+payload);
-
-	std::lock_guard<std::mutex> lock(mutexCmd_);
+    mqttLogger::getInstance().log(logger::DEBUG, "Received command: "+payload);
 
     commands_.push( payload );
 
@@ -119,8 +117,6 @@ void Listener::listenForCommands(const std::string& payload)
 
 void Listener::listenForSensor(unsigned char data)
 {
-	std::lock_guard<std::mutex> lock(mutexSnr_);
-
 	if(currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH){
 		float f=(float)data;
 		f /= 10;
@@ -139,21 +135,17 @@ void Listener::listenForSensor(unsigned char data)
 
 void Listener::resetCurrentSensor()
 {
-	std::lock_guard<std::mutex> lock(mutexSnr_);
 	currentSensor_ = sensor_t::First;
 }
 
 Types::Vector<int> Listener::axes()
 {
-	std::lock_guard<std::mutex> lock(mutexAxs_);
 	axesUpdated_ = false;
 	return axes_;
 }
 
 std::string Listener::action()
 {
-	std::lock_guard<std::mutex> lock(mutexCmd_);
-
 	commandsUpdated_ = false;
 	if (commands_.empty()) return Commands::Actions::NONE;
 
@@ -342,6 +334,7 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 
 			std::string data = listener.action();
 
+    		mqttLogger::getInstance().log(logger::DEBUG, "Computing command: "+data);
 			
 			if (data == Commands::Actions::RESET)
 			{
@@ -408,11 +401,9 @@ bool SPI::isUsing()
 
 int main(int argc, const char *argv[])
 {
-	// Enable logging
-	logger::enableLevel(logger::DEBUG);
+    mqttLogger::setRootTag(argv[0]);
 	
 	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
-	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
@@ -444,10 +435,16 @@ int main(int argc, const char *argv[])
 		else
 			ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
 	}
-	catch (Politocean::controllerException &e)
+	catch (const std::exception &e)
 	{
 		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
-		ptoLogger.log(logger::ERROR, e);
+		mqttLogger::getInstance().log(logger::ERROR, "Controller setup failed!", e);
+		exit(EXIT_FAILURE);
+	}
+	catch (...)
+	{
+		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
+		mqttLogger::getInstance().log(logger::ERROR, "Controller setup failed!");
 		exit(EXIT_FAILURE);
 	}
 
@@ -461,16 +458,18 @@ int main(int argc, const char *argv[])
 	}
 	catch(const std::exception& e)
 	{
-		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.", e);
-		exit(-1);
+		mqttLogger::getInstance().log(logger::ERROR, "Can't setup SPI!", e);
+		exit(EXIT_FAILURE);
 	}
 	catch(...)
 	{
-		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.");
-		exit(-1);
+		mqttLogger::getInstance().log(logger::ERROR, "Can't setup SPI!");
+		exit(EXIT_FAILURE);
 	}
 	
 	spi.startSPI(listener, publisher);
+
+	mqttLogger::getInstance().log(logger::CONFIG, "SPI initialized");
 
 	Talker talker;
 	talker.startTalking(publisher, listener, controller);

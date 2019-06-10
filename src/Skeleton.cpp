@@ -16,6 +16,7 @@
 #include "PolitoceanUtils.hpp"
 
 #include "ComponentsManager.hpp"
+#include <mqttLogger.h>
 
 using namespace Politocean;
 using namespace Politocean::RPi;
@@ -60,6 +61,7 @@ public:
 
 void Listener::listenForShoulder(const std::string& payload, const std::string& topic)
 {
+    mqttLogger::getInstance().log(logger::DEBUG, "Received shoulder command <"+topic+", "+payload+">");
     if (topic == Topics::SHOULDER)
     {
         if (payload == Commands::Actions::ON)
@@ -94,6 +96,7 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
 
 void Listener::listenForWrist(const std::string& payload, const std::string& topic)
 {
+    mqttLogger::getInstance().log(logger::DEBUG, "Received wrist command <"+topic+", "+payload+">");
     if (topic == Topics::WRIST)
     {
         if (payload == Commands::Actions::ON)
@@ -114,17 +117,18 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
         }
         catch(const std::exception& e)
         {
-            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.", e);
+            mqttLogger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.", e);
         }
         catch(...)
         {
-            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.");
+            mqttLogger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.");
         }
     else return ;
 }
 
 void Listener::listenForHand(const std::string& payload, const std::string& topic)
 {
+    mqttLogger::getInstance().log(logger::DEBUG, "Received hand command <"+topic+", "+payload+">");
     if (topic == Topics::HAND)
     {
         if (payload == Commands::Actions::START)
@@ -142,11 +146,11 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
         }
         catch(const std::exception& e)
         {
-            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.", e);
+            mqttLogger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.", e);
         }
         catch(...)
         {
-            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.");
+            mqttLogger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.");
         }
     }
     else return ;
@@ -154,6 +158,7 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
 
 void Listener::listenForHead(const std::string& payload, const std::string& topic)
 {
+    mqttLogger::getInstance().log(logger::DEBUG, "Received head command <"+topic+", "+payload+">");
     if (topic == Topics::HEAD)
     {
         if (payload == Commands::Actions::ON)
@@ -286,7 +291,7 @@ bool Listener::isUpdated()
 
 int main(int argc, const char *argv[])
 {
-    logger::enableLevel(logger::DEBUG);
+    mqttLogger::setRootTag(argv[0]);
 
     MqttClient& subscriber = MqttClient::getInstance(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
@@ -299,7 +304,23 @@ int main(int argc, const char *argv[])
     ComponentsManager::Init(Rov::SKELETON_ID);
 
     Controller controller;
-    controller.setup();
+	// Try to setup @controller
+	try
+	{
+		controller.setup();
+	}
+	catch (const std::exception &e)
+	{
+		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
+		mqttLogger::getInstance().log(logger::ERROR, "Controller setup failed!", e);
+		exit(EXIT_FAILURE);
+	}
+	catch (...)
+	{
+		ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ERROR);
+		mqttLogger::getInstance().log(logger::ERROR, "Controller setup failed!");
+		exit(EXIT_FAILURE);
+	}
     
     Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
@@ -326,6 +347,8 @@ int main(int argc, const char *argv[])
         }
 
         std::string action = listener.action();
+
+        mqttLogger::getInstance().log(logger::INFO, "Computing action: "+action);
 
         if (action == Commands::Skeleton::SHOULDER_ON)
         {
