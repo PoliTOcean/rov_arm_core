@@ -461,8 +461,14 @@ int main(int argc, const char *argv[])
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << e.what() << '\n';
-	}	
+		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.", e);
+		exit(-1);
+	}
+	catch(...)
+	{
+		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.");
+		exit(-1);
+	}
 	
 	spi.startSPI(listener, publisher);
 
