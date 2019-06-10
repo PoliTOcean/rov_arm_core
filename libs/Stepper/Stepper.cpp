@@ -9,7 +9,7 @@ void Stepper::setup()
     controller_->pinMode(dirPin_, Controller::PinMode::PIN_OUTPUT);
     controller_->pinMode(stepPin_, Controller::PinMode::PIN_OUTPUT);
             
-    controller_->digitalWrite(enPin_, Controller::PinLevel::PIN_HIGH);
+    disable();
 }
 
 void Stepper::enable()
@@ -26,9 +26,9 @@ void Stepper::setDirection(Direction direction)
 {
     direction_ = direction;
 
-    if (direction_ == Direction::CW)
+    if (direction_ == Direction::CCW)
         controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_LOW);
-    else if (direction_ == Direction::CCW)
+    else if (direction_ == Direction::CW)
         controller_->digitalWrite(dirPin_, Controller::PinLevel::PIN_HIGH);
     else return ;
 }
@@ -41,10 +41,10 @@ void Stepper::setVelocity(int velocity)
 void Stepper::step()
 {   
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_LOW);
-    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
+    std::this_thread::sleep_for(std::chrono::microseconds(velocity_));
 
     controller_->digitalWrite(stepPin_, Controller::PinLevel::PIN_HIGH);
-    std::this_thread::sleep_for(std::chrono::milliseconds(velocity_));
+    std::this_thread::sleep_for(std::chrono::microseconds(velocity_));
 }
 
 void Stepper::startStepping()

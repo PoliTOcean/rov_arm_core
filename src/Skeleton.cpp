@@ -9,10 +9,13 @@
 #include "Commands.h"
 
 #include <climits>
+#include <queue>
 
 #include "PolitoceanConstants.h"
 #include "PolitoceanExceptions.hpp"
 #include "PolitoceanUtils.hpp"
+
+#include "ComponentsManager.hpp"
 
 using namespace Politocean;
 using namespace Politocean::RPi;
@@ -23,7 +26,7 @@ class Listener
     Direction shoulderDirection_, wristDirection_, handDirection_, headDirection_;
     int shoulderVelocity_, wristVelocity_, handVelocity_, headVelocity_;
 
-    std::string action_;
+    std::queue<std::string> actions_;
 
     bool updated_;
 
@@ -60,25 +63,24 @@ void Listener::listenForShoulder(const std::string& payload, const std::string& 
     if (topic == Topics::SHOULDER)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::SHOULDER_ON;
+            actions_.push(Commands::Skeleton::SHOULDER_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::SHOULDER_OFF;
+            actions_.push(Commands::Skeleton::SHOULDER_OFF);
         else if (payload == Commands::Actions::Stepper::UP)
         {
             shoulderDirection_ = Direction::CCW;
-            action_ = Commands::Skeleton::SHOULDER_STEP;
+            actions_.push(Commands::Skeleton::SHOULDER_STEP);
         }
         else if (payload == Commands::Actions::Stepper::DOWN)
         {
             shoulderDirection_ = Direction::CW;
-            action_ = Commands::Skeleton::SHOULDER_STEP;
+            actions_.push(Commands::Skeleton::SHOULDER_STEP);
         }
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::SHOULDER_STOP;
+            actions_.push(Commands::Skeleton::SHOULDER_STOP);
         else
         {
             shoulderDirection_ = Direction::NONE;
-            action_ = Commands::Actions::NONE;
         }
 
         updated_ = true;
@@ -95,27 +97,28 @@ void Listener::listenForWrist(const std::string& payload, const std::string& top
     if (topic == Topics::WRIST)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::WRIST_ON;
+            actions_.push(Commands::Skeleton::WRIST_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::WRIST_OFF;
+            actions_.push(Commands::Skeleton::WRIST_OFF);
         else if (payload == Commands::Actions::START)
-            action_ = Commands::Skeleton::WRIST_START;
+            actions_.push(Commands::Skeleton::WRIST_START);
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::WRIST_STOP;
-        else
-            action_ = Commands::Actions::NONE;
-
+            actions_.push(Commands::Skeleton::WRIST_STOP);
+        
         updated_ = true;
     }
     else if (topic == Topics::WRIST_VELOCITY)
         try
         {
-            int axis = std::stoi(payload);
-            wristAxis(axis);
+            wristAxis(std::stoi(payload));
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.", e);
+        }
+        catch(...)
+        {
+            logger::getInstance().log(logger::WARNING, "Error while converting wrist velocity.");
         }
     else return ;
 }
@@ -125,11 +128,9 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     if (topic == Topics::HAND)
     {
         if (payload == Commands::Actions::START)
-            action_ = Commands::Skeleton::HAND_START;
+            actions_.push(Commands::Skeleton::HAND_START);
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::HAND_STOP;
-        else
-            action_ = Commands::Actions::NONE;
+            actions_.push(Commands::Skeleton::HAND_STOP);
 
         updated_ = true;
     }
@@ -137,12 +138,15 @@ void Listener::listenForHand(const std::string& payload, const std::string& topi
     {
         try
         {
-            int axis = std::stoi(payload);
-            handAxis(axis);
+            handAxis(std::stoi(payload));
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.", e);
+        }
+        catch(...)
+        {
+            logger::getInstance().log(logger::WARNING, "Error while parsing hand velocity.");
         }
     }
     else return ;
@@ -153,24 +157,23 @@ void Listener::listenForHead(const std::string& payload, const std::string& topi
     if (topic == Topics::HEAD)
     {
         if (payload == Commands::Actions::ON)
-            action_ = Commands::Skeleton::HEAD_ON;
+            actions_.push(Commands::Skeleton::HEAD_ON);
         else if (payload == Commands::Actions::OFF)
-            action_ = Commands::Skeleton::HEAD_OFF;
+            actions_.push(Commands::Skeleton::HEAD_OFF);
         else if (payload == Commands::Actions::Stepper::UP)
         {
             headDirection_ = Direction::CCW;
-            action_ = Commands::Skeleton::HEAD_STEP;
+            actions_.push(Commands::Skeleton::HEAD_STEP);
         }
         else if (payload == Commands::Actions::Stepper::DOWN)
         {
             headDirection_ = Direction::CW;
-            action_ = Commands::Skeleton::HEAD_STEP;
+            actions_.push(Commands::Skeleton::HEAD_STEP);
         }
         else if (payload == Commands::Actions::STOP)
-            action_ = Commands::Skeleton::HEAD_STOP;
+            actions_.push(Commands::Skeleton::HEAD_STOP);
         else
         {
-            action_ = Commands::Actions::NONE;
             headDirection_ = Direction::NONE;
         }
         
@@ -184,22 +187,22 @@ void Listener::wristAxis(int axis)
     int velocity        = axis;
     Direction direction = Direction::NONE;
 
+    updated_ = true;
     if (velocity > 0)
-        direction = Direction::CCW;
+        direction = Direction::CW;
     else if (velocity < 0)
     {
-        direction = Direction::CW;
+        direction = Direction::CCW;
         velocity = -axis;
     }
-    else {}
-
-    if (wristVelocity_ == velocity && wristDirection_ == direction)
-        return ;
-
-    wristVelocity_  = velocity;
+    else {
+        wristVelocity_  = 0;
+        wristDirection_ = Direction::NONE;
+        return;
+    }
+    
+    wristVelocity_  = Politocean::map(velocity, 0, SHRT_MAX, Timing::Microseconds::WRIST_MAX, Timing::Microseconds::WRIST_MIN);
     wristDirection_ = direction;
-
-    updated_ = true;
 }
 
 void Listener::handAxis(int axis)
@@ -229,57 +232,40 @@ void Listener::handAxis(int axis)
 
 Direction Listener::shoulderDirection()
 {
-    updated_ = false;
-
     return shoulderDirection_;
 }
 
 Direction Listener::wristDirection()
-{
-    updated_ = false;
-
-    return wristDirection_;
+{    return wristDirection_;
 }
 
 Direction Listener::handDirection()
 {
-    updated_ = false;
-
     return handDirection_;
 }
 
 Direction Listener::headDirection()
 {
-    updated_ = false;
-    
     return headDirection_;
 }
 
 int Listener::shoulderVelocity()
 {
-    updated_ = false;
-
     return shoulderVelocity_;
 }
 
 int Listener::wristVelocity()
 {
-    updated_ = false;
-
     return wristVelocity_;
 }
 
 int Listener::handVelocity()
 {
-    updated_ = false;
-
     return handVelocity_;
 }
 
 int Listener::headVelocity()
 {
-    updated_ = false;
-
     return headVelocity_;
 }
 
@@ -287,89 +273,92 @@ std::string Listener::action()
 {
     updated_ = false;
 
-    return action_;
+    if (actions_.empty()) return Commands::Actions::NONE;
+    std::string action = actions_.front();
+    actions_.pop();
+    return action;
 }
 
 bool Listener::isUpdated()
 {
-    return updated_;
+    return !actions_.empty();
 }
 
 int main(int argc, const char *argv[])
 {
-    // Publisher publisher(Hmi::IP_ADDRESS, Rov::SKELETON_ID);
-    MqttClient subscriber(Rov::SKELETON_ID, Rov::IP_ADDRESS);
+    logger::enableLevel(logger::DEBUG);
+
+    MqttClient& subscriber = MqttClient::getInstance(Rov::SKELETON_ID, Rov::IP_ADDRESS);
     Listener listener;
 
-    try
-    {
-        subscriber.connect();
-        // publisher.connect();
-    }
-    catch (const mqttException& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+    subscriber.subscribeToFamily(Topics::SHOULDER,  &Listener::listenForShoulder,  &listener);
+    subscriber.subscribeToFamily(Topics::WRIST,     &Listener::listenForWrist,     &listener);
+    subscriber.subscribeToFamily(Topics::HAND,      &Listener::listenForHand,      &listener);
+    subscriber.subscribeToFamily(Topics::HEAD,      &Listener::listenForHead,      &listener);
 
-    subscriber.subscribeTo(Topics::SHOULDER+"#",    &Listener::listenForShoulder,   &listener);
-    subscriber.subscribeTo(Topics::WRIST+"#",       &Listener::listenForWrist,      &listener);
-    subscriber.subscribeTo(Topics::HAND+"#",        &Listener::listenForHand,       &listener);
-    subscriber.subscribeTo(Topics::HEAD+"#",        &Listener::listenForHead,       &listener);
-
+    ComponentsManager::Init(Rov::SKELETON_ID);
 
     Controller controller;
     controller.setup();
     
+    Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
     Stepper shoulder(&controller, Pinout::SHOULDER_EN, Pinout::SHOULDER_DIR, Pinout::SHOULDER_STEP);
     Stepper wrist(&controller, Pinout::WRIST_EN, Pinout::WRIST_DIR, Pinout::WRIST_STEP);
     DCMotor hand(&controller, Pinout::HAND_DIR, Pinout::HAND_PWM, DCMotor::PWM_MIN, DCMotor::PWM_MAX);
 
-    Stepper head(&controller, Pinout::CAMERA_EN, Pinout::CAMERA_DIR, Pinout::CAMERA_STEP);
+    head.setup();
+    ComponentsManager::SetComponentState(component_t::HEAD, Component::Status::DISABLED);
 
     shoulder.setup();
-    wrist.setup();
-    hand.setup();
+    ComponentsManager::SetComponentState(component_t::SHOULDER, Component::Status::DISABLED);
 
-    head.setup();
+    wrist.setup();
+    ComponentsManager::SetComponentState(component_t::WRIST, Component::Status::DISABLED);
+
+    hand.setup();
 
     while (subscriber.is_connected())
     {
-        if (!listener.isUpdated()) continue ;
+        if (!listener.isUpdated())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
+            continue ;
+        }
 
         std::string action = listener.action();
 
         if (action == Commands::Skeleton::SHOULDER_ON)
         {
-            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::ON);
             shoulder.enable();
+            ComponentsManager::SetComponentState(component_t::SHOULDER, Component::Status::ENABLED);
         }
         else if (action == Commands::Skeleton::SHOULDER_OFF)
         {
-            // Politocean::publishComponents(publisher,Components::SHOULDER, Commands::Actions::OFF);
             shoulder.disable();
+            ComponentsManager::SetComponentState(component_t::SHOULDER, Component::Status::DISABLED);
         }
         else if (action == Commands::Skeleton::SHOULDER_STEP)
         {
             shoulder.setDirection(listener.shoulderDirection());
-            shoulder.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
+            shoulder.setVelocity(Timing::Microseconds::DFLT_STEPPER);
             shoulder.startStepping();
         }
         else if (action == Commands::Skeleton::SHOULDER_STOP)
             shoulder.stopStepping();
         else if (action == Commands::Skeleton::WRIST_ON)
         {
-            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::ON);
             wrist.enable();
+            ComponentsManager::SetComponentState(component_t::WRIST, Component::Status::ENABLED);
         }
         else if (action == Commands::Skeleton::WRIST_OFF)
         {
-            // Politocean::publishComponents(publisher,Components::WRIST, Commands::Actions::OFF);
             wrist.disable();
+            ComponentsManager::SetComponentState(component_t::WRIST, Component::Status::DISABLED);
         }
         else if (action == Commands::Skeleton::WRIST_START)
         {
             wrist.setDirection(listener.wristDirection());
-            wrist.setVelocity(Timing::Milliseconds::DFLT_STEPPER);
+            wrist.setVelocity(listener.wristVelocity());
             wrist.startStepping();
         }
         else if (action == Commands::Skeleton::WRIST_STOP)
@@ -383,13 +372,19 @@ int main(int argc, const char *argv[])
         else if (action == Commands::Skeleton::HAND_STOP)
             hand.stopPwm();
         else if (action == Commands::Skeleton::HEAD_ON)
+        {
             head.enable();
+            ComponentsManager::SetComponentState(component_t::HEAD, Component::Status::ENABLED);
+        }
         else if (action == Commands::Skeleton::HEAD_OFF)
+        {
             head.disable();
+            ComponentsManager::SetComponentState(component_t::HEAD, Component::Status::DISABLED);
+        }
         else if (action == Commands::Skeleton::HEAD_STEP)
         {
             head.setDirection(listener.headDirection());
-            head.setVelocity(10);
+            head.setVelocity(Timing::Microseconds::DFLT_HEAD);
             head.startStepping();
         }
         else if (action == Commands::Skeleton::HEAD_STOP)
