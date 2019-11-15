@@ -27,6 +27,7 @@
 #include "json.hpp"
 
 #include <Reflectables/Vector.hpp>
+#include <Reflectables/Float.hpp>
 
 /***************************************************
  * Listener class for subscriber
@@ -49,7 +50,7 @@ class Listener
 	Types::Vector<int> axes_;
 	std::queue<string> commands_;
 
-	Types::Vector<Sensor<float>> sensors_;
+	std::vector<Sensor<float>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -65,9 +66,8 @@ public:
 	// It setup class variables and sensors
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First), sensorsUpdated_(false)
 	{
-		for(auto sensor_type : Politocean::sensor_t())
-			sensors_.emplace_back(Politocean::Sensor<float>(sensor_type,0));
-
+		for (auto sensor_type : sensor_t())
+			sensors_.emplace_back(Sensor<float>(sensor_type, 0));
 	}
 
 	// Returns the @axes_ vector
@@ -75,7 +75,7 @@ public:
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	Types::Vector<Sensor<float>>& sensors();
+	std::vector<Sensor<float>> sensors();
 
 	/**
 	 * Callback functions.
@@ -87,7 +87,7 @@ public:
 	 * listenForAxes	: parses the string @payload into a JSON an stores the axes values inside @axes_ vector.
 	 */
 	void listenForAxes(Types::Vector<int> payload);
-	void listenForCommands(const std::string& payload);
+	void listenForCommands(const std::string &payload);
 	void listenForSensor(unsigned char data);
 
 	void resetCurrentSensor();
@@ -96,23 +96,22 @@ public:
 	bool isAxesUpdated();
 	bool isCommandsUpdated();
 	bool isSensorsUpdated();
-
 };
 
 void Listener::listenForAxes(Types::Vector<int> payload)
 {
 	axes_ = payload;
-	
+
 	axesUpdated_ = true;
 }
 
-void Listener::listenForCommands(const std::string& payload)
+void Listener::listenForCommands(const std::string &payload)
 {
-	logger::getInstance().log(logger::DEBUG, "Received: "+payload);
+	logger::getInstance().log(logger::DEBUG, "Received: " + payload);
 
 	std::lock_guard<std::mutex> lock(mutexCmd_);
 
-    commands_.push( payload );
+	commands_.push(payload);
 
 	commandsUpdated_ = true;
 }
@@ -121,15 +120,16 @@ void Listener::listenForSensor(unsigned char data)
 {
 	std::lock_guard<std::mutex> lock(mutexSnr_);
 
-	if(currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH){
-		float f=(float)data;
+	if (currentSensor_ == sensor_t::ROLL || currentSensor_ == sensor_t::PITCH)
+	{
+		float f = (float)data;
 		f /= 10;
 		sensors_[static_cast<int>(currentSensor_)].setValue(f);
-	}else if(currentSensor_ == sensor_t::PRESSURE)
+	}
+	else if (currentSensor_ == sensor_t::PRESSURE)
 		sensors_[static_cast<int>(currentSensor_)].setValue(data + 990);
 	else
 		sensors_[static_cast<int>(currentSensor_)].setValue(data);
-	
 
 	if (++currentSensor_ > sensor_t::Last)
 		currentSensor_ = sensor_t::First;
@@ -155,14 +155,15 @@ std::string Listener::action()
 	std::lock_guard<std::mutex> lock(mutexCmd_);
 
 	commandsUpdated_ = false;
-	if (commands_.empty()) return Commands::Actions::NONE;
+	if (commands_.empty())
+		return Commands::Actions::NONE;
 
 	string action = commands_.front();
 	commands_.pop();
 	return action;
 }
 
-Types::Vector<Sensor<float>>& Listener::sensors()
+std::vector<Sensor<float>> Listener::sensors()
 {
 	return sensors_;
 }
@@ -194,16 +195,16 @@ class Talker
 public:
 	Talker() : isTalking_(false) {}
 
-	void startTalking(MqttClient& publisher, Listener& listener, Controller& controller);
+	void startTalking(MqttClient &publisher, Listener &listener, Controller &controller);
 	void stopTalking();
 
 	bool isTalking();
 };
 
-void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller& controller)
+void Talker::startTalking(MqttClient &publisher, Listener &listener, Controller &controller)
 {
 	if (isTalking_)
-		return ;
+		return;
 
 	isTalking_ = true;
 	sensorThread_ = new std::thread([&]() {
@@ -212,9 +213,14 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller&
 			if (!listener.isSensorsUpdated())
 			{
 				std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
-				continue ;
+				continue;
 			}
-			publisher.publish(Topics::SENSORS, listener.sensors());
+
+			Types::Vector<Types::Float> sensorValues;
+			for (Sensor<float> s : listener.sensors())
+				sensorValues.emplace_back(s.getValue());
+
+			publisher.publish(Topics::SENSORS, sensorValues);
 
 			std::this_thread::sleep_for(std::chrono::seconds(Timing::Seconds::SENSORS));
 		}
@@ -224,8 +230,8 @@ void Talker::startTalking(MqttClient& publisher, Listener& listener, Controller&
 void Talker::stopTalking()
 {
 	if (!isTalking_)
-		return ;
-	
+		return;
+
 	isTalking_ = false;
 	sensorThread_->join();
 	actionsThread_->join();
@@ -236,27 +242,26 @@ bool Talker::isTalking()
 	return isTalking_;
 }
 
-
 /***************************************************
  * SPI Class
  **************************************************/
 
 class SPI
 {
-	Controller& controller_;
+	Controller &controller_;
 	std::mutex mutex_;
 
 	std::thread *SPIAxesThread_, *SPICommandsThread_;
 	bool isUsing_;
 
-	void send(const std::vector<unsigned char>& buffer, Listener &listener);
+	void send(const std::vector<unsigned char> &buffer, Listener &listener);
 
 public:
-	SPI(Controller& controller) : controller_(controller), isUsing_(false) {}
+	SPI(Controller &controller) : controller_(controller), isUsing_(false) {}
 
 	void setup();
 
-	void startSPI(Listener& listener, MqttClient& publisher);
+	void startSPI(Listener &listener, MqttClient &publisher);
 	void stopSPI();
 
 	bool isUsing();
@@ -269,43 +274,41 @@ void SPI::setup()
 
 unsigned char setAction(std::string action)
 {
-    if(action == Commands::Actions::ATMega::VDOWN_ON)
-        return Commands::ATMega::SPI::VDOWN_ON;
-    else if(action == Commands::Actions::ATMega::VDOWN_OFF)
-        return Commands::ATMega::SPI::VDOWN_OFF;
-    else if(action == Commands::Actions::ATMega::VUP_ON)
-        return Commands::ATMega::SPI::VUP_ON;
-    else if(action == Commands::Actions::ATMega::VUP_OFF)
-        return Commands::ATMega::SPI::VUP_OFF;
-	else if(action == Commands::Actions::ATMega::VUP_FAST_ON)
+	if (action == Commands::Actions::ATMega::VDOWN_ON)
+		return Commands::ATMega::SPI::VDOWN_ON;
+	else if (action == Commands::Actions::ATMega::VDOWN_OFF)
+		return Commands::ATMega::SPI::VDOWN_OFF;
+	else if (action == Commands::Actions::ATMega::VUP_ON)
+		return Commands::ATMega::SPI::VUP_ON;
+	else if (action == Commands::Actions::ATMega::VUP_OFF)
+		return Commands::ATMega::SPI::VUP_OFF;
+	else if (action == Commands::Actions::ATMega::VUP_FAST_ON)
 		return Commands::ATMega::SPI::VUP_FAST_ON;
-	else if(action == Commands::Actions::ATMega::VUP_FAST_OFF)
+	else if (action == Commands::Actions::ATMega::VUP_FAST_OFF)
 		return Commands::ATMega::SPI::VUP_FAST_OFF;
-    else if(action == Commands::Actions::ATMega::FAST)
-        return Commands::ATMega::SPI::FAST;
-    else if(action == Commands::Actions::ATMega::SLOW)
-        return Commands::ATMega::SPI::SLOW;
-    else if(action == Commands::Actions::ATMega::MEDIUM)
-        return Commands::ATMega::SPI::MEDIUM;
-    else if(action == Commands::Actions::ATMega::START_AND_STOP)
-        return Commands::ATMega::SPI::START_AND_STOP;
-    else if(action == Commands::Actions::ATMega::PITCH_CONTROL)
+	else if (action == Commands::Actions::ATMega::FAST)
+		return Commands::ATMega::SPI::FAST;
+	else if (action == Commands::Actions::ATMega::SLOW)
+		return Commands::ATMega::SPI::SLOW;
+	else if (action == Commands::Actions::ATMega::MEDIUM)
+		return Commands::ATMega::SPI::MEDIUM;
+	else if (action == Commands::Actions::ATMega::START_AND_STOP)
+		return Commands::ATMega::SPI::START_AND_STOP;
+	else if (action == Commands::Actions::ATMega::PITCH_CONTROL)
 		return Commands::ATMega::SPI::PITCH_CONTROL;
 	else
-        return 0;
+		return 0;
 }
 
-void SPI::startSPI(Listener& listener, MqttClient& publisher)
+void SPI::startSPI(Listener &listener, MqttClient &publisher)
 {
 	if (isUsing_)
-		return ;
+		return;
 
 	isUsing_ = true;
 
 	SPIAxesThread_ = new std::thread([&]() {
-
-		long long threshold = (Timing::Milliseconds::SENSORS_UPDATE_DELAY / Timing::Milliseconds::AXES_DELAY) 
-								/ ( static_cast<int>(sensor_t::Last) + 1 );
+		long long threshold = (Timing::Milliseconds::SENSORS_UPDATE_DELAY / Timing::Milliseconds::AXES_DELAY) / (static_cast<int>(sensor_t::Last) + 1);
 		int counter = 0;
 
 		while (isUsing_)
@@ -313,17 +316,18 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 			std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::AXES_DELAY));
 
 			counter++;
-			
-			if(!listener.isAxesUpdated() && counter < threshold) continue;
+
+			if (!listener.isAxesUpdated() && counter < threshold)
+				continue;
 
 			Types::Vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::X_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
+				(unsigned char)Commands::ATMega::SPI::Delims::AXES,
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::X_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
 			};
 
 			send(buffer, listener);
@@ -335,35 +339,34 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 	SPICommandsThread_ = new std::thread([&]() {
 		while (isUsing_)
 		{
-			if(!listener.isCommandsUpdated()){
-            	std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
+			if (!listener.isCommandsUpdated())
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(Timing::Milliseconds::COMMANDS));
 				continue;
 			}
 
 			std::string data = listener.action();
 
-			
 			if (data == Commands::Actions::RESET)
 			{
-			    controller_.reset();
+				controller_.reset();
 			}
 			else if (data == Commands::Actions::ON)
-            {
-                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
-                controller_.startMotors();
-            }
-            else if (data == Commands::Actions::OFF)
-            {
-                ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
-                controller_.stopMotors();
-            }
+			{
+				ComponentsManager::SetComponentState(component_t::POWER, Component::Status::ENABLED);
+				controller_.startMotors();
+			}
+			else if (data == Commands::Actions::OFF)
+			{
+				ComponentsManager::SetComponentState(component_t::POWER, Component::Status::DISABLED);
+				controller_.stopMotors();
+			}
 			else
-			{	// the command is for the spi
+			{ // the command is for the spi
 				unsigned char action = setAction(data);
 				std::vector<unsigned char> buffer = {
 					Commands::ATMega::SPI::Delims::COMMAND,
-					action
-				};
+					action};
 				send(buffer, listener);
 			}
 		}
@@ -373,13 +376,14 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 void SPI::stopSPI()
 {
 	if (!isUsing_)
-		return ;
+		return;
 
 	isUsing_ = false;
-	SPIAxesThread_->join(); SPICommandsThread_->join();
+	SPIAxesThread_->join();
+	SPICommandsThread_->join();
 }
 
-void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
+void SPI::send(const std::vector<unsigned char> &buffer, Listener &listener)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
@@ -392,7 +396,7 @@ void SPI::send(const std::vector<unsigned char>& buffer, Listener& listener)
 			listener.resetCurrentSensor();
 			continue;
 		}
-		
+
 		listener.listenForSensor(data);
 	}
 }
@@ -410,21 +414,20 @@ int main(int argc, const char *argv[])
 {
 	// Enable logging
 	logger::enableLevel(logger::DEBUG);
-	
-	MqttClient& publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
-	mqttLogger& ptoLogger = mqttLogger::getInstance(publisher);
+
+	MqttClient &publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
+	mqttLogger &ptoLogger = mqttLogger::getInstance(publisher);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
 	 * @listener	: object with the callbacks for @subscriber and methods to retreive data read
 	 */
-	MqttClient& subscriber = MqttClient::getInstance(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
+	MqttClient &subscriber = MqttClient::getInstance(Rov::ATMEGA_ID, Rov::IP_ADDRESS);
 	Listener listener;
 
 	// Subscribe @subscriber to joystick publisher topics
-	subscriber.subscribeTo(Topics::AXES, 			&Listener::listenForAxes, 		&listener);
-	subscriber.subscribeTo(Topics::COMMANDS,		&Listener::listenForCommands, 	&listener);
-
+	subscriber.subscribeTo(Topics::AXES, &Listener::listenForAxes, &listener);
+	subscriber.subscribeTo(Topics::COMMANDS, &Listener::listenForCommands, &listener);
 
 	/**
 	 * @controller : to access to Raspberry Pi features
@@ -433,7 +436,7 @@ int main(int argc, const char *argv[])
 	Controller controller;
 
 	ComponentsManager::Init(Rov::ATMEGA_ID);
-	
+
 	// Try to setup @controller
 	try
 	{
@@ -451,7 +454,6 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-
 	SPI spi(controller);
 
 	// Try to setup @spi
@@ -459,17 +461,17 @@ int main(int argc, const char *argv[])
 	{
 		spi.setup();
 	}
-	catch(const std::exception& e)
+	catch (const std::exception &e)
 	{
 		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.", e);
 		exit(-1);
 	}
-	catch(...)
+	catch (...)
 	{
 		logger::getInstance().log(logger::ERROR, "Can't setup SPI! Exit.");
 		exit(-1);
 	}
-	
+
 	spi.startSPI(listener, publisher);
 
 	Talker talker;
@@ -484,6 +486,6 @@ int main(int argc, const char *argv[])
 
 	//safe reset at the end
 	controller.reset();
-	
+
 	return 0;
 }
