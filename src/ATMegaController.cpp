@@ -216,7 +216,7 @@ void Talker::startTalking(MqttClient &publisher, Listener &listener, Controller 
 				continue;
 			}
 
-			Types::Vector<Types::Float> sensorValues;
+			Types::Vector<float> sensorValues;
 			for (Sensor<float> s : listener.sensors())
 				sensorValues.emplace_back(s.getValue());
 
@@ -416,7 +416,7 @@ int main(int argc, const char *argv[])
 	logger::enableLevel(logger::DEBUG);
 
 	MqttClient &publisher = MqttClient::getInstance(Rov::ATMEGA_ID, Hmi::IP_ADDRESS);
-	mqttLogger &ptoLogger = mqttLogger::getInstance(publisher);
+	mqttLogger &ptoLogger = mqttLogger::getInstance(Rov::ATMEGA_ID);
 
 	/**
 	 * @subscriber	: the subscriber listening to JoystickMqttClient topics
