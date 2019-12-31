@@ -50,7 +50,7 @@ class Listener
 	Types::Vector<int> axes_;
 	std::queue<string> commands_;
 
-	std::vector<Sensor<float>> sensors_;
+	std::vector<Sensor<double>> sensors_;
 	sensor_t currentSensor_;
 
 	std::mutex mutexSnr_, mutexAxs_, mutexCmd_;
@@ -67,7 +67,7 @@ public:
 	Listener() : axes_(3, 0), axesUpdated_(false), commandsUpdated_(false), currentSensor_(sensor_t::First), sensorsUpdated_(false)
 	{
 		for (auto sensor_type : sensor_t())
-			sensors_.emplace_back(Sensor<float>(sensor_type, 0));
+			sensors_.emplace_back(Sensor<double>(sensor_type, 0));
 	}
 
 	// Returns the @axes_ vector
@@ -75,7 +75,7 @@ public:
 	// Returns the @button_ variable
 	std::string action();
 	// Returns the @sensor_ vector
-	std::vector<Sensor<float>> sensors();
+	std::vector<Sensor<double>> sensors();
 
 	/**
 	 * Callback functions.
@@ -163,7 +163,7 @@ std::string Listener::action()
 	return action;
 }
 
-std::vector<Sensor<float>> Listener::sensors()
+std::vector<Sensor<double>> Listener::sensors()
 {
 	return sensors_;
 }
@@ -217,7 +217,7 @@ void Talker::startTalking(MqttClient &publisher, Listener &listener, Controller 
 			}
 
 			Types::Vector<float> sensorValues;
-			for (Sensor<float> s : listener.sensors())
+			for (Sensor<double> s : listener.sensors())
 				sensorValues.emplace_back(s.getValue());
 
 			publisher.publish(Topics::SENSORS, sensorValues);
