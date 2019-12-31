@@ -316,8 +316,8 @@ void SPI::startSPI(Listener& listener, MqttClient& publisher)
 				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
 				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::UP_AXIS], 		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
-				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::DOWN_AXIS], 	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1)
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::UP_AXIS], 		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::DOWN_AXIS], 	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1)
 			};
 
 			send(buffer, listener);
