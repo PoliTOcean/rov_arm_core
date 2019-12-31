@@ -19,6 +19,8 @@ namespace Commands {
             const short Y_AXIS      = 1;
             const short RZ_AXIS     = 2;
             const short PITCH_AXIS  = 3;
+            const short UP_AXIS     = 4;
+            const short DOWN_AXIS   = 5;
         }
 
         namespace SPI
