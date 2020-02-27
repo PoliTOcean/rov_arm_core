@@ -309,13 +309,12 @@ void SPI::startSPI(Listener &listener, MqttClient &publisher)
 			Types::Vector<int> axes = listener.axes();
 
 			std::vector<unsigned char> buffer = {
-				(unsigned char) Commands::ATMega::SPI::Delims::AXES,
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::X_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::Z_AXIS]),		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS],		SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1),
-				(unsigned char) Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS],	SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX-1)
-			};
+				(unsigned char)Commands::ATMega::SPI::Delims::AXES,
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::X_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Z_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1)};
 
 			send(buffer, listener);
 
