@@ -1,7 +1,3 @@
-/**
- * @author pettinz
- */
-
 #include <cstdlib>
 #include <string>
 #include <thread>
@@ -312,7 +308,7 @@ void SPI::startSPI(Listener &listener, MqttClient &publisher)
 				(unsigned char)Commands::ATMega::SPI::Delims::AXES,
 				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::X_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
 				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Y_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
-				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Z_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
+				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::Z_AXIS], 2 * SHRT_MIN, 2 * SHRT_MAX, 1, UCHAR_MAX - 1),
 				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::RZ_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1),
 				(unsigned char)Politocean::map(axes[Commands::ATMega::Axes::PITCH_AXIS], SHRT_MIN, SHRT_MAX, 1, UCHAR_MAX - 1)};
 
